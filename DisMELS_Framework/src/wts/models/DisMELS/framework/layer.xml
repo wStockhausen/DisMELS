@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Actions">
+        <folder name="File">
+            <file name="wts-models-DisMELS-actions-OpenAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="org.netbeans.api.actions.Openable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.actions.OpenAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#OpenAction.CTL_OpenAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/open.gif"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-SaveAsAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.actions.SaveAsable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.actions.SaveAsAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#SaveAsAction.CTL_SaveAsAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-ResetAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.actions.Resetable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.actions.ResetAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#ResetAction.CTL_ResetAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+        </folder>
+        <folder name="Edit">
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-ClearLastIndividualsAddedAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.topcomponents.LHSAttributesEditor.LHSAttributesEditorTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.topcomponents.LHSAttributesEditor.ClearLastIndividualsAddedAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/topcomponents/LHSAttributesEditor/Bundle#ClearLastIndividualsAddedAction.CTL_ClearLastIndividualsAddedAction"/>
+                <!--attr name="iconBase" stringvalue="org/openide/resources/actions/open.gif"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-ClearAllIndividualsAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.topcomponents.LHSAttributesEditor.LHSAttributesEditorTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.topcomponents.LHSAttributesEditor.ClearAllIndividualsAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/topcomponents/LHSAttributesEditor/Bundle#ClearAllIndividualsAction.CTL_ClearAllIndividualsAction"/>
+                <!--attr name="iconBase" stringvalue="org/openide/resources/actions/open.gif"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+        </folder>
+        <folder name="Tools">
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-MouseConfigurationAction.instance"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddSelectableGISLayerAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.topcomponents.LHSAttributesEditor.LHSAttributesEditorTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.topcomponents.LHSAttributesEditor.AddSelectableGISLayerAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/topcomponents/LHSAttributesEditor/Bundle#AddSelectableGISLayerAction.CTL_AddSelectableGISLayerAction"/>
+                <!-- attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.instance"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.instance"/>
+            <file name="wts-models-DisMELS-actions-ExportAnimationAction.instance"/>
+            <file name="wts-models-DisMELS-actions-RunAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.actions.Runnable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.actions.RunAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#RunAction.CTL_RunAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <folder name="File">
+            <file name="org-openide-actions-SaveAction.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAllAction.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAsAction.shadow_hidden"/>
+            <file name="wts-models-DisMELS-actions-OpenAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/wts-models-DisMELS-actions-OpenAction.instance"/>
+                <attr name="position" intvalue="50"/>
+            </file>
+            <file name="SaveAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-SaveAction.instance"/>
+                <attr name="position" intvalue="100"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-SaveAsAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/wts-models-DisMELS-actions-SaveAsAction.instance"/>
+                <attr name="position" intvalue="150"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-ResetAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/wts-models-DisMELS-actions-ResetAction.instance"/>
+                <attr name="position" intvalue="200"/>
+            </file>
+        </folder>
+        <folder name="Edit">
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-ClearLastIndividualsAddedAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Edit/wts-models-DisMELS-topcomponents-LHSAttributesEditor-ClearLastIndividualsAddedAction.instance"/>
+                <attr name="position" intvalue="5000"/>
+            </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-ClearAllIndividualsAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Edit/wts-models-DisMELS-topcomponents-LHSAttributesEditor-ClearAllIndividualsAction.instance"/>
+                <attr name="position" intvalue="5100"/>
+            </file>
+        </folder>
+        <folder name="Tools">
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-MouseConfigurationAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-MouseConfigurationAction.instance"/>
+                <attr name="position" intvalue="400"/>
+            </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddSelectableGISLayerAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddSelectableGISLayerAction.instance"/>
+                <attr name="position" intvalue="450"/>
+            </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.instance"/>
+                <attr name="position" intvalue="460"/>
+            </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.instance"/>
+                <attr name="position" intvalue="470"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-ExportAnimationAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-ExportAnimationAction.instance"/>
+                <attr name="position" intvalue="480"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-RunAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-RunAction.instance"/>
+                <attr name="position" intvalue="1000"/>
+            </file>
+        </folder>    
+        <folder name="Window">
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-LHSAttributesEditorTopComponent.shadow_hidden"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSParametersEditor-LHSParametersEditorTopComponent.shadow_hidden"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSTypesEditorTopComponent.shadow_hidden"/>
+            <file name="wts-models-DisMELS-topcomponents-ModelRunner-ModelRunnerTopComponent.shadow_hidden"/>
+            <file name="wts-models-DisMELS-topcomponents-ModelReviewer-ModelReviewerTopComponent.shadow_hidden"/>
+        </folder>
+    </folder>
+</filesystem>

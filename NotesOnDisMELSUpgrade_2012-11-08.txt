@@ -1,0 +1,95 @@
+Changes:
+Added functionality to turn off output of track information to results file.
+
+Changed or new files:
+    DisMELS_Framework   wts\models\DisMELS\framework\LifeStageAttributesInterface.java
+    DisMELS_Framework   wts\models\DisMELS\framework\AbstractLHSAttributes.java
+    DisMELS_Framework   wts\models\DisMELS\framework\AbstractLHSAttributes2.java
+    DisMELS_Framework   wts\models\DisMELS\framework\ModelControllerBean.java
+    DisMELS_Framework   wts\models\DisMELS\framework\ModelControllerBeanInfo.java
+    DisMELS_Framework   wts\models\DisMELS\gui\AbstractLHSAttributes2Customizer.java
+    DisMELS_Framework   wts\models\DisMELS\gui\AbstractLHSAttributes2Customizer.form
+    
+    DisMELS_IBMs_ArrowtoothFlounder     wts\models\DisMELS\IBMs\Arrowtooth\EggStageAttributes.java
+    DisMELS_IBMs_ArrowtoothFlounder     wts\models\DisMELS\IBMs\Arrowtooth\EggStageAttributesCustomizer.java
+    DisMELS_IBMs_ArrowtoothFlounder     wts\models\DisMELS\IBMs\Arrowtooth\EggStageAttributesCustomizer.form
+    
+Deleted files:
+    DisMELS_IBMs_ArrowtoothFlounder     wts\models\DisMELS\IBMs\Arrowtooth\AbstractArrowtoothAttributes.java
+    DisMELS_IBMs_ArrowtoothFlounder     wts\models\DisMELS\IBMs\Arrowtooth\AbstractArrowtoothAttributesCustomizer.java
+    DisMELS_IBMs_ArrowtoothFlounder     wts\models\DisMELS\IBMs\Arrowtooth\AbstractArrowtoothAttributesCustomizer.form
+
+To update PCod life stages:
+1. Delete the pcod equivalents to the AbstractArrowtoothAttributes.java and  AbstractArrowtoothAttributesCustomizer.* files
+2. For the Attributes class in each life stage:
+    a. Change the class declaration so it extends wts.models.DisMELS.framework.AbstractLHSAttributes2
+        ex: 
+            old: public class EggStageAttributes extends AbstractArrowtoothAttributes {
+            new: public class EggStageAttributes extends AbstractLHSAttributes2 {
+    b. delete the import statement for the old AbstractPCodAttributes class
+    c. insert an import statement for wts.models.DisMELS.framework.AbstractLHSAttributes2
+    d. Replace the code for the methods getCSV(), getCSVHeader() and getCSVHeaderShortNames() with (ignore START_CODE, END_CODE):
+START_CODE    
+    /**
+     * Returns a CSV string representation of the attribute values.
+     * 
+     *@return - CSV string attribute values
+     */
+    @Override
+    public String getCSV() {
+        String str = super.getCSV();
+        Iterator<String> it = newKeys.iterator();
+        while (it.hasNext()) str = str+cc+getValueAsString(it.next());
+        return str;
+    }
+                
+    /**
+     * Returns the comma-delimited string corresponding to the attributes
+     * to be used as a header for a csv file.  
+     * Use getCSV() to get the string of actual attribute values.
+     *
+     *@return - String of CSV header names
+     */
+    @Override
+    public String getCSVHeader() {
+        String str = super.getCSVHeader();
+        Iterator<String> it = newKeys.iterator();
+        while (it.hasNext()) str = str+cc+it.next();
+        return str;
+    }
+                
+    /**
+     * Returns the comma-delimited string corresponding to the attributes
+     * to be used as a header for a csv file.  
+     *
+     *@return - String of CSV header names (short style)
+     */
+    @Override
+    public String getCSVHeaderShortNames() {
+        String str = super.getCSVHeaderShortNames();
+        Iterator<String> it = newKeys.iterator();
+        while (it.hasNext()) str = str+cc+mapAllAttributes.get(it.next()).shortName;
+        return str;
+    }
+END_CODE
+
+3. For the AttributesCustomizer for each life stage, open up the .java and .form files in a text editor (NOT Netbeans)
+        1. In the .java file, search on "czrStandardAttributes" (no quotes in search) until you find something that looks like
+            czrStandardAttributes = new ...AbstractPCodAttributesCustomizer();
+        and replace it with
+            czrStandardAttributes = new wts.models.DisMELS.gui.AbstractLHSAttributes2Customizer();
+        2. In the .java file, continue to search on "czrStandardAttributes" (no quotes in search) until you find something that looks like
+            private ..AbstractPCodAttributesCustomizer czrStandardAttributes;
+        and replace it with
+            private wts.models.DisMELS.gui.AbstractLHSAttributes2Customizer czrStandardAttributes;
+        3. In the .form file,  find the line that includes "czrStandardAttributes" and replace it with
+            <Component class="wts.models.DisMELS.gui.AbstractLHSAttributes2Customizer" name="czrStandardAttributes">
+        4. save the files
+        
+4. Delete the ...AttributesBeanInfo.java file and create a new one:
+    a. Right click on the ...Attributes class in the Projects window, select Bean Info Editor from the popup menu, 
+        and create a new ...AttributesBeanInfo class
+    b. Change from "Source" to "Designer" mode in the Bean Info Editor editor
+    c. Select "Bean" and set the name of the Customizer to ...AttributesCustomizer.class
+
+5. clean and build the application project

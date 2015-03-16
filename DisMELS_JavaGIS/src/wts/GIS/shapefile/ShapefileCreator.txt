@@ -1,0 +1,199 @@
+/*
+ * ShapefileCreator.java
+ *
+ * Created on March 20, 2004, 1:53 PM
+ *
+ *  Uses DataStore API.
+ *
+ *  1. set the url for the shapefile by setShapefileURL(URL)
+ *  2
+ *      a. call createShapefile(FeatureCollection) OR
+ *
+ *      b. define the schema & add the data first
+ *          1. set the shape type using setShapeType(ShapeType)
+ *          2. set the Attribute names using setAttributeNames(String[])
+ *          3. set the attribute class definitions using
+ *                   setAttribueClasses(Class[])
+ *          4. set the attributes data using setAttributesArray(ArrayList)
+ *          5. set the coordinates data using setCoordinatesArray(ArrayList)
+ *          6. Finally, call createShapefile()
+ *          NOTE: steps 1-5 can occur in any order.
+ */
+
+package wts.GIS.shapefile;
+
+/**
+ *
+ * @author  William Stockhausen
+ */
+
+import java.net.URL;
+import java.util.ArrayList;
+import org.geotools.data.DataUtilities;
+import org.geotools.data.FeatureReader;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.FeatureStore;
+import org.geotools.data.shapefile.ShapefileDataStore;
+import org.geotools.data.shapefile.shp.JTSUtilities;
+import org.geotools.data.shapefile.shp.ShapeType;
+import org.geotools.feature.FeatureCollection;
+import wts.GIS.feature.FeatureCollectionCreator;
+import com.wtstockhausen.utils.ObjectTransformer;
+
+public class ShapefileCreator {
+    
+    /* shape type in integer form */
+    protected ShapeType shapeType;
+    
+    /* URL pointing to shapefile location */
+    protected URL shapefileURL;
+    
+    /* ArrayList of ArrayLists of non-geometric feature attributes */
+    protected ArrayList shapeAttribs;  
+    
+    /* Array of the names of the shape attributes */
+    protected String[] attNames;
+    
+    /* Array of the classes of the shape attributes */
+    protected Class[] attClasses;
+    
+    /* ArrayList of vector of coordinates defining shapes */
+    protected ArrayList shapeCoords;
+    
+    /* FeatureCollection to hold features */
+    protected FeatureCollection fc;
+    
+    /** Creates a new instance of ShapefileCreator */
+    public ShapefileCreator() {
+    }
+    
+    public void createShapefile() throws Exception {
+        FeatureCollectionCreator fcc = new FeatureCollectionCreator();
+        fcc.setAttributeClasses(this.attClasses);
+        fcc.setAttributeNames(this.attNames);
+        fcc.setAttributesArray(this.shapeAttribs);
+        fcc.setCoordinatesArray(this.shapeCoords);
+        fcc.setGeometryClass(JTSUtilities.findBestGeometryClass(this.shapeType));
+        fcc.setSchemaBaseName(this.getFeatureTypeName());
+        FeatureCollection fc = fcc.createFeatureCollection();
+        createShapefile(fc);
+    }
+    
+    public void createShapefile(FeatureCollection fc) throws Exception {
+        //use a ShapefileDataStore instance to write the featureCollection to
+        //disk as a shapefile
+        ShapefileDataStore sds = new ShapefileDataStore(shapefileURL);
+        writeFeatures(sds, fc);
+    }
+    
+    private void writeFeatures(ShapefileDataStore s,FeatureCollection fc) throws Exception {
+        s.createSchema(fc.features().next().getFeatureType());
+        FeatureStore fs = (FeatureStore) s.getFeatureSource();
+        FeatureReader fr = DataUtilities.reader(fc);
+        fs.addFeatures(fr);
+//        FeatureWriter fw = s.getFeatureWriter(s.getTypeNames()[0],Transaction.AUTO_COMMIT);
+//        FeatureIterator it = fc.features();
+//        Feature f  = null;
+//        while (it.hasNext()) {
+//            f = fw.next();
+//            f.
+//            fw.next().setAttributes(it.next().getAttributes(null));
+//            fw.next().
+//            fw.write();
+//        }
+//        fw.close();
+    }
+    
+    public FeatureCollection getFeatureCollection() {
+        return fc;
+    }
+    
+    private String getFeatureTypeName() {
+        String path = shapefileURL.getPath();
+        int dot = path.lastIndexOf('.');
+        if (dot < 0) {
+          dot = path.length();
+        }
+        int slash = path.lastIndexOf('/') + 1;
+        return path.substring(slash,dot);
+    } 
+  
+    public URL getShapefileURL(){
+        return shapefileURL;
+    }
+    public void setShapefileURL(URL u){
+        shapefileURL = u;
+    }
+    
+    /*
+     * Getter for a description of shape type (e.g., point, arc, polygon).
+     * @returns type: string describing the shapepefile type
+     */
+    public String getShapeTypeDescription(){
+        return shapeType.toString();
+    }
+    
+    /*
+     * Getter for the shape type (e.g., point, arc, polygon).
+     * @returns type: int denoting one of the shapepefile types 
+     *      (i.e. ShapeType.Point, ShapeType.Arc, ShapeType.Polygon, etc.)
+     */
+    public ShapeType getShapeType() {
+        return shapeType;
+    }
+    
+    /*
+     * Setter for the shape type (e.g., point, arc, polygon).
+     * @param type: int denoting one of the shapepefile types 
+     *      (i.e. ShapeType.Point, ShapeType.Arc, ShapeType.Polygon, etc.)
+     */
+    public void setShapeType(ShapeType type){
+        shapeType = type;
+    }
+    
+    /*
+     * Setter for the names of the attributes associated with each shape.
+     * @param types: Class[] denoting the attribute names in
+     *               the order they are found in the attributes data
+     */
+    public void setAttributeNames(String[] names) {
+        attNames = new String[names.length];
+        for (int i=0;i<names.length;i++){
+            attNames[i] = names[i];
+        }
+        //System.out.println("setAttributeNames");
+    }
+    
+    /*
+     * Setter for the attribute types (e.g., Boolean, Int, Double, etc.).
+     * @param types: Class[] denoting the attribute class types in
+     *               the order they are found in the attributes data
+     */
+    public void setAttributeClasses(Class[] types) {
+        attClasses = new Class[types.length];
+        for (int i=0;i<types.length;i++){
+            attClasses[i] = types[i];
+        }
+        //System.out.println("setAttributeTypes");
+    }
+    
+    /*
+     * Setter for the shape attributes data in an ArrayList format.
+     * @param coords: ArrayList in the following format:
+     *      - Object j in attribs should be an ArrayList which contains the
+     *          attribute data associated with shape j
+     */
+    public void setAttributesArray(ArrayList attribs) {
+        shapeAttribs = attribs;
+    }
+    
+    /*
+     * Setter for the shape coordinates in an ArrayList format.
+     * @param coords: ArrayList in the following format:
+     *      - each object in coords should be a double[] containing the
+     *          x,y pairs of the shape in order (e.g. {x0,y0,x1,y1,...}
+     */
+    public void setCoordinatesArray(ArrayList coords) {
+        shapeCoords = coords;
+    }
+}

@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+OpenIDE-Module: wts.roms
+OpenIDE-Module-Layer: wts/roms/layer.xml
+OpenIDE-Module-Localizing-Bundle: wts/roms/Bundle.properties
+OpenIDE-Module-Requires: org.openide.windows.WindowManager
+OpenIDE-Module-Specification-Version: 1.0
+

@@ -1,0 +1,113 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package wts.GIS.styling;
+
+import java.awt.Color;
+import org.geotools.filter.Expression;
+import org.geotools.styling.Stroke;
+import org.geotools.styling.StyleFactory;
+import org.geotools.styling.StyleVisitor;
+
+/**
+ *
+ * @author wstockhausen
+ */
+public class Vector2DSymbol implements IVector2DSymbol {
+
+    private static final java.util.logging.Logger LOGGER =
+            java.util.logging.Logger.getLogger("org.geotools.styling");
+    private static final org.geotools.filter.FilterFactory filterFactory =
+            org.geotools.filter.FilterFactory.createFilterFactory();
+
+    private Expression color     = null;
+    private Expression magnitude = null;
+    private Expression rotation  = null;
+    private Expression scale     = null;
+    private Expression width     = null;
+
+    private Stroke stroke = null;
+
+    public Vector2DSymbol() {
+        LOGGER.fine("creating defaultMark");
+
+        try {
+            StyleFactory sf = StyleFactory.createStyleFactory();
+            stroke = sf.getDefaultStroke();
+
+            color     = StyleUtilities.createColorExpression(filterFactory, Color.BLACK);
+            magnitude = filterFactory.createLiteralExpression(new Double(1));
+            rotation  = filterFactory.createLiteralExpression(new Double(0.0));
+            scale     = filterFactory.createLiteralExpression(new Double(1));
+            width     = filterFactory.createLiteralExpression(new Double(1));
+        } catch (org.geotools.filter.IllegalFilterException ife) {
+            severe("<init>", "Failed to build default mark: ", ife);
+        }
+    }
+
+    public Expression getColor() {
+        return color;
+    }
+
+    public void setColor(Expression clr) {
+        color = clr;
+    }
+
+    public Expression getMagnitude() {
+        return magnitude;
+    }
+
+    public void setMagnitude(Expression mag) {
+        magnitude = mag;
+    }
+
+    public Expression getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(Expression rot) {
+        rotation = rot;
+    }
+
+    public Expression getScale() {
+        return scale;
+    }
+
+    public void setScale(Expression scale) {
+        this.scale = scale;
+    }
+
+    public Stroke getStroke() {
+        return stroke;
+    }
+
+    public void setStroke(Stroke stroke) {
+        this.stroke = stroke;
+    }
+
+    public Expression getWidth() {
+        return width;
+    }
+
+    public void setWidth(Expression width) {
+        this.width = width;
+    }
+
+    public void accept(StyleVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    /**
+     * Convenience method for logging a message with an exception.
+     */
+    private static void severe(final String method, final String message, final Exception exception) {
+        final java.util.logging.LogRecord record =
+            new java.util.logging.LogRecord(java.util.logging.Level.SEVERE, message);
+        record.setSourceMethodName(method);
+        record.setThrown(exception);
+        LOGGER.log(record);
+    }
+
+}

@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: wts.GIS
+OpenIDE-Module-Localizing-Bundle: wts/GIS/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

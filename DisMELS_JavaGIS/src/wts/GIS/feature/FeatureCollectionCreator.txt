@@ -1,0 +1,405 @@
+/*
+ * FeatureCollectionCreator.java
+ *
+ * Created on September 14, 2003, 12:25 PM
+ *
+ *Creates a feature collection from:
+ *      1. a Geomettry type
+ *      2. a set of Attribute names and types
+ *      3. an ArrayList of ArrayLists of coordinates
+ *          defining the geometric features
+ *      4. an ArrayList of ArrayLists of non-spatial attributes
+ */
+
+package wts.GIS.feature;
+
+/**
+ *
+ * @author  William Stockhausen
+ */
+
+import com.wtstockhausen.utils.ObjectTransformer;
+
+import com.vividsolutions.jts.algorithm.CGAlgorithms;
+import com.vividsolutions.jts.algorithm.RobustCGAlgorithms;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.GeometryFactory;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.Point;
+
+import org.geotools.data.DataSourceException;
+
+import org.geotools.feature.AttributeType;
+import org.geotools.feature.AttributeTypeFactory;
+import org.geotools.feature.Feature;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureCollections;
+import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.FeatureFactory;
+import org.geotools.feature.DefaultFeature;
+import org.geotools.feature.FeatureType;
+import org.geotools.feature.DefaultFeatureType;
+import org.geotools.feature.FeatureTypeFactory;
+import org.geotools.feature.IllegalAttributeException;
+import org.geotools.feature.SchemaException;
+
+
+import org.geotools.filter.Filter;
+
+import java.awt.geom.Point2D;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FeatureCollectionCreator {
+    
+    /* */
+    protected static CGAlgorithms cga = new RobustCGAlgorithms();
+    
+    /* geometry type to create as Class */
+    protected Class geometryClass;
+    
+    /* the schema */
+    protected FeatureType schema;
+    
+    /* the base name for the schema. the geometry class will be appended
+     * to create the full name */
+    protected String schemaBaseName;
+     
+    /* ArrayList of ArrayLists of non-geometric feature attributes */
+    protected ArrayList attData;  
+    
+    /* Array of the names of the geometry attributes */
+    protected String[] attNames;
+    
+    /* Array of the classes of the geometry attributes */
+    protected Class[] attClasses;
+    
+    /* ArrayList of vector of coordinates defining geometrys */
+    protected ArrayList geometryCoords;
+    
+    /** Creates a new instance of FeatureCollectionCreator */
+    public FeatureCollectionCreator() {
+    }
+    
+    /** creates the feature collection from 
+     *  the coordinate and attribute data 
+     */
+    public FeatureCollection createFeatureCollection() {
+        FeatureCollection fc = FeatureCollections.newCollection();
+        int i = 0;
+        try {            
+            if (schema==null) createSchema();
+                //Build the FeatureCollecion
+            GeometryCollection gc = createGeometries();  //from ArrayList geometryCoords
+            List features = new ArrayList();
+            Feature feature;
+            int ns = gc.getNumGeometries();
+            int j,nCol;
+            Object obj, obj1;
+            Object[] row;
+            ArrayList attribs;
+            //loop over geometric geometrys and associated attributes
+            for (i=0;i<ns;i++) {
+                if (attData==null) {
+                    row = new Object[2];
+                    row[1] = new Integer(i);
+                } else {
+                    attribs = (ArrayList)attData.get(i);
+                    nCol = attribs.size();
+                    row = new Object[nCol+1];
+                    for (j=0;j<nCol;j++){
+                        obj  = attribs.get(j);
+                        obj1 = null;
+                        if (obj.getClass().isAssignableFrom(attClasses[j])){
+                            obj1 = attribs.get(j);
+                        } else {
+                            obj1 = ObjectTransformer.transform(obj,attClasses[j]);
+                        }
+                        row[j+1] = obj1;
+                    }
+                }
+                row[0] = (Geometry) gc.getGeometryN(i);
+//                System.out.println("Geometry Type ="+((Geometry) row[0]).getgeometryClass());
+//                System.out.println("JTS Class ="+JTSUtilities.findBestGeometryClass(geometryClass).toString());
+                feature = schema.create(row);
+                fc.add(feature);
+            }
+
+        } catch (IllegalAttributeException exc) {
+            System.out.println("");
+            System.out.println("problem with row "+i);
+            System.out.println(exc.toString());
+        }
+        System.out.println("FeatureCollection size = "+fc.size());
+        return fc;
+    }
+    
+    public FeatureType createSchema() {
+            //Build the FeatureType (i.e., the schema)        
+        // 1. define the geometry attribute type
+        try {
+            AttributeType geomAttType = AttributeTypeFactory.newAttributeType(
+                                        "the_geom",
+                                        geometryClass);
+            System.out.println("createFeatureCollection: geometryClass = "+
+                                                geometryClass.getName());
+            ArrayList attTypeList = new ArrayList();
+            attTypeList.add(geomAttType);
+            // 2. add associated non-geometric attirbutes to attribs
+            //      loop over column names/column types,
+            //      add new attributes to attrib using
+            //          attTypeList.add(new AttributeTypeDefault(colName, colType));
+            //
+            if (attNames!=null) {
+                int nc = attNames.length;
+                for (int i=0;i<nc;i++){
+                    attTypeList.add(AttributeTypeFactory.newAttributeType(attNames[i],
+                                                                          attClasses[i]));
+                }
+            } else {
+                attTypeList.add(AttributeTypeFactory.newAttributeType("ID",
+                                                                      Integer.class));
+            }
+            AttributeType[] attTypes = (AttributeType[]) attTypeList.toArray(
+                                                new AttributeType[attTypeList.size()]);
+            schema = FeatureTypeFactory.newFeatureType(
+                                                    attTypes,getSchemaName());
+        } catch (SchemaException exc) {
+            System.out.println(exc.toString());
+        }
+        return schema;
+    }
+    
+    protected Geometry createLineString(ArrayList coords, 
+                                     GeometryFactory geometryFactory){
+        // code based on MultiLineHandler
+        if (coords==null) return null;
+        
+        if ((coords.get(0) instanceof Point2D)) {
+            // simple line
+            // coords is an ArrayList of coordinates as java.awt.geom.Point2D
+            int numPoints = coords.size();
+            Coordinate[] points = new Coordinate[numPoints];
+            for (int t = 0; t < numPoints; t++) {
+                Point2D pt = (Point2D) coords.get(t);
+                points[t] = new Coordinate(pt.getX(),pt.getY());
+            }
+            
+            LineString line = geometryFactory.createLineString(points);
+            return line;
+        }    
+        //TODO: add capabilities for MultiPolygon & polygon with holes
+        return null;
+    }
+    
+    protected Geometry createPoint(ArrayList coords, 
+                                     GeometryFactory geometryFactory){
+        // code based on PolygonHandler
+        if (coords==null) return null;
+        
+        if ((coords.get(0) instanceof Point2D)) {
+            // coords is an ArrayList of coordinates as java.awt.geom.Point2D
+            // point will be created from first Coordinate 
+            Point2D pt2d   = (Point2D) coords.get(0);
+            Coordinate ptC = new Coordinate(pt2d.getX(),pt2d.getY());
+            Point pt       = geometryFactory.createPoint(ptC);
+            return pt;
+        }    
+        //TODO: add capabilities for MultiPoints
+        return null;
+    }
+    
+    protected Geometry createPolygon(ArrayList coords, 
+                                     GeometryFactory geometryFactory){
+        // code based on PolygonHandler
+        if (coords==null) return null;
+        
+        if ((coords.get(0) instanceof Point2D)) {
+            // simple polygon with no holes
+            // coords is an ArrayList of coordinates as java.awt.geom.Point2D
+            int numPoints = coords.size();
+            Coordinate[] points = new Coordinate[numPoints];
+            for (int t = 0; t < numPoints; t++) {
+                Point2D pt = (Point2D) coords.get(t);
+                points[t] = new Coordinate(pt.getX(),pt.getY());
+            }
+            
+            if (cga.isCCW(points)) {
+                //reverse order of points
+                Coordinate[] rPoints = new Coordinate[numPoints];
+                for (int t = 0; t < numPoints; t++) {
+                    rPoints[t] = points[numPoints-1-t];
+                }
+                points = rPoints;
+            }
+            
+            LinearRing ring = geometryFactory.createLinearRing(points);
+            Polygon pol = geometryFactory.createPolygon(ring,new LinearRing[0]);
+            Polygon[] polV = {pol};
+            MultiPolygon mp = geometryFactory.createMultiPolygon(polV);
+            return mp;
+        }    
+        //TODO: add capabilities for MultiPolygon & polygon with holes
+        return null;
+    }
+    
+    /* create the com.vividsolutions.jts.geom objects from
+     * the ArrayList geometryCoords and the geometryClass
+     */
+    protected GeometryCollection createGeometries() {
+        ArrayList geoms = new ArrayList();
+        GeometryFactory gf = new GeometryFactory();
+        int ns = geometryCoords.size();
+        ArrayList coords;
+        Geometry geom;
+         {
+            // Just creating polygons at present
+            // TODO: add functionality for other types
+            if (geometryClass.equals(Point.class)) {
+                for (int i=0;i<ns;i++) {
+                    coords = (ArrayList) geometryCoords.get(i);
+                    geom = null;
+                    geom = createPoint(coords,gf);
+                    geoms.add(geom);
+                }
+            } else if (geometryClass.equals(LineString.class)) {
+                for (int i=0;i<ns;i++) {
+                    coords = (ArrayList) geometryCoords.get(i);
+                    geom = null;
+                    geom = createLineString(coords,gf);
+                    geoms.add(geom);
+                }
+            } else if (geometryClass.equals(Polygon.class)) {
+                for (int i=0;i<ns;i++) {
+                    coords = (ArrayList) geometryCoords.get(i);
+                    geom = null;
+                    geom = createPolygon(coords,gf);
+                    geoms.add(geom);
+                }
+            } else if (geometryClass.equals(MultiPolygon.class)) {
+                for (int i=0;i<ns;i++) {
+                    coords = (ArrayList) geometryCoords.get(i);
+                    geom = null;
+                    geom = createPolygon(coords,gf);
+                    geoms.add(geom);
+                }
+            }
+        }
+        GeometryCollection gc = gf.createGeometryCollection(
+                                   (Geometry[]) geoms.toArray(new Geometry[0]));
+        System.out.println("createGeometries: Returning "+gc.getNumGeometries()+" geometries");
+        return gc;
+    }
+    
+    public String getSchemaName() {
+        if ((geometryClass!=null)&&(schemaBaseName!=null)) {
+            return schemaBaseName+geometryClass.getName(); 
+        } else {
+            return null;
+        }
+    } 
+
+    public String getSchemaBaseName() {
+        return schemaBaseName;
+    }
+    
+    public void setSchemaBaseName(String s) {
+        schemaBaseName = s;
+    }
+    
+    /*
+     * Getter for a description of geometry type (e.g., point, arc, polygon).
+     * @returns type: string describing the geometrypefile type
+     */
+    public FeatureType getSchema(){
+        return schema;
+    }
+    
+    /*
+     * Getter for a description of geometry type (e.g., point, arc, polygon).
+     * @returns type: string describing the geometrypefile type
+     */
+    public void setSchema(FeatureType newSchema){
+        schema = newSchema;
+    }
+    
+    /*
+     * Getter for the geometry type (e.g., point, arc, polygon).
+     * @returns type: int denoting one of the geometrypefile types 
+     *      (i.e. geometryClass.Point, geometryClass.Arc, geometryClass.Polygon, etc.)
+     */
+    public Class getGeometryClass() {
+        return geometryClass;
+    }
+    
+    /*
+     * Setter for the geometry type (e.g., point, arc, polygon).
+     * @param type: int denoting one of the geometrypefile types 
+     *      (i.e. geometryClass.Point, geometryClass.Arc, geometryClass.Polygon, etc.)
+     */
+    public void setGeometryClass(Class clazz){
+        geometryClass = clazz;
+    }
+    
+    /*
+     * Setter for the names of the attributes associated with each geometry.
+     * @param types: Class[] denoting the attribute names in
+     *               the order they are found in the attributes data
+     */
+    public void setAttributeNames(String[] names) {
+        attNames = new String[names.length];
+        for (int i=0;i<names.length;i++){
+            attNames[i] = names[i];
+        }
+        //System.out.println("setAttributeNames");
+    }
+    
+    /*
+     * Setter for the attribute types (e.g., Boolean, Int, Double, etc.).
+     * @param types: Class[] denoting the attribute class types in
+     *               the order they are found in the attributes data
+     */
+    public void setAttributeClasses(Class[] types) {
+        attClasses = new Class[types.length];
+        for (int i=0;i<types.length;i++){
+            attClasses[i] = types[i];
+        }
+        //System.out.println("setAttributeTypes");
+    }
+    
+    /*
+     * Setter for the geometry attributes data in an ArrayList format.
+     * @param coords: ArrayList in the following format:
+     *      - Object j in attribs should be an ArrayList which contains the
+     *          attribute data associated with geometry j
+     */
+    public void setAttributesArray(ArrayList attribs) {
+        attData = new ArrayList();
+        int nc = attribs.size();
+        for (int i=0;i<nc;i++) {
+            attData.add(attribs.get(i));
+        }
+    }
+    
+    /*
+     * Setter for the geometry coordinates in an ArrayList format.
+     * @param coords: ArrayList in the following format:
+     *      - each object in coords should be a double[] containing the
+     *          x,y pairs of the geometry in order (e.g. {x0,y0,x1,y1,...}
+     */
+    public void setCoordinatesArray(ArrayList coords) {
+        geometryCoords = new ArrayList();
+        int nc = coords.size();
+        for (int i=0;i<nc;i++) {
+            geometryCoords.add(coords.get(i));
+        }
+    }
+}
