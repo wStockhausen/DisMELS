@@ -198,6 +198,7 @@ public class GlobalInfo implements PropertyChangeListener {
             doEvents = true;//turn on PropertyChangeEvent processing
             setCanonicalFile(PROP_NotSet);
             propertySupport.firePropertyChange(PROP_GridFile,oldval,gridFile);
+            propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET, null, cviGrid2D);
         }
     }
     
@@ -225,6 +226,8 @@ public class GlobalInfo implements PropertyChangeListener {
             oviModel.reset();
             doEvents = true;//turn on PropertyChangeEvent processing
             propertySupport.firePropertyChange(PROP_CanonicalFile,oldval,canonicalModelFile);
+            propertySupport.firePropertyChange(PROP_ModelCVI_RESET, null, cviModel);
+            propertySupport.firePropertyChange(PROP_ModelOVI_RESET, null, oviModel);
         }
     }
     
