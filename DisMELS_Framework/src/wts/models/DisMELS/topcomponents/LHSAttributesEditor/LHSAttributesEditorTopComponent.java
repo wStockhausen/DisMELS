@@ -74,8 +74,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "LHSAttributesEditorTopComponent")
 @Messages({
     "CTL_LHSAttributesEditorAction=LHSAttributesEditor",
-    "CTL_LHSAttributesEditorTopComponent=LHS Attributes Editor",
-    "HINT_LHSAttributesEditorTopComponent=LHS Attributes Editor"
+    "CTL_LHSAttributesEditorTopComponent=Initial Attributes Editor",
+    "HINT_LHSAttributesEditorTopComponent=Initial Attributes Editor window"
 })
 public final class LHSAttributesEditorTopComponent extends TopComponent implements PropertyChangeListener {
     

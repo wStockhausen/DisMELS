@@ -28,7 +28,7 @@
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-            <TitledBorder title="Life history stage"/>
+            <TitledBorder title="Life stage"/>
           </Border>
         </Property>
       </Properties>
@@ -89,7 +89,7 @@
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Model class"/>
+            <Property name="text" type="java.lang.String" value="Java class"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JComboBox" name="jcbClasses">
@@ -217,7 +217,7 @@
               <Properties>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="Next life history stage"/>
+                    <TitledBorder title="Subsequent life stage"/>
                   </Border>
                 </Property>
               </Properties>
@@ -278,7 +278,7 @@
                 </Component>
                 <Component class="javax.swing.JLabel" name="jLabel4">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Model class"/>
+                    <Property name="text" type="java.lang.String" value="Java class"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JComboBox" name="jcbNextLHSClasses">
@@ -372,7 +372,7 @@
                     </Component>
                     <Component class="javax.swing.JLabel" name="jLabel6">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Model class"/>
+                        <Property name="text" type="java.lang.String" value="Java class"/>
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JComboBox" name="jcbSpawnedLHSClasses">

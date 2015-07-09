@@ -73,8 +73,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "LHSParametersEditorTopComponent")
 @Messages({
     "CTL_LHSParametersEditorAction=LHSParametersEditor",
-    "CTL_LHSParametersEditorTopComponent=LHS Parameters Editor",
-    "HINT_LHSParametersEditorTopComponent=The LHS Parameters Editor"
+    "CTL_LHSParametersEditorTopComponent=IBM Sub-stage Parameters Editor",
+    "HINT_LHSParametersEditorTopComponent=The editor for IBM sub-stage parameter values"
 })
 public final class LHSParametersEditorTopComponent extends TopComponent implements PropertyChangeListener {
     

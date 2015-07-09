@@ -59,7 +59,7 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "PhysicalEnvironmentViewerTopComponent")
 @Messages({
     "CTL_PhysicalEnvironmentViewerAction=Physical environment viewer",
-    "CTL_PhysicalEnvironmentViewerTopComponent=Physical environment viewer",
+    "CTL_PhysicalEnvironmentViewerTopComponent=Physical Environment Viewer",
     "HINT_PhysicalEnvironmentViewerTopComponent=This is the Physical Environment Viewer window"
 })
 public final class PhysicalEnvironmentViewerTopComponent extends TopComponent implements PropertyChangeListener {

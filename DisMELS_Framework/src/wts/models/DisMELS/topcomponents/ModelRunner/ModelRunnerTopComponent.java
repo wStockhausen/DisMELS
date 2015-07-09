@@ -68,8 +68,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "ModelRunnerTopComponent")
 @Messages({
     "CTL_ModelRunnerAction=ModelRunner",
-    "CTL_ModelRunnerTopComponent=ModelRunner Window",
-    "HINT_ModelRunnerTopComponent=This is a ModelRunner window"
+    "CTL_ModelRunnerTopComponent= IBM Editor/Launcher",
+    "HINT_ModelRunnerTopComponent=This is the IBM Editor/Launcher window"
 })
 public final class ModelRunnerTopComponent extends TopComponent implements AnimationEventListener, PropertyChangeListener  {
     
@@ -814,7 +814,7 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
     
     //------------------------------------------------------------------------//
     /**
-     * Private class to implement a "reset" capability for LifeStageParameters
+     * Private class to implement a "reset" capability for ModelControllerBean
      */
     private class Resetter implements Resetable {
 

@@ -54,8 +54,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "MapViewerTopComponent")
 @Messages({
     "CTL_MapViewerAction=Map Viewer",
-    "CTL_MapViewerTopComponent=Map viewer",
-    "HINT_MapViewerTopComponent=Map viewer"
+    "CTL_MapViewerTopComponent=Map Viewer",
+    "HINT_MapViewerTopComponent=Map Viewer"
 })
 public final class MapViewerTopComponent extends TopComponent implements PropertyChangeListener {
     

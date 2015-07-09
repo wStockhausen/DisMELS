@@ -37,8 +37,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "ModelFunctionTesterTopComponent")
 @Messages({
     "CTL_ModelFunctionTesterAction=Model function tester",
-    "CTL_ModelFunctionTesterTopComponent=Model function tester",
-    "HINT_ModelFunctionTesterTopComponent=This is the model function tester window."
+    "CTL_ModelFunctionTesterTopComponent=IBM Function Tester",
+    "HINT_ModelFunctionTesterTopComponent=This is the IBM Function Tester window."
 })
 public final class ModelFunctionTesterTopComponent extends TopComponent {
 

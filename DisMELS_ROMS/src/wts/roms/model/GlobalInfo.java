@@ -7,10 +7,16 @@ package wts.roms.model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 import org.openide.util.Exceptions;
@@ -26,8 +32,12 @@ public class GlobalInfo implements PropertyChangeListener {
     /*----STATIC VARIABLES and METHODS----*/
     /** version */
     public static final String version = "1.0";
+    /** ROMS properties filename */
+    public static final String propsFN = "ROMS.properties";
     /** String flag indicating property is not set */
     public static final String PROP_NotSet = "--not set--";
+    /** working directory property key */
+    public static final String PROP_WorkingDirFN = "wts.roms.model.GlobalInfo.WorkingDirectory";
     /** property id for changes to the reference date */
     public static final String PROP_RefDate = "wts.roms.model.GlobalInfo.ROMS_reference_date";
     /** property id for changes to the ROMS grid file */
@@ -63,6 +73,8 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /*----INSTANCE VARIABLES and METHODS-------*/
+    /** path to working directory */ 
+    private String workingDirFN  = PROP_NotSet;
     
     /** 
      * ROMS reference date as a string. 
@@ -119,6 +131,13 @@ public class GlobalInfo implements PropertyChangeListener {
     }   
     
     /**
+     * Resets the ROMS info properties to their default values.
+     */
+    public void reset(){
+        setGridFile(PROP_NotSet);//this should take care of all(?!)
+    }
+    
+    /**
      * Gets the reference date as a String
      * @return
      */
@@ -129,20 +148,20 @@ public class GlobalInfo implements PropertyChangeListener {
     /**
      * Sets the reference date using the parsed value of the input string.
      * @param strDate - reference date in string format
-     * @throws ParseException
      */
-    public void setRefDateString(String strDate) throws ParseException {
-        String oldVal = refDateString;
-        try {
-            refDateString = strDate;
-            Date newRefDate = dateFormat01.parse(refDateString);//throws ParseException if format is incorrect
-            refDate = newRefDate;
-            propertySupport.firePropertyChange(PROP_RefDate, oldVal, refDateString);//fire property change to listeners
-            logger.info("ROMS reference date set");
-        } catch (ParseException ex) {
-            logger.warning("Invalid ROMS ref date: '"+refDate+"'. Using old value.");
-            refDateString = oldVal;//reset to original value (refDate has not yet changed) 
-            throw(ex);
+    public void setRefDateString(String strDate) {
+        if (!refDateString.equals(strDate)){
+            String oldVal = refDateString;
+            try {
+                refDateString = strDate;
+                Date newRefDate = dateFormat01.parse(refDateString);//throws ParseException if format is incorrect
+                refDate = newRefDate;
+                propertySupport.firePropertyChange(PROP_RefDate, oldVal, refDateString);//fire property change to listeners
+                logger.info("ROMS reference date set");
+            } catch (ParseException ex) {
+                logger.warning("Invalid ROMS ref date: '"+refDate+"'. Using old value.");
+                refDateString = oldVal;//reset to original value (refDate has not yet changed) 
+            }
         }
     }
     
@@ -164,20 +183,22 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Sets the ROMS grid file name.
+     * Sets the ROMS grid file name tot he new name. In doing so,
+     *  setCanonicalFile(PROP_NotSet) is called.
      * 
      * @param file - the new filename
      */
     public void setGridFile(String file){
-        logger.info("ROMS grid file set");
-        String oldval = gridFile;
-        gridFile = file;
-        doEvents = false;//turn off PropertyChangeEvent processing
-        cviGrid2D.reset();
-        cviModel.reset();
-        oviModel.reset();
-        doEvents = true;//turn on PropertyChangeEvent processing
-        propertySupport.firePropertyChange(PROP_GridFile,oldval,gridFile);
+        if (!gridFile.equals(file)){
+            logger.info("ROMS grid file set");
+            String oldval = gridFile;
+            gridFile = file;
+            doEvents = false;//turn off PropertyChangeEvent processing
+            cviGrid2D.reset();
+            doEvents = true;//turn on PropertyChangeEvent processing
+            setCanonicalFile(PROP_NotSet);
+            propertySupport.firePropertyChange(PROP_GridFile,oldval,gridFile);
+        }
     }
     
     /**
@@ -195,14 +216,16 @@ public class GlobalInfo implements PropertyChangeListener {
      * @param file - the new filename
      */
     public void setCanonicalFile(String file){
-        logger.info("ROMS canonical file set");
-        String oldval = canonicalModelFile;
-        canonicalModelFile = file;
-        doEvents = false;//turn off PropertyChangeEvent processing
-        cviModel.reset();
-        oviModel.reset();
-        doEvents = true;//turn on PropertyChangeEvent processing
-        propertySupport.firePropertyChange(PROP_CanonicalFile,oldval,canonicalModelFile);
+        if (!canonicalModelFile.equals(file)){
+            logger.info("ROMS canonical file set");
+            String oldval = canonicalModelFile;
+            canonicalModelFile = file;
+            doEvents = false;//turn off PropertyChangeEvent processing
+            cviModel.reset();
+            oviModel.reset();
+            doEvents = true;//turn on PropertyChangeEvent processing
+            propertySupport.firePropertyChange(PROP_CanonicalFile,oldval,canonicalModelFile);
+        }
     }
     
     /**
@@ -292,6 +315,73 @@ public class GlobalInfo implements PropertyChangeListener {
         if (type.equals(ModelTypes.MASKTYPE_NONE)) return null;
         return "mask_"+type;
     }
+    
+    /**
+     * Gets the working directory
+     * 
+     * @return
+     */
+    public String getWorkingDir(){
+        return workingDirFN;
+    }
+    
+    /**
+     * Sets the working directory (WD).
+     *  Reads ROMS.properties file in new WD, if the file exists, otherwise
+     *  it uses the current ROMS properties and writes a new ROMS.properties file in the new WD.
+     * 
+     * @param dir - path to new working directory directory
+     */
+    public void setWorkingDir(String dir){
+        if (!workingDirFN.equals(dir)){
+            String oldVal = workingDirFN;
+            workingDirFN = dir;
+            try {
+                String romsPropsPath = workingDirFN+File.separator+propsFN;
+                File f = new File(romsPropsPath);
+                if (f.exists()){
+                    readProperties(f);
+                } else {
+                    //create ROMS.properties file and write current properties to it
+                    writeProperties(f);
+                }
+            } catch (FileNotFoundException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (IOException | SecurityException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+            logger.info("Changed working directory to "+workingDirFN);
+        }
+    }
+
+    /**
+     * Write properties to file represented by fn. Should be called before application
+     * is closed to save current property values.
+     * 
+     * @param fn - the file name
+     */
+    public void writeProperties(String fn) throws IOException{
+        logger.info("Writing properties to "+fn);
+        File f = new File(fn);
+        writeProperties(f);
+        logger.info("Done writing properties to "+fn);
+    }
+
+    /**
+     * Write properties to file f. Should be called before application
+     * is closed to save current property values.
+     * 
+     * @param f - the file name
+     */
+    public void writeProperties(File f) throws IOException{
+        logger.info("Writing properties to "+f.getPath());
+        Properties p = new Properties();
+        writeProperties(p);
+        FileOutputStream fos = new FileOutputStream(f);
+        p.store(fos,null);
+        fos.close();
+        logger.info("Done writing properties to "+f.getPath());
+    }
 
     /**
      * Write properties to property object. Should be called before application
@@ -313,6 +403,35 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
+     * Read properties from file represented by fn. Should be called at application startup
+     * to read in previously-saved property values.
+     * 
+     * @param fn - the Properties file name
+     */
+    public void readProperties(String fn) throws IOException{
+        logger.info("reading properties from "+fn);
+        File f = new File(fn);
+        readProperties(f);
+        logger.info("done reading properties from "+fn);
+    }
+    
+    /**
+     * Read properties from File f. Should be called at application startup
+     * to read in previously-saved property values.
+     * 
+     * @param f - the File object
+     */
+    public void readProperties(java.io.File f) throws IOException{
+        logger.info("reading properties from "+f.getAbsolutePath());
+        Properties p = new Properties();
+        FileInputStream fis = new FileInputStream(f);
+        p.load(fis);
+        readProperties(p);
+        fis.close();
+        logger.info("done reading properties from "+f.getAbsolutePath());
+    }
+    
+    /**
      * Read properties from Properties object. Should be called at application startup
      * to read in previously-saved property values.
      * 
@@ -321,11 +440,11 @@ public class GlobalInfo implements PropertyChangeListener {
     public void readProperties(java.util.Properties p){
         logger.info("reading properties");
         String version = p.getProperty(this.getClass().getName()+"_version");
-        if (version.equals(GlobalInfo.version)) {
-            refDateString      = p.getProperty(PROP_RefDate, refDateString);
-            gridFile           = p.getProperty(PROP_GridFile, gridFile);
-            canonicalModelFile = p.getProperty(PROP_CanonicalFile, canonicalModelFile);
-            mapRegion          = p.getProperty(PROP_MapRegion, mapRegion);
+        if (version.equals("1.0")) {
+            setRefDateString(p.getProperty(PROP_RefDate, refDateString));
+            setMapRegion(p.getProperty(PROP_MapRegion, mapRegion));
+            setGridFile(p.getProperty(PROP_GridFile, gridFile));
+            setCanonicalFile(p.getProperty(PROP_CanonicalFile, canonicalModelFile));
         }
         cviGrid2D.readProperties(p);
         propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET, null, cviGrid2D);
@@ -363,13 +482,15 @@ public class GlobalInfo implements PropertyChangeListener {
      */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+        String pn = evt.getPropertyName();
+        logger.info("--starting propertyChange(): "+pn);
         if (doEvents) {
-            String pn = evt.getPropertyName();
+            logger.info("----doing events");
             if (pn.equals(CriticalGrid2DVariablesInfo.PROP_RESET)){
                 propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET,null,cviGrid2D);
             } else 
             if (pn.equals(CriticalModelVariablesInfo.PROP_RESET)){            
-                propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET,null,cviModel);
+                propertySupport.firePropertyChange(PROP_ModelCVI_RESET,null,cviModel);
             } else 
             if (pn.equals(OptionalModelVariablesInfo.PROP_RESET)){
                 propertySupport.firePropertyChange(PROP_ModelOVI_RESET,null,oviModel);
@@ -385,5 +506,6 @@ public class GlobalInfo implements PropertyChangeListener {
             } else 
             propertySupport.firePropertyChange(evt);//propagate event up the chain
         }
+        logger.info("--finished propertyChange(): "+pn);
     }
 }

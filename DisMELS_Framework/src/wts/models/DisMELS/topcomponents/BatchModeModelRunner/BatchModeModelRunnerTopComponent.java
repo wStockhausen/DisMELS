@@ -56,8 +56,8 @@ persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED)
 preferredID = "BatchModeModelRunnerTopComponent")
 @Messages({
     "CTL_BatchModeModelRunnerAction=Batch-mode model runner",
-    "CTL_BatchModeModelRunnerTopComponent=Batch-mode model runner",
-    "HINT_BatchModeModelRunnerTopComponent=This is the batch-mode model runner window"
+    "CTL_BatchModeModelRunnerTopComponent=Batch-Mode Model Runner",
+    "HINT_BatchModeModelRunnerTopComponent=This is the Batch-Mode Model Runner window"
 })
 public final class BatchModeModelRunnerTopComponent extends TopComponent implements PropertyChangeListener {
     

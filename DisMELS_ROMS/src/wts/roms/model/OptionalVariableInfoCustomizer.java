@@ -42,6 +42,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jchkChecked.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jchkChecked.text")); // NOI18N
         jchkChecked.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jchkChecked.toolTipText")); // NOI18N
+        jchkChecked.setInheritsPopupMenu(true);
         jchkChecked.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jchkCheckedActionPerformed(evt);
@@ -50,6 +51,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jtfNameInROMS.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfNameInROMS.text")); // NOI18N
         jtfNameInROMS.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfNameInROMS.toolTipText")); // NOI18N
+        jtfNameInROMS.setInheritsPopupMenu(true);
         jtfNameInROMS.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfNameInROMSActionPerformed(evt);
@@ -58,6 +60,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jtfName.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfName.text")); // NOI18N
         jtfName.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfName.toolTipText")); // NOI18N
+        jtfName.setInheritsPopupMenu(true);
         jtfName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfNameActionPerformed(evt);
@@ -65,6 +68,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
         });
 
         jchkSpatialField.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jchkSpatialField.text")); // NOI18N
+        jchkSpatialField.setInheritsPopupMenu(true);
         jchkSpatialField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jchkSpatialFieldActionPerformed(evt);
@@ -81,6 +85,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jtfDescription.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfDescription.text")); // NOI18N
         jtfDescription.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfDescription.toolTipText")); // NOI18N
+        jtfDescription.setInheritsPopupMenu(true);
         jtfDescription.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfDescriptionActionPerformed(evt);

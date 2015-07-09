@@ -3,6 +3,36 @@
 <filesystem>
     <folder name="Actions">
         <folder name="File">
+            <file name="wts-roms-actions-OpenAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="org.netbeans.api.actions.Openable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.actions.OpenAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/actions/Bundle#OpenAction.CTL_OpenAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/open.gif"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+            </file>
+            <file name="wts-roms-actions-SaveAsAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="org.netbeans.api.actions.Savable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.actions.SaveAsAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/actions/Bundle#OpenAction.CTL_SaveAsAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+            </file>
+            <file name="wts-roms-actions-ResetAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.roms.actions.Resetable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.actions.ResetAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/actions/Bundle#ResetAction.CTL_ResetAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/undo.gif"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
         </folder>
         <folder name="Tools">
             <file name="wts-roms-topcomponents-MapViewer-AddGISLayerAction.instance">

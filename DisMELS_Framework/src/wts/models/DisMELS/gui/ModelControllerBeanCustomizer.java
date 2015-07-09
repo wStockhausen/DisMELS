@@ -132,7 +132,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
 
         jPanel1.setLayout(new java.awt.GridLayout(6, 0));
 
-        jfbDataset.setLabel("ROMS Dataset");
+        jfbDataset.setBorder(javax.swing.BorderFactory.createTitledBorder("Initial ROMS dataset"));
         jfbDataset.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jfbDatasetActionPerformed(evt);
@@ -140,7 +140,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
         });
         jPanel1.add(jfbDataset);
 
-        jfbParams.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "LHS parameters definition file", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP));
+        jfbParams.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Life stage parameters definition file", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP));
         jfbParams.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jfbParamsActionPerformed(evt);
@@ -148,7 +148,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
         });
         jPanel1.add(jfbParams);
 
-        jfbInitialAttributes.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "LHS initial attributes file", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP));
+        jfbInitialAttributes.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Initial attributes file", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP));
         jfbInitialAttributes.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jfbInitialAttributesActionPerformed(evt);
@@ -156,7 +156,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
         });
         jPanel1.add(jfbInitialAttributes);
 
-        jfbResults.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Results file", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP));
+        jfbResults.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "IBM results file", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP));
         jfbResults.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jfbResultsActionPerformed(evt);
@@ -217,7 +217,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel1)
                     .add(jtfStartTime, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 8, Short.MAX_VALUE)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jtfStartDate, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel9))
@@ -376,7 +376,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
             .add(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 441, Short.MAX_VALUE)
+                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
                     .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
@@ -390,7 +390,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                 .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(12, 12, 12)
                 .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(45, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Run parameters", jPanel2);
@@ -486,7 +486,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                     .add(jcbShowDeadIndivs)
                     .add(jcbNoAdvection)
                     .add(jcbRunInReverse, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(134, Short.MAX_VALUE))
+                .addContainerGap(188, Short.MAX_VALUE))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -509,7 +509,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                 .add(jcbShowDeadIndivs)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jcbExcludeTracks)
-                .addContainerGap(125, Short.MAX_VALUE))
+                .addContainerGap(148, Short.MAX_VALUE))
         );
 
         org.jdesktop.layout.GroupLayout jPanel6Layout = new org.jdesktop.layout.GroupLayout(jPanel6);

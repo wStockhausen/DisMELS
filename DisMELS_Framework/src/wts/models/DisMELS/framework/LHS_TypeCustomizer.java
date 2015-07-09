@@ -150,7 +150,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         setPreferredSize(new java.awt.Dimension(600, 325));
         setLayout(new java.awt.BorderLayout());
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Life history stage"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Life stage"));
 
         jLabel1.setText("Name");
 
@@ -161,7 +161,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             }
         });
 
-        jLabel2.setText("Model class");
+        jLabel2.setText("Java class");
 
         jcbClasses.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jcbClasses.addActionListener(new java.awt.event.ActionListener() {
@@ -225,7 +225,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         );
         jpColorLayout.setVerticalGroup(
             jpColorLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 23, Short.MAX_VALUE)
+            .add(0, 0, Short.MAX_VALUE)
         );
 
         org.jdesktop.layout.GroupLayout jPanel5Layout = new org.jdesktop.layout.GroupLayout(jPanel5);
@@ -237,7 +237,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 .add(jpColor, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jbColorChange)
-                .addContainerGap(420, Short.MAX_VALUE))
+                .addContainerGap(422, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -253,7 +253,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         jPanel4.setPreferredSize(new java.awt.Dimension(100, 50));
         jPanel4.setLayout(new java.awt.BorderLayout());
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Next life history stage"));
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Subsequent life stage"));
 
         jLabel3.setText("Name");
 
@@ -264,7 +264,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             }
         });
 
-        jLabel4.setText("Model class");
+        jLabel4.setText("Java class");
 
         jcbNextLHSClasses.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jcbNextLHSClasses.addActionListener(new java.awt.event.ActionListener() {
@@ -316,7 +316,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             }
         });
 
-        jLabel6.setText("Model class");
+        jLabel6.setText("Java class");
 
         jcbSpawnedLHSClasses.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jcbSpawnedLHSClasses.addActionListener(new java.awt.event.ActionListener() {

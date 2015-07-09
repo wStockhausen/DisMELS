@@ -73,8 +73,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "ModelReviewerTopComponent")
 @Messages({
     "CTL_ModelReviewerAction=ModelReviewer",
-    "CTL_ModelReviewerTopComponent=Model Results Reviewer",
-    "HINT_ModelReviewerTopComponent=This is a Model Reviewer window"
+    "CTL_ModelReviewerTopComponent=IBM Results Reviewer",
+    "HINT_ModelReviewerTopComponent=This is the IBM Results Reviewer window"
 })
 public final class ModelReviewerTopComponent extends TopComponent 
                                             implements AnimationEventListener, MediaToolBarEventListener, PropertyChangeListener {

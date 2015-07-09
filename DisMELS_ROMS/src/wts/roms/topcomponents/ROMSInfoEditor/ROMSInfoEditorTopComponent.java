@@ -6,18 +6,27 @@ package wts.roms.topcomponents.ROMSInfoEditor;
 
 import com.wtstockhausen.utils.FileFilterImpl;
 import com.wtstockhausen.utils.ReverseListModel;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.text.ParseException;
+import java.io.IOException;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
+import org.netbeans.api.actions.Openable;
+import org.netbeans.api.actions.Savable;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
+import org.openide.util.lookup.Lookups;
+import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.WindowManager;
+import wts.roms.actions.Resetable;
 import wts.roms.gis.CSCreator;
 import wts.roms.model.CriticalGrid2DVariablesInfo;
 import wts.roms.model.CriticalModelVariablesInfo;
@@ -41,10 +50,10 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "ROMSInfoEditorTopComponent")
 @Messages({
     "CTL_ROMSInfoEditorAction=ROMS Info Editor",
-    "CTL_ROMSInfoEditorTopComponent=ROMS info editor",
+    "CTL_ROMSInfoEditorTopComponent=ROMS Info Editor",
     "HINT_ROMSInfoEditorTopComponent=The ROMS Info Editor"
 })
-public final class ROMSInfoEditorTopComponent extends TopComponent {
+public final class ROMSInfoEditorTopComponent extends TopComponent implements PropertyChangeListener {
     
     /** singleton object */
     private static ROMSInfoEditorTopComponent instance = null;
@@ -96,17 +105,130 @@ public final class ROMSInfoEditorTopComponent extends TopComponent {
     private boolean initializing;
     
     /** JFileChooser for selecting grid and canonical datasets */
-    private final JFileChooser jfc = new JFileChooser();
+    private final JFileChooser jfcNC = new JFileChooser();   
+    /** JFileChooser for selecting ROMS properties file */
+    private final JFileChooser jfcGI = new JFileChooser();
+    
+    /** instance content reflecting csvLoader and csvSaver capabilities */
+    private InstanceContent content;
+    /** instance of the private class for loading the ROMS info properties file */
+    private InfoSaver infoSaver;
+    /** instance of the private class for loading the ROMS info properties file */
+    private InfoLoader infoLoader;
+    /** instance of the private class for reseting all ROMS info properties */
+    private Resetter resetter;
     
     public ROMSInfoEditorTopComponent() {
-        logger.info("+++++starting ROMSInfoEditorTopComponent()");
+        logger.info("++starting ROMSInfoEditorTopComponent()");
         initializing = true;
         globalInfo = GlobalInfo.getInstance();
+        
+        //add the actionMap, the instance content (wrapped in an AbstractLookup) and 'this' to the global lookup
+        content = new InstanceContent();//will reflect infoSaver, infoLoader capabilities
+        associateLookup(new ProxyLookup(Lookups.fixed(getActionMap(),this),new AbstractLookup(content)));
+        
         initComponents();
         initComponents1();
+        
         setName(Bundle.CTL_ROMSInfoEditorTopComponent());
         setToolTipText(Bundle.HINT_ROMSInfoEditorTopComponent());
-        logger.info("+++++finished ROMSInfoEditorTopComponent()");
+        
+        logger.info("++finished ROMSInfoEditorTopComponent()");
+    }
+
+    /**
+     * This method is called from the constructor to set up additional components.
+     */
+    private void initComponents1(){
+        logger.info("++++Starting initComponents1()");
+        //set up file choosers
+        final FileFilter ffNC = new FileFilterImpl("nc","netCDF files");
+        jfcNC.addChoosableFileFilter(ffNC);
+        jfcNC.setFileFilter(ffNC);
+        jfcNC.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            jfcNC.setCurrentDirectory(new File(globalInfo.getCanonicalFile()));
+        } else if (!globalInfo.getGridFile().equals(GlobalInfo.PROP_NotSet)){
+            jfcNC.setCurrentDirectory(new File(globalInfo.getGridFile()));
+        } else {
+            jfcNC.setCurrentDirectory(new File(globalInfo.getWorkingDir()));
+        }
+        
+        
+        final FileFilter ffGI = new FileFilterImpl("properties","ROMS properties file");
+        jfcGI.addChoosableFileFilter(ffGI);
+        jfcGI.setFileFilter(ffGI);
+        jfcGI.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        jfcGI.setDialogTitle("Open ROMS.roperties file");
+        
+        //set ROMS grid functionality
+        grdLM = new ReverseListModel();
+        grdLM.setSize(4);
+        
+        //set canonical ROMS file functionality
+        canLM = new ReverseListModel();
+        canLM.setSize(4);
+        
+        //Set map projections functionality
+        jcbMapRegions.removeAllItems();
+        jcbMapRegions.addItem(CSCreator.REGION_ALASKA);
+        jcbMapRegions.addItem(CSCreator.REGION_ROK);
+
+        infoSaver  = new InfoSaver();
+        infoLoader = new InfoLoader();
+        resetter = new Resetter();
+        
+        logger.info("++++Ending initComponents1().");        
+    }
+    @Override
+    public void componentOpened() {
+        logger.info("+++++starting componentOpened()");
+        jtfROMSRefDate.setText(globalInfo.getRefDateString());
+        jtfROMSRefDate.setToolTipText(globalInfo.getRefDateString());
+        
+        jcbGridFiles.setSelectedItem(globalInfo.getGridFile());        
+        jcbCanonicalFiles.setSelectedItem(globalInfo.getCanonicalFile());
+        
+        jcbMapRegions.setSelectedItem(globalInfo.getMapRegion());
+        
+        //set critical grid variables information
+        CriticalGrid2DVariablesInfo cvig = globalInfo.getCriticalGrid2DVariablesInfo();
+        grid2DCVIsCustomizer.setObject(cvig);
+        
+        //set critical model variables information
+        CriticalModelVariablesInfo cvim = globalInfo.getCriticalModelVariablesInfo();
+        criticalMVsCustomizer.setObject(cvim);
+        
+        //set critical model variables information
+        OptionalModelVariablesInfo ovim = globalInfo.getOptionalModelVariablesInfo();
+        oviCustomizer.setObject(ovim);
+        
+        validate();
+        
+        globalInfo.addPropertyChangeListener(grid2DCVIsCustomizer);
+        globalInfo.addPropertyChangeListener(criticalMVsCustomizer);
+        globalInfo.addPropertyChangeListener(oviCustomizer);
+        globalInfo.addPropertyChangeListener(this);
+        
+        initializing = false;//initialization stage is finished
+        enableLoadAction(true);
+        enableSaveAction(false);
+        enableResetAction(true);
+        logger.info("+++++finished componentOpened()");
+    }
+
+    @Override
+    public void componentClosed() {
+        logger.info("+++starting compnonentClosed()");
+        enableLoadAction(false);
+        enableSaveAction(false);
+        enableResetAction(false);
+        
+        globalInfo.removePropertyChangeListener(grid2DCVIsCustomizer);
+        globalInfo.removePropertyChangeListener(criticalMVsCustomizer);
+        globalInfo.removePropertyChangeListener(oviCustomizer);
+        globalInfo.removePropertyChangeListener(this);
+        logger.info("+++finished compnonentClosed()");
     }
 
     /**
@@ -354,17 +476,9 @@ public final class ROMSInfoEditorTopComponent extends TopComponent {
         if (!initializing){
             logger.info("++++starting jtfROMSRefDateActionPerformed()");
             String oldRef = globalInfo.getRefDateString();
-            try {
-                globalInfo.setRefDateString(jtfROMSRefDate.getText());
-            } catch (ParseException ex) {
-                Exceptions.printStackTrace(ex);
-                try {
-                    globalInfo.setRefDateString(oldRef);
-                } catch (ParseException ex1) {
-                    Exceptions.printStackTrace(ex1);//should not happen
-                }
-            }
+            globalInfo.setRefDateString(jtfROMSRefDate.getText());
             jtfROMSRefDate.setToolTipText(globalInfo.getRefDateString());
+            enableSaveAction(true);
             logger.info("++++finished ROMSInfoEditor.jtfROMSRefDateActionPerformed()\n");
         }
     }//GEN-LAST:event_jtfROMSRefDateActionPerformed
@@ -376,12 +490,12 @@ public final class ROMSInfoEditorTopComponent extends TopComponent {
     private void jbSelGridFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSelGridFileActionPerformed
         logger.info("++++starting jbSelGridFileActionPerformed()");
         File f = new File(globalInfo.getGridFile());
-        jfc.setCurrentDirectory(f);
-        jfc.setDialogTitle("Select ROMS grid:");
-        jfc.setApproveButtonText("Select");
-        int res = jfc.showOpenDialog(this);
-        if (res==jfc.APPROVE_OPTION) {
-            f = jfc.getSelectedFile();
+        jfcNC.setCurrentDirectory(f);
+        jfcNC.setDialogTitle("Select ROMS grid:");
+        jfcNC.setApproveButtonText("Select");
+        int res = jfcNC.showOpenDialog(this);
+        if (res==jfcNC.APPROVE_OPTION) {
+            f = jfcNC.getSelectedFile();
             jcbGridFiles.setSelectedItem(f.getPath());//this the path in the GlobalInfo instance
             jcbGridFiles.setToolTipText(f.getPath());
         }
@@ -391,12 +505,12 @@ public final class ROMSInfoEditorTopComponent extends TopComponent {
     private void jbSelCanonicalFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSelCanonicalFileActionPerformed
         logger.info("++++starting jbSelCanonicalFileActionPerformed()");
         File f = new File(globalInfo.getCanonicalFile());
-        jfc.setCurrentDirectory(f);
-        jfc.setDialogTitle("Select ROMS model canonical output file:");
-        jfc.setApproveButtonText("Select");
-        int res = jfc.showOpenDialog(this);
-        if (res==jfc.APPROVE_OPTION) {
-            f = jfc.getSelectedFile();
+        jfcNC.setCurrentDirectory(f);
+        jfcNC.setDialogTitle("Select ROMS model canonical output file:");
+        jfcNC.setApproveButtonText("Select");
+        int res = jfcNC.showOpenDialog(this);
+        if (res==jfcNC.APPROVE_OPTION) {
+            f = jfcNC.getSelectedFile();
             jcbCanonicalFiles.setSelectedItem(f.getPath());//this sets the path in the GlobalInfo  instance
             jcbCanonicalFiles.setToolTipText(f.getPath());
         }
@@ -457,74 +571,13 @@ public final class ROMSInfoEditorTopComponent extends TopComponent {
     private javax.swing.JTextField jtfROMSRefDate;
     private wts.roms.model.OptionalModelVariablesInfoCustomizer oviCustomizer;
     // End of variables declaration//GEN-END:variables
-    @Override
-    public void componentOpened() {
-        logger.info("+++++starting compnonentOpened()");
-        jtfROMSRefDate.setText(globalInfo.getRefDateString());
-        jtfROMSRefDate.setToolTipText(globalInfo.getRefDateString());
-        
-        jcbGridFiles.setSelectedItem(globalInfo.getGridFile());
-        
-        jcbCanonicalFiles.setSelectedItem(globalInfo.getCanonicalFile());
-        
-        jcbMapRegions.setSelectedItem(globalInfo.getMapRegion());
-        
-        //set critical grid variables information
-        CriticalGrid2DVariablesInfo cvig = globalInfo.getCriticalGrid2DVariablesInfo();
-        grid2DCVIsCustomizer.setObject(cvig);
-        globalInfo.addPropertyChangeListener(grid2DCVIsCustomizer);
-        
-        //set critical model variables information
-        CriticalModelVariablesInfo cvim = globalInfo.getCriticalModelVariablesInfo();
-        criticalMVsCustomizer.setObject(cvim);
-        globalInfo.addPropertyChangeListener(criticalMVsCustomizer);
-        
-        //set critical model variables information
-//        globalInfo.addPropertyChangeListener(oviCustomizer);
-        OptionalModelVariablesInfo ovim = globalInfo.getOptionalModelVariablesInfo();
-        oviCustomizer.setObject(ovim);
-        globalInfo.addPropertyChangeListener(oviCustomizer);
-        
-        validate();
-        
-        initializing = false;//initialization stage is finished
-        logger.info("+++++finished compnonentOpened()");
-    }
-
-    @Override
-    public void componentClosed() {
-        logger.info("+++starting compnonentClosed()");
-        globalInfo.removePropertyChangeListener(grid2DCVIsCustomizer);
-        globalInfo.removePropertyChangeListener(criticalMVsCustomizer);
-        logger.info("+++finished compnonentClosed()");
-    }
-
-    /**
-     * This method is called from the constructor to set up additional components.
-     */
-    private void initComponents1(){
-        logger.info("+++++Starting initComponents1()");
-        //set up file chooser
-        final FileFilter ffNC = new FileFilterImpl("nc","netCDF files");
-        jfc.addChoosableFileFilter(ffNC);
-        jfc.setFileFilter(ffNC);
-        jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        
-        //set ROMS grid functionality
-        grdLM = new ReverseListModel();
-        grdLM.setSize(4);
-        
-        //set canonical ROMS file functionality
-        canLM = new ReverseListModel();
-        canLM.setSize(4);
-        
-        //Set map projections functionality
-        jcbMapRegions.removeAllItems();
-        jcbMapRegions.addItem(CSCreator.REGION_ALASKA);
-        jcbMapRegions.addItem(CSCreator.REGION_ROK);
-        logger.info("+++++Ending initComponents1().");        
-    }
      
+    /**
+     * Write editor properties to file:
+     *  1. recent grid files
+     *  2. recent canonical files
+     * @param p 
+     */
     void writeProperties(java.util.Properties p) {
         logger.info("+++++starting writeProperties()");
         // better to version settings since initial version as advocated at
@@ -575,6 +628,144 @@ public final class ROMSInfoEditorTopComponent extends TopComponent {
                 jcbCanonicalFiles.addItem(str);
             }
         }        
-        logger.info("++++finished readProperties()\n");
+        logger.info("++++finished readProperties()");
+    }
+    
+    /**
+     * Enables ability to load ROMS info from properties file
+     * 
+     * @param canLoad 
+     */
+    public void enableLoadAction(boolean canLoad){
+        if (canLoad){
+            content.add(infoLoader);//add a LoadCookie to the instance content
+            logger.info("----Load enabled!!");
+        } else {
+            content.remove(infoLoader);//remove a loadCookie from the instance content 
+            logger.info("----Load disabled!!");
+        }
+    }
+    
+    /**
+     * Enables ability to save ROMS info to properties file..
+     * 
+     * @param canSave 
+     */
+    public void enableSaveAction(boolean canSave){
+        if (canSave){
+            content.add(infoSaver);//add the SaveCookie to the instance content
+            logger.info("----Save enabled!!");
+        } else {
+            content.remove(infoSaver);//remove the SaveCookie from the instance content 
+            logger.info("----Save disabled!!");
+        }
+    }
+    
+    /**
+     * Enables ability to reset ROMS info to default.
+     * 
+     * @param canReset 
+     */
+    public void enableResetAction(boolean canReset){
+        if (canReset){
+            content.add(resetter);//add the resettere to the instance content
+            logger.info("----Reset enabled!!");
+        } else {
+            content.remove(resetter);//remove the resetter from the instance content 
+            logger.info("----Reset disabled!!");
+        }
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        logger.info("--starting propertyChange(): "+evt.getPropertyName());
+        switch (evt.getPropertyName()) {
+            case GlobalInfo.PROP_CanonicalFile:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_GridFile:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_MapRegion:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_RefDate:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_Grid2DCVI_RESET:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelCVI_RESET:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_ADDED:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_REMOVED:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_RENAMED:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_RESET:
+                enableSaveAction(true);
+                break;
+        }
+        logger.info("--finished propertyChange(): "+evt.getPropertyName());
+    }
+    
+    //------------------------------------------------------------------------//
+    /**
+     * Private class to implement open functionality for ROMS properties file
+     */
+    private class InfoLoader implements Openable {
+
+        @Override
+        public void open() {
+            logger.info("--starting InfoLoader.open()");
+            jfcGI.setCurrentDirectory(new File(globalInfo.getWorkingDir()));
+            int res = jfcGI.showOpenDialog(ROMSInfoEditorTopComponent.this);
+            if (res!=JFileChooser.APPROVE_OPTION) return;
+            try {
+                File f = jfcGI.getSelectedFile();
+                globalInfo.readProperties(f);
+                componentOpened();
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+            logger.info("--finished InfoLoader.open()");
+        }
+    }
+
+    //------------------------------------------------------------------------//
+    /**
+     * Private class to implement save functionality for the ROMS properties file.
+     * The properties are saved to a file in the working directory.
+     */
+    private class InfoSaver implements Savable  {
+
+        @Override
+        public void save() throws IOException {
+            logger.info("--starting InfoSaver.save()");
+            String fn = globalInfo.getWorkingDir()+File.separator+GlobalInfo.propsFN;
+            globalInfo.writeProperties(fn);
+            logger.info("--finished InfoSaver.save()");
+        }
+    }
+    
+    
+    //------------------------------------------------------------------------//
+    /**
+     * Private class to implement a "reset" capability for the ROMS info
+     */
+    private class Resetter implements Resetable {
+
+        @Override
+        public void reset() {
+            logger.info("--starting Resetter.reset()");
+            globalInfo.reset();
+            componentOpened();
+            logger.info("--finished Resetter.reset()");
+        }        
     }
 }

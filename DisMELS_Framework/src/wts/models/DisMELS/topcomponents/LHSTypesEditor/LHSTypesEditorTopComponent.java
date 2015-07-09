@@ -42,8 +42,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "LHSTypesEditorTopComponent")
 @Messages({
     "CTL_LHSTypesEditorAction=LHSTypesEditor",
-    "CTL_LHSTypesEditorTopComponent=LHS Types Editor",
-    "HINT_LHSTypesEditorTopComponent=The LHS Types Editor"
+    "CTL_LHSTypesEditorTopComponent=IBM Life Stage Linker",
+    "HINT_LHSTypesEditorTopComponent=The linker for IBM life stages"
 })
 public final class LHSTypesEditorTopComponent extends TopComponent implements PropertyChangeListener {
     
