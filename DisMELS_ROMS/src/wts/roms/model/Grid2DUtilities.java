@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * @author William Stockhausen
  */
 public class Grid2DUtilities {
-    /** Flag toturn on ROMS approach to finding cell indices from input lat/lons. */
+    /** Flag to turn on ROMS approach to finding cell indices from input lat/lons. */
     public static boolean likeOldROMS = true;
     /** Raduis of earth (m) */
     public static final double earthRadius = 6371315.0;
@@ -39,7 +39,7 @@ public class Grid2DUtilities {
      * input position vector.  This method duplicates the functionality
      * of the ROMS subroutine "hindices" in Utility.F.
      * @param pos --double[2] position vector to convert to IJ.
-     *    if LatLon, pos={lat,lon}
+     *    if LatLon, pos={lon,lat}
      *    if XY,     pos={x,y}.
      * @param xgrd --ModelData field with grid of coordinates corresponding to pos index 0.
      * @param ygrd --ModelData field with grid of coordinates corresponding to pos index 1.
@@ -187,7 +187,7 @@ public class Grid2DUtilities {
     }
     
     /**
-     * Calculate IJ from input coordinates pos using the original ROMS method. 
+     * Calculate IJ from input coordinates pos using a new method. 
      * Note that this method should guarantee a "round trip" such
      * that computing XY->IJ->XY' yields XY = XY' (as one might think).
      * @param pos
@@ -203,7 +203,7 @@ public class Grid2DUtilities {
                                         ModelData ygrd){
         double[] grdPos = new double[] {-1.0,-1.0};
         //Knowing correct cell, calculate the grid coordinates such that
-        //XY->IJ-XY' yields XY = XY'
+        //XY->IJ->XY' yields XY = XY'
         double x,x11,x12,x21,x22;
         double y,y11,y12,y21,y22;
         x = pos[0];
@@ -217,33 +217,48 @@ public class Grid2DUtilities {
         y12 = ygrd.getValue(Imin  ,Jmin+1);
         y22 = ygrd.getValue(Imin+1,Jmin+1);
         
-        double ddx, ddy;
-        ddx = x11-x21-x12+x22;
-        ddy = y11-y21-y12+y22;
-        
-        //calculate coefficients of quadratic eqn ax^2+bx+c=0 where x is di
-        double a,b,c;
-        c = (x-x11)*(y12-y11) - (y-y11)*(x12-x11);
-        b = (x-x11)*ddy - (x21-x11)*(y12-y11)  - ((y-y11)*ddx - (y21-y11)*(x12-x11));
-        a = -((x21-x11)*ddy - (y21-y11)*ddx);
-        
-        double di, dj, rt;
-        rt = Math.sqrt(b*b-4*a*c);
-        di = (-b+rt)/(2*a);
-//        logger.info("di positive sign root = "+di);
-        if ((di>1.0)||(di<0.0)) {
-            di = (-b-rt)/(2*a);
-//            logger.info("di negative sign root = "+di);
+        double di, dj;
+        boolean dxchk = (Math.abs(x12-x11)+Math.abs(x22-x21))<Double.MIN_NORMAL;//check if indep of J
+        boolean dychk = (Math.abs(y21-y11)+Math.abs(y22-y12))<Double.MIN_NORMAL;//check if indep of I
+        if (dxchk & dychk){
+            //x = x(I), y = y(J)
+            di = (x-x11)/(x21-x11);
+            dj = (y-y11)/(y12-y11);
+        } else {
+            //x = x(I,J), y = y(I,J)
+            double ddx, ddy;
+            ddx = x11-x21-x12+x22;
+            ddy = y11-y21-y12+y22;
+
+            //calculate coefficients of quadratic eqn ax^2+bx+c=0 where x is di
+            double a,b,c;
+            c = (x-x11)*(y12-y11) - (y-y11)*(x12-x11);
+            b = (x-x11)*ddy - (x21-x11)*(y12-y11)  - ((y-y11)*ddx - (y21-y11)*(x12-x11));
+            a = -((x21-x11)*ddy - (y21-y11)*ddx);
+
+            if (Math.abs(a)<Double.MIN_NORMAL){
+                //equation is degenerate (linear): bx+c=0
+                di = -c/b;
+                logger.info("Quadratic interpolation is degenerate ");
+            } else {
+                double rt = Math.sqrt(b*b-4*a*c);
+                di = (-b+rt)/(2*a);
+        //        logger.info("di positive sign root = "+di);
+                if ((di>1.0)||(di<0.0)) {
+                    di = (-b-rt)/(2*a);
+        //            logger.info("di negative sign root = "+di);
+                }
+            }
+            dj = ((x-x11)-di*(x21-x11))/(di*ddx+(x12-x11));
+    //        logger.info("dj = "+dj);
         }
-        dj = ((x-x11)-di*(x21-x11))/(di*ddx+(x12-x11));
-//        logger.info("dj = "+dj);
         
         grdPos[0] = di+Imin;
         grdPos[1] = dj+Jmin;
         return grdPos;
    }
      
-   public static double[] findRoot() {
+    public static double[] findRoot() {
         double[] root = new double[]{0,0};
         return root;
     }
