@@ -29,6 +29,7 @@ import org.geotools.feature.IllegalAttributeException;
 import org.geotools.feature.SchemaException;
 //import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import wts.roms.model.GlobalInfo;
 //import wts.GIS.crs.CRSCreator;
 import wts.roms.model.Interpolator2D;
 import wts.roms.model.ModelGrid2D;
@@ -39,7 +40,7 @@ import wts.roms.model.ModelGrid2D;
  */
 public class ModelGrid2DMapData {
     
-    private Interpolator2D i2d;
+    private GlobalInfo globalInfo;
     
     private FeatureType ftLines;
     private FeatureType ftMask;
@@ -47,16 +48,13 @@ public class ModelGrid2DMapData {
     private GeometryFactory gf;
 //    private GeometryCoordinateSequenceTransformer gcst;//gt2.1+
     private MathTransform mt; //gt2.1-
-
-    /**
-     * Holds value of property grid2D.
-     */
-    private ModelGrid2D grid2D;
     
     /**
      * Creates a new instance of ModelGrid2DMapData
      */
     public ModelGrid2DMapData() throws Exception {        
+        globalInfo = GlobalInfo.getInstance();
+        
         //Create the coordinate transformer--Geotools 2.0/2.1
         GeographicCoordinateSystem nad83 = 
                 CSCreator.createNAD_83();
@@ -126,29 +124,13 @@ public class ModelGrid2DMapData {
 //        MathTransform mt         = CRSCreator.getCRSTransform(nad83,nad83albers);
 //        gcst.setMathTransform(mt);
     }
-    
-    /**
-     * Getter for property grid2D.
-     * @return Value of property grid2D.
-     */
-    public ModelGrid2D getGrid2D() {
-
-        return this.grid2D;
-    }
-
-    /**
-     * Setter for property grid2D.
-     * @param grid2D New value of property grid2D.
-     */
-    public void setGrid2D(ModelGrid2D grid2d) {
-        this.grid2D = grid2d;
-        if (i2d==null) i2d = new Interpolator2D(grid2d);
-                else   i2d.setGrid(grid2d);
-    }
 
     /**
      * Getter for property featureCollection.
      * @return Value of property featureCollection.
+     * @throws org.geotools.feature.SchemaException
+     * @throws org.geotools.feature.IllegalAttributeException
+     * @throws org.opengis.referencing.operation.TransformException
      */
     public FeatureCollection getGridLines() 
             throws SchemaException,IllegalAttributeException, TransformException {
@@ -157,13 +139,19 @@ public class ModelGrid2DMapData {
 
     /**
      * Getter for property featureCollection.
+     * @param spc - grid interval to output
      * @return Value of property featureCollection.
+     * @throws org.geotools.feature.SchemaException
+     * @throws org.geotools.feature.IllegalAttributeException
+     * @throws org.opengis.referencing.operation.TransformException
      */
     public FeatureCollection getGridLines(int spc) 
             throws SchemaException, IllegalAttributeException, TransformException {
         
         //Now create the features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
+        
+        ModelGrid2D grid2D = globalInfo.getGrid();
         int L = grid2D.getL();
         int M = grid2D.getM();
         double lon,lat;
@@ -183,7 +171,7 @@ public class ModelGrid2DMapData {
                 AlbersNAD83.transformGtoP(srcPts,0,dstPts,0,1);//gt2.1-
 //                c[i] = new Coordinate(lon,lat);//gt2.1+
                 c[i] = new Coordinate(dstPts[0],dstPts[1]);//gt2.1-
-              }
+            }
             ls = gf.createLineString(c);//gt2.1-
 //            ls = gcst.transformLineString(gf.createLineString(c),gf);//gt2.1+
             f = ftLines.create(new Object[] {ls,new Integer(-1),new Integer(j)});
@@ -204,7 +192,7 @@ public class ModelGrid2DMapData {
               }
             ls = gf.createLineString(c);//gt2.1-
 //            ls = gcst.transformLineString(gf.createLineString(c),gf);//gt2.1+
-            f = ftLines.create(new Object[] {ls,new Integer(i),new Integer(-1)});
+            f = ftLines.create(new Object[] {ls, i, -1});
 //            System.out.println("const i line bounds: "+i+f.getBounds().toString());
             fc.add(f);
         }
@@ -222,8 +210,8 @@ public class ModelGrid2DMapData {
             throws SchemaException, IllegalAttributeException, TransformException {       
         //Create the mask features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
-        GeometryFactory gf = new GeometryFactory();
 
+        ModelGrid2D grid2D = globalInfo.getGrid();
         int Lm = grid2D.getLm();
         int Mm = grid2D.getMm();
         double lon,lat;
@@ -257,7 +245,7 @@ public class ModelGrid2DMapData {
                     lr = gf.createLinearRing(c);
                     p = gf.createPolygon(lr,null);
 //                    p = gcst.transformPolygon(gf.createPolygon(lr,null),gf);//gt2.1+
-                    f = ftMask.create(new Object[] {p,""+i+"_"+j,new Integer(i),new Integer(j)});
+                    f = ftMask.create(new Object[] {p,""+i+"_"+j, i, j});
                     fc.add(f);
                 }
             }
@@ -269,13 +257,16 @@ public class ModelGrid2DMapData {
     /**
      * Returns grid bathymetry as a FeatureCollection
      * @return FeatureCollection.
+     * @throws org.geotools.feature.SchemaException
+     * @throws org.geotools.feature.IllegalAttributeException
+     * @throws org.opengis.referencing.operation.TransformException
      */
     public FeatureCollection getBathymetry() 
             throws SchemaException, IllegalAttributeException, TransformException {       
         //Create the mask features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
-        GeometryFactory gf = new GeometryFactory();
 
+        ModelGrid2D grid2D = globalInfo.getGrid();
         int Lm = grid2D.getLm();
         int Mm = grid2D.getMm();
         double lon,lat;
@@ -307,7 +298,7 @@ public class ModelGrid2DMapData {
                         lr = gf.createLinearRing(c);
                         p = gf.createPolygon(lr,null);
     //                    p = gcst.transformPolygon(gf.createPolygon(lr,null),gf);//gt2.1+
-                        f = ftBathym.create(new Object[] {p,""+i+"_"+j,new Integer(i),new Integer(j),new Double(bathym)});
+                        f = ftBathym.create(new Object[] {p,""+i+"_"+j, i, j, bathym});
                         fc.add(f);
                     }
                 }
@@ -327,8 +318,8 @@ public class ModelGrid2DMapData {
     public double interpolateBathymetricDepth(double lon, double lat) {
 //        lon = PrimeMeridian.adjustToROMSlon(lon);
         //now compute location in grid coordinates
-        double[] posIJ = grid2D.computeIJfromLL(lat,lon);
-        return i2d.interpolateBathymetricDepth(posIJ);
+        double[] posIJ = globalInfo.getGrid().computeIJfromLL(lat,lon);
+        return globalInfo.getInterpolator().interpolateBathymetricDepth(posIJ);
     }
     
     /**
@@ -339,7 +330,7 @@ public class ModelGrid2DMapData {
      *@return - bathymetric depth (d > 0)
      */
     public double interpolateBathymetricDepth(double[] posIJ) {
-        return i2d.interpolateBathymetricDepth(posIJ);
+        return globalInfo.getInterpolator().interpolateBathymetricDepth(posIJ);
     }
     
     /**
@@ -348,6 +339,6 @@ public class ModelGrid2DMapData {
      * @return 
      */
     public boolean isOnLand(double[] pos){
-        return grid2D.isOnLand(pos);
+        return globalInfo.getGrid().isOnLand(pos);
     }
 }

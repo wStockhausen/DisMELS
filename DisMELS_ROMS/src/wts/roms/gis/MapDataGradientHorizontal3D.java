@@ -14,7 +14,6 @@ import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.logging.Logger;
 import org.geotools.cs.GeographicCoordinateSystem;
@@ -38,19 +37,19 @@ import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.ModelData;
-import wts.roms.model.ModelTypes;
+import wts.roms.model.ModelGrid3D;
 
 /**
  *
  * @author William Stockhausen
  */
-public class MapDataGradientHorizontal extends AbstractMapDataScalar implements MapDataVectorInterface {
+public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D implements MapDataInterfaceVector3D {
     
    protected ModelData field  = null;
     /** style used to create and visualize vector field */
     private VectorStyle style = null;
     /** logger for the class */
-    private static final Logger logger = Logger.getLogger(MapDataVector.class.getName());
+    private static final Logger logger = Logger.getLogger(MapDataVector3D.class.getName());
 
     /**
      * Constructor for the scalar field encapsulated in a ModelData instance.
@@ -61,33 +60,12 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
      *
      * @throws java.lang.Exception
      */
-    public MapDataGradientHorizontal(ModelData md, Interpolator3D i3d, DateTime date) throws Exception {
+    public MapDataGradientHorizontal3D(ModelData md, Interpolator3D i3d, DateTime date) throws Exception {
+        super();
         this.date = date;
         this.field = md;
         this.i3d   = i3d;
-        this.grid  = i3d.getGrid();
-        this.mask  = grid.getGridMask(md.getName());
-        this.fc    = FeatureCollections.newCollection();
-        initialize();
-    }
-
-    /**
-     * Constructor for one of the scalar fields encapsulated in a PhysicalEnvironment
-     * instance.  The Interpolator3D instance must encapsulate the PhysicalEnvironment
-     * instance.
-     *
-     * @param fieldName - String representation of field name
-     * @param i3d       - Interpolator3D instance containing a PhysicalEnvironment instance encapsulating the field
-     * @param date - a DateTime instance of the time corresponding to the data
-     *
-     * @throws java.lang.Exception
-     */
-    public MapDataGradientHorizontal(String fieldName, Interpolator3D i3d, DateTime date) throws Exception {
-        this.date = date;
-        this.field = i3d.getPhysicalEnvironment().getField(fieldName);
-        this.i3d   = i3d;
-        this.grid  = i3d.getGrid();
-        this.mask  = grid.getGridMask(fieldName);
+        this.mask  = romsGI.getGrid().getGridMask(md.getName());
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -186,67 +164,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
                                 c[1].y+amag*Math.sin(aVal-aa));
         return c;
     }
-
-    /**
-     * Creates and returns a FeatureCollection of the horizontal gradient 
-     * for the 2D field.
-     * 
-     * @return FeatureCollection.
-     */
-    @Override
-    public FeatureCollection createFeatureCollection()
-            throws SchemaException, IllegalAttributeException, TransformException {
-        //@TODO: implement horizontal grdaient calculations
-        gf = new GeometryFactory();
-
-        int Lm = grid.getLm();
-        int Mm = grid.getMm();
-        double lon,lat;
-        double[] srcPts = new double[2];//gt2.1-
-        double[] dstPts = new double[2];//gt2.1-
-        Coordinate[] c;
-        LineString ls;
-        Feature f;
-        double[] grad; double sVal; double aVal; double rVal;
-        double aa   = Math.toRadians(180-style.getArrowheadAngle());
-        double[] pos = new double[2];
-        //need to create a line feature that creates the vector shape
-        double stride = style.getStride();
-        for (double j=Math.max(1, stride);j<=Mm;j=j+stride) {//TODO: make sure indices are correct!
-            for (double i=Math.max(1,stride);i<=Lm;i=i+stride) {
-                if (grid.getMask_RHO((int)i,(int)j)>0.0) {
-                    pos[0] = i; pos[1] = j;
-                    lon = PrimeMeridian.adjustToGISlon(i3d.interpolateLon(pos));
-                    lat = i3d.interpolateLat(pos);
-                    grad = i3d.calcHorizGradient(pos, field, mask, Interpolator3D.INTERP_VAL);
-                    sVal  = Math.sqrt(grad[0]*grad[0]+grad[1]*grad[1]);//magnitude
-                    rVal = i3d.interpolateValue(pos, "angle", null, Interpolator3D.INTERP_VAL);//angle between xi axis & east in radians
-                    //System.out.println("rVal = "+Math.toDegrees(rVal));
-                    if (!isFinite(sVal)) {
-                        sVal = 0.0;
-                        aVal = rVal;
-                    } else {
-                        aVal = Math.atan2(grad[1], grad[0])+rVal;//CCW angle in radians from east (if rVal interpreted corrctly)
-                    }
-                    srcPts[0] = lon;
-                    srcPts[1] = lat;
-                    AlbersNAD83.transformGtoP(srcPts,0,dstPts,0,1);//gt2.1-
-                    c = createArrow(sVal,aVal,dstPts,aa);
-                    if (c[0]!=null) {
-                        ls = gf.createLineString(c);
-                        f = ft.create(new Object[] {ls,""+(int)i+"_"+(int)j,new Double(lat),new Double(lon),
-                                new Double(sVal), new Double(Math.toDegrees(aVal))});
-                        fc.add(f);
-                    }
-                }
-            }
-        }
-        double[] mm = FeatureCollectionUtilities.findMinMax("magnitude",fc);
-        min = mm[0];
-        max = mm[1];
-        return fc;
-    }
-
+    
     /**
      * Creates and returns a FeatureCollection for the horizontal gradient of a 
      * 3D field sliced at vertical index k.
@@ -255,9 +173,8 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
     @Override
     public FeatureCollection createFeatureCollection(int k)
             throws SchemaException, IllegalAttributeException, TransformException {       
-        //@TODO: implement horizontal grdaient calculations
-        gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -293,8 +210,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
                     c = createArrow(sVal,aVal,dstPts,aa);
                     if (c[0]!=null) {
                         ls = gf.createLineString(c);
-                        f = ft.create(new Object[] {ls,""+(int)i+"_"+(int)j,new Double(lat),new Double(lon),
-                                new Double(sVal), new Double(Math.toDegrees(aVal))});
+                        f = ft.create(new Object[] {ls,""+(int)i+"_"+(int)j, lat, lon, sVal, Math.toDegrees(aVal)});
                         fc.add(f);
                     }
                 }
@@ -316,9 +232,8 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
     @Override
     public FeatureCollection createFeatureCollection(double z)
             throws SchemaException, IllegalAttributeException, TransformException {
-        //@TODO: implement horizontal grdaient calculations
-        gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -357,8 +272,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
                             c = createArrow(sVal,aVal,dstPts,aa);
                             if (c[0]!=null) {
                                 ls = gf.createLineString(c);
-                                f = ft.create(new Object[] {ls,""+(int)i+"_"+(int)j,new Double(lat),new Double(lon),
-                                        new Double(sVal), new Double(Math.toDegrees(aVal))});
+                                f = ft.create(new Object[] {ls,""+(int)i+"_"+(int)j, lat, lon, sVal, Math.toDegrees(aVal)});
                                 fc.add(f);
                             }
                         }
@@ -399,9 +313,8 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
         aTypes[idx++] = AttributeTypeFactory.newAttributeType("angle",
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,"uv");
-        //Create the mask features and add them to the feature collection
-        gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -437,13 +350,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
                     if (c!=null) {
                         nf++;
                         pt = gf.createPoint(c);
-                        f = ftp.create(new Object[] {
-                                        pt,
-                                        sDate,
-                                        new Double(lat),
-                                        new Double(lon),
-                                        new Double(sVal),
-                                        new Double(Math.toDegrees(aVal))});
+                        f = ftp.create(new Object[] {pt, sDate, lat, lon, sVal, Math.toDegrees(aVal)});
                         fcp.add(f);
                     }
                 }
@@ -484,6 +391,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
 
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -519,9 +427,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
                         f = ftp.create(new Object[] {
                                 pt,
                                 sDate,
-                                kSlice,
-                                new Double(sVal),
-                                new Double(Math.toDegrees(aVal))});
+                                kSlice, sVal, Math.toDegrees(aVal)});
                         fcp.add(f);
                     }
                 }
@@ -564,6 +470,7 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
 
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -616,58 +523,6 @@ public class MapDataGradientHorizontal extends AbstractMapDataScalar implements 
         }
         System.out.println("Created "+nf+" features.");
         return fcp;
-    }
-
-    /**
-     * Exports the internal FeatureCollection to the given shapefile.
-     * 
-     * @param shpFile
-     * @throws MalformedURLException
-     * @throws IOException 
-     */
-    @Override
-    public void exportFeatureCollection(String shpFile) throws MalformedURLException, IOException {
-        if (fc!=null) {
-            ShapefileCreator sc = new ShapefileCreator();
-            URI uri = (new File(shpFile)).toURI();
-            sc.setShapefileURL(uri.toURL());
-            sc.createShapefile(fc);
-        }
-    }
-
-    /**
-     * Exports the horizontal gradient of the 2d field to a point shapefile.
-     * Shapefile fields are date (as String), magnitude, and angle.
-     *
-     * @param shpFile - String;  name of shapefile to export to
-     * @param add     - boolean; flag to create new (false) or add to existing (true) shapefile
-     *
-     * @throws java.net.MalformedURLException
-     * @throws java.io.IOException
-     * @throws org.geotools.factory.FactoryConfigurationError
-     * @throws org.geotools.feature.SchemaException
-     * @throws org.geotools.feature.IllegalAttributeException
-     * @throws org.opengis.referencing.operation.TransformException
-     */
-    @Override
-    public void exportToShapefile(String shpFile,boolean add)
-            throws MalformedURLException, IOException, FactoryConfigurationError, SchemaException,
-                   IllegalAttributeException, TransformException {
-        URL url = (new File(shpFile)).toURI().toURL();
-        //Create feature type for vector map data
-        FeatureCollection fcp = createFeatureCollection1();
-
-        if (!fcp.isEmpty()) {
-            ShapefileCreator sc = new ShapefileCreator();
-            sc.setShapefileURL(url);
-            if (add) {
-                sc.addToShapefile(fcp);
-            } else {
-                sc.createShapefile(fcp);
-            }
-        } else {
-            System.out.println("FeatureCollection was empty!");
-        }
     }
 
     /**

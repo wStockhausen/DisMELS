@@ -58,6 +58,7 @@ public class LagrangianParticleTracker {
      */
     public LagrangianParticleTracker(Interpolator3D i3dp) {
         i3d = i3dp;
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid();
         
         cff1p = 8.0/3.0;
         cff2p = 4.0/3.0;
@@ -66,9 +67,9 @@ public class LagrangianParticleTracker {
         cff3c = 3.0/8.0;
         cff4c = 6.0/8.0;
            
-        L = i3d.grid.getL();
-        M = i3d.grid.getM();
-        N = i3d.grid.getN();
+        L = grid.getL();
+        M = grid.getM();
+        N = grid.getN();
         ixgrd = LagrangianParticle.IXGRD;
         iygrd = LagrangianParticle.IYGRD;
         izgrd = LagrangianParticle.IZGRD;
@@ -254,7 +255,7 @@ public class LagrangianParticleTracker {
 
         //Interpolate "slopes" at corrected locations
         for (int i=0;i<3;i++) pos[i] = track[ixgrd+i][np1];
-        if (i3d.getGrid().isOnLand(pos)){
+        if (GlobalInfo.getInstance().getGrid().isOnLand(pos)){
             //set position to edge of previous ocean cell
             double dx = track[ixgrd][np1]-track[ixgrd][n];
             if ((dx>0) && (Math.round(track[ixgrd][n])<Math.round(track[ixgrd][np1]))){

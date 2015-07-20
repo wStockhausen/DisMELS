@@ -28,8 +28,6 @@ import ucar.nc2.dataset.NetcdfDataset;
  */
 public class ModelGrid2D {
     
-    /** */
-    protected final CriticalGrid2DVariablesInfo cvi;
     /** map of all ModelData fields */
     protected final HashMap<String,ModelData> mdMap = new HashMap<>(40);
     /** map of all MaskData fields */
@@ -58,22 +56,23 @@ public class ModelGrid2D {
     /** mask fields */
     MaskData mask_rho, mask_psi, mask_u, mask_v;
     
-    /** Creates a new instance of Grid */
-    public ModelGrid2D() {
-        cvi = GlobalInfo.getInstance().getCriticalGrid2DVariablesInfo();
-        initialize();
-    }
-    
-    public ModelGrid2D(String fn) {
-        cvi = GlobalInfo.getInstance().getCriticalGrid2DVariablesInfo();
+    /**
+     * Create model grid object based on file.
+     * @param fn - filename for ROMS grid.
+     */
+    ModelGrid2D(String fn) {
         initialize();
         if (isGrid(fn)) {
             setDataset(fn);
         }
     }
     
-    public ModelGrid2D(ucar.nc2.dataset.NetcdfDataset nds) {
-        cvi = GlobalInfo.getInstance().getCriticalGrid2DVariablesInfo();
+    /**
+     * Create model grid object based on netcdf dataset.
+     * 
+     * @param nds - the netcdf dataset representing the ROMS grid
+     */
+    ModelGrid2D(ucar.nc2.dataset.NetcdfDataset nds) {
         initialize();
         if (isGrid(nds)) {
             setDataset(nds);
@@ -107,7 +106,7 @@ public class ModelGrid2D {
             if (cvi.isSpatialField()) mdMap.put(key,null);//additional field
         }
         
-        //create mkMap
+        //create mask map (mkMap)
         mkMap.put("mask_rho",null);
         mkMap.put("mask_psi",null);
         mkMap.put("mask_u",null);
@@ -160,7 +159,8 @@ public class ModelGrid2D {
     }
     
     private void extractVariables() throws IOException {
-        Variable sph = nr.findVariable(cvi.getNameInROMSDataset("spherical"));
+        CriticalGrid2DVariablesInfo cvis = GlobalInfo.getInstance().getCriticalGrid2DVariablesInfo();
+        Variable sph = nr.findVariable(cvis.getNameInROMSDataset("spherical"));
         if (sph!=null) {
             ArrayChar ac = (ArrayChar) sph.read();
             Index ix = ac.getIndex();
@@ -172,42 +172,42 @@ public class ModelGrid2D {
             spherical = false;
         }
         
-        xl = readScalarDouble(cvi.getNameInROMSDataset("xl"));
-        el = readScalarDouble(cvi.getNameInROMSDataset("el"));
+        xl = readScalarDouble(cvis.getNameInROMSDataset("xl"));
+        el = readScalarDouble(cvis.getNameInROMSDataset("el"));
 
-        h = nr.getModelData(cvi.getNameInROMSDataset("h"),"h");
-        pm = nr.getModelData(cvi.getNameInROMSDataset("pm"),"pm");
-        pn = nr.getModelData(cvi.getNameInROMSDataset("pn"),"pn");
-        dmde = nr.getModelData(cvi.getNameInROMSDataset("dmde"),"dmde");
-        dndx = nr.getModelData(cvi.getNameInROMSDataset("dndx"),"dndx");
-        angle = nr.getModelData(cvi.getNameInROMSDataset("angle"),"angle");
+        h = nr.getModelData(cvis.getNameInROMSDataset("h"),"h");
+        pm = nr.getModelData(cvis.getNameInROMSDataset("pm"),"pm");
+        pn = nr.getModelData(cvis.getNameInROMSDataset("pn"),"pn");
+        dmde = nr.getModelData(cvis.getNameInROMSDataset("dmde"),"dmde");
+        dndx = nr.getModelData(cvis.getNameInROMSDataset("dndx"),"dndx");
+        angle = nr.getModelData(cvis.getNameInROMSDataset("angle"),"angle");
         
         int[] shp = h.getShape();
         L = shp[1]-1; //max index in xi direction
         M = shp[0]-1; //max index in eta direction
         
-        mask_rho = nr.getMaskData(cvi.getNameInROMSDataset("mask_rho"),"mask_rho");
-        mask_psi = nr.getMaskData(cvi.getNameInROMSDataset("mask_psi"),"mask_psi");
-        mask_u   = nr.getMaskData(cvi.getNameInROMSDataset("mask_u"),"mask_u");
-        mask_v   = nr.getMaskData(cvi.getNameInROMSDataset("mask_v"),"mask_v");
+        mask_rho = nr.getMaskData(cvis.getNameInROMSDataset("mask_rho"),"mask_rho");
+        mask_psi = nr.getMaskData(cvis.getNameInROMSDataset("mask_psi"),"mask_psi");
+        mask_u   = nr.getMaskData(cvis.getNameInROMSDataset("mask_u"),"mask_u");
+        mask_v   = nr.getMaskData(cvis.getNameInROMSDataset("mask_v"),"mask_v");
         
-        x_rho = nr.getModelData(cvi.getNameInROMSDataset("x_rho"),"x_rho");
-        x_psi = nr.getModelData(cvi.getNameInROMSDataset("x_psi"),"x_psi");
-        x_u   = nr.getModelData(cvi.getNameInROMSDataset("x_u"),"x_u");
-        x_v   = nr.getModelData(cvi.getNameInROMSDataset("x_v"),"x_v");
-        y_rho = nr.getModelData(cvi.getNameInROMSDataset("y_rho"),"y_rho");
-        y_psi = nr.getModelData(cvi.getNameInROMSDataset("y_psi"),"y_psi");
-        y_u   = nr.getModelData(cvi.getNameInROMSDataset("y_u"),"y_u");
-        y_v   = nr.getModelData(cvi.getNameInROMSDataset("y_v"),"y_v");
+        x_rho = nr.getModelData(cvis.getNameInROMSDataset("x_rho"),"x_rho");
+        x_psi = nr.getModelData(cvis.getNameInROMSDataset("x_psi"),"x_psi");
+        x_u   = nr.getModelData(cvis.getNameInROMSDataset("x_u"),"x_u");
+        x_v   = nr.getModelData(cvis.getNameInROMSDataset("x_v"),"x_v");
+        y_rho = nr.getModelData(cvis.getNameInROMSDataset("y_rho"),"y_rho");
+        y_psi = nr.getModelData(cvis.getNameInROMSDataset("y_psi"),"y_psi");
+        y_u   = nr.getModelData(cvis.getNameInROMSDataset("y_u"),"y_u");
+        y_v   = nr.getModelData(cvis.getNameInROMSDataset("y_v"),"y_v");
         
-        lat_rho = nr.getModelData(cvi.getNameInROMSDataset("lat_rho"),"lat_rho");
-        lat_psi = nr.getModelData(cvi.getNameInROMSDataset("lat_psi"),"lat_psi");
-        lat_u   = nr.getModelData(cvi.getNameInROMSDataset("lat_u"),"lat_u");
-        lat_v   = nr.getModelData(cvi.getNameInROMSDataset("lat_v"),"lat_v");            
-        lon_rho = nr.getModelData(cvi.getNameInROMSDataset("lon_rho"),"lon_rho");
-        lon_psi = nr.getModelData(cvi.getNameInROMSDataset("lon_psi"),"lon_psi");
-        lon_u   = nr.getModelData(cvi.getNameInROMSDataset("lon_u"),"lon_u");
-        lon_v   = nr.getModelData(cvi.getNameInROMSDataset("lon_v"),"lon_v");            
+        lat_rho = nr.getModelData(cvis.getNameInROMSDataset("lat_rho"),"lat_rho");
+        lat_psi = nr.getModelData(cvis.getNameInROMSDataset("lat_psi"),"lat_psi");
+        lat_u   = nr.getModelData(cvis.getNameInROMSDataset("lat_u"),"lat_u");
+        lat_v   = nr.getModelData(cvis.getNameInROMSDataset("lat_v"),"lat_v");            
+        lon_rho = nr.getModelData(cvis.getNameInROMSDataset("lon_rho"),"lon_rho");
+        lon_psi = nr.getModelData(cvis.getNameInROMSDataset("lon_psi"),"lon_psi");
+        lon_u   = nr.getModelData(cvis.getNameInROMSDataset("lon_u"),"lon_u");
+        lon_v   = nr.getModelData(cvis.getNameInROMSDataset("lon_v"),"lon_v");            
         if (lat_rho!=null) spherical=true;
         
         Iterator<String> keys = mdMap.keySet().iterator();

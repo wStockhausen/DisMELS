@@ -17,13 +17,18 @@ import java.util.logging.Logger;
  */
 public class Interpolator2D {
     
+    /** flag to turn on debugging info */
     public static boolean debug = false;
+    /** flag to interpolate values */
     public static int INTERP_VAL   = 0;
+    /** flag to interpolate slopes */
     public static int INTERP_SLOPE = 1;
 
-    ModelGrid2D grid;
+    GlobalInfo globalInfo;
+    
     ModelData md;
     ModelData mask;
+    
     int[]  shp;
     double v, xPos, yPos;
     int    interpType;
@@ -41,11 +46,20 @@ public class Interpolator2D {
     /** logger for class */
     private static final Logger logger = Logger.getLogger(Interpolator2D.class.getName());
     
-    /** Creates a new instance of Interpolator2D 
-     * @param grid2D 
+    /** 
+     * Creates a new instance of Interpolator2D 
      */
-    public Interpolator2D(ModelGrid2D grid2D) {
-        grid = grid2D;
+    protected Interpolator2D() {
+        globalInfo = GlobalInfo.getInstance();
+    }
+    
+    /**
+     * Returns the model grid (via the GlobalInfo).
+     * 
+     * @return -- ModelGrid2D object
+     */
+    public ModelGrid2D getGrid(){
+        return globalInfo.getGrid();
     }
     
     protected void initializeParameters() {
@@ -106,7 +120,7 @@ public class Interpolator2D {
 
     /**
      * Interpolates a 2D model field (with appropriate mask) to the given position.
-     * @param -- pos position vector [x,y] in grid units (0<x<L,0<y<M,0<z<N)
+     * @param pos -- position vector [x,y] in grid units (0<x<L,0<y<M,0<z<N)
      * @param modelField -- name of model field to interpolate
      * @param interpType -- flag to interpolate values directly (=INTERP_VAL) or 
      *                      to interpolate "slopes" (=INTERP_SLOPE)
@@ -120,9 +134,9 @@ public class Interpolator2D {
     }
     /**
      * Interpolates a 2D model field (with appropriate mask) to the given position.
-     * @param -- pos position vector [x,y] in grid units (0<x<L,0<y<M,0<z<N)
+     * @param pos -- position vector [x,y] in grid units (0<x<L,0<y<M,0<z<N)
      * @param modelField -- name of model field to interpolate
-     * @param modelField -- name of mask field for interpolation
+     * @param maskField -- name of mask field for interpolation
      * @param interpType -- flag to interpolate values directly (=INTERP_VAL) or 
      *                      to interpolate "slopes" (=INTERP_SLOPE)
      * @return value of field at given position or NaN
@@ -131,6 +145,7 @@ public class Interpolator2D {
                                      String modelField, 
                                      String maskField,
                                      int interpType) throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         ModelData mdp = grid.getGridField(modelField);
         MaskData  mkp = grid.getGridMask(maskField);
                     
@@ -144,6 +159,7 @@ public class Interpolator2D {
      * @param pos position vector [x,y] in grid units (0<x<L,0<y<M)
      * @param mdp model field to interpolate
      * @param maskp mask for field
+     * @param interpType
      * @return value of field at given position
      */
     public double interpolateValue2D(double[] pos, 
@@ -237,6 +253,7 @@ public class Interpolator2D {
      * @throws ArrayIndexOutOfBoundsException
      */
     private void interpOnUCells() throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         int Iu = (int) Math.floor(xPos+0.5);
         int Ju = (int) Math.floor(yPos);
 
@@ -293,6 +310,7 @@ public class Interpolator2D {
     }
 
     private void interpOnVCells() throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         int Iv = (int) Math.floor(xPos);
         int Jv = (int) Math.floor(yPos+0.5);
         
@@ -356,6 +374,7 @@ public class Interpolator2D {
      * @return interpolated bathymetric depth.
      */
     public double interpolateBathymetricDepth(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         v = interpolateValue2D(pos,grid.h,null,INTERP_VAL);
         if (Double.isNaN(v)) {
             throw new java.lang.UnknownError("Found a NaN in interpolateBathymetricDepth "+pos[0]+", "+pos[1]+", "+pos[2]);
@@ -371,6 +390,7 @@ public class Interpolator2D {
      */
     public double interpolateLat(double[] pos) throws ArrayIndexOutOfBoundsException {
         v = Double.NaN;
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         if (grid.isSpherical()) v = interpolateValue2D(pos,grid.lat_rho,null,INTERP_VAL);
         if (Double.isNaN(v)) {
             throw new java.lang.UnknownError("Found a NaN in interpolateLat "+pos[0]+", "+pos[1]+", "+pos[2]);
@@ -388,6 +408,7 @@ public class Interpolator2D {
      */
     public double interpolateLon(double[] pos) throws ArrayIndexOutOfBoundsException {
         v = Double.NaN;
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         if (grid.isSpherical()) v = interpolateValue2D(pos,grid.lon_rho,null,INTERP_VAL);
         if (v>180) v=v-360;
         if (Double.isNaN(v)) {
@@ -403,6 +424,7 @@ public class Interpolator2D {
      * @param pos -- position vector in grid units (0<I<L,0<J<M)
      */
     public double interpolateX(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         v = interpolateValue2D(pos,grid.x_rho,null,INTERP_VAL);
         return v;
     }
@@ -414,18 +436,9 @@ public class Interpolator2D {
      * @param pos -- position vector in grid units (0<I<L,0<J<M)
      */
     public double interpolateY(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         v = interpolateValue2D(pos,grid.y_rho,null,INTERP_VAL);
         return v;
-    }
-    
-    /**
-     * Sets the ModelGrid2D object used to define the 2d geonetry 
-     * for interpolations.
-     *
-     * @param grid2D -- ModelGrid2D object to set
-     */
-    public void setGrid(ModelGrid2D grid2D) {
-        grid = grid2D;
     }
     
     /**
@@ -467,6 +480,7 @@ public class Interpolator2D {
      * @param pos position vector in grid units (0<x<L,0<y<M,0<z<N)
      */
     public double calcUscale(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         int Iu = (int) Math.floor(pos[0]+0.5);
         int Ju = (int) Math.floor(pos[1]);
 
@@ -508,6 +522,7 @@ public class Interpolator2D {
      * @param pos position vector in grid units (0<x<L,0<y<M,0<z<N)
      */
     public double calcVscale(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         int Iv = (int) Math.floor(pos[0]);
         int Jv = (int) Math.floor(pos[1]+0.5);
         
@@ -560,10 +575,12 @@ public class Interpolator2D {
      * 
      * @param pos
      * @param modelField
+     * @param maskField
      * @param interpType
      * @return 
      */
     public double[] calcHorizGradient(double[] pos, String modelField, String maskField, int interpType){
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
         ModelData mdp = grid.getGridField(modelField);
         MaskData  mkp = grid.getGridMask(maskField);
                     
@@ -576,10 +593,12 @@ public class Interpolator2D {
      * 
      * @param pos
      * @param modelField
+     * @param maskField
      * @param interpType
      * @return 
      */
     public double[] calcHorizGradient(double[] pos, ModelData modelField, ModelData maskField, int interpType){
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid();
 //        double m00 = interpolateValue2D(new double[]{pos[0],    pos[1]},     modelField, maskField, interpType);
         double mp0 = interpolateValue2D(new double[]{pos[0]+0.1,pos[1]},     modelField, maskField, interpType);
         double mm0 = interpolateValue2D(new double[]{pos[0]-0.1,pos[1]},     modelField, maskField, interpType);

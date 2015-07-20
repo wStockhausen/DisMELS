@@ -21,9 +21,6 @@ public class ModelGrid3D extends ModelGrid2D {
     public static final String VAR_sc_w = "sc_w";
     public static final String VAR_Cs_w = "Cs_w";
     
-    /** info for critical ROMS 3D grid variables */
-    protected final CriticalModelVariablesInfo cmvi; 
-                
     /** number of vertical layers */
     protected int N;
     /** critical depth parameter */
@@ -32,13 +29,10 @@ public class ModelGrid3D extends ModelGrid2D {
     protected ModelData sc_w;
     /** vertical grid scaling parameters */
     protected ModelData Cs_w;
-        
-   /** Creates a new instance of ModelGrid3D */
-    public ModelGrid3D() {
-        super();
-        cmvi = GlobalInfo.getInstance().getCriticalModelVariablesInfo();
-    }
     
+    /** flag indicating whether constant fields have been read */
+    private boolean hasVertInfo = false;
+        
     /**
      * Creates a new instance of ModelGrid3D based on the input filename, which
      * should be a ROMS model grid file.  Note that to complete creation of a
@@ -50,7 +44,6 @@ public class ModelGrid3D extends ModelGrid2D {
      */
     public ModelGrid3D(String fn) {
         super(fn);
-        cmvi = GlobalInfo.getInstance().getCriticalModelVariablesInfo();
     }
     
     /**
@@ -60,11 +53,10 @@ public class ModelGrid3D extends ModelGrid2D {
      * method "readConstantFields" needs to be called on a NetcdfReader 
      * instance that points to a valid ROMS dataset (as distinct from a grid).
      * 
-     * @param fn - filename for the ROMS model grid
+     * @param nds
      */
     public ModelGrid3D(ucar.nc2.dataset.NetcdfDataset nds) {
         super(nds);
-        cmvi = GlobalInfo.getInstance().getCriticalModelVariablesInfo();
     }
     
     /**
@@ -73,7 +65,8 @@ public class ModelGrid3D extends ModelGrid2D {
      *
      *@param bd--bathymetric depth (>0, m)
      *@param zeta--sea surface height (m)
-     *@returns double[] with layer z's, starting from the bottom (z<0).
+     * 
+     *@return double[] with layer z's, starting from the bottom (z<0).
      */
     public double[] computeLayerZs(double bd, double zeta) {
         double cff_w, cff1_w,hinv,zw0;
@@ -108,16 +101,26 @@ public class ModelGrid3D extends ModelGrid2D {
      * @throws IOException 
      */
     public void readConstantFields(NetcdfReader nR) throws IOException {
+        hasVertInfo = false;//reset to false
+        CriticalModelVariablesInfo cmvis = GlobalInfo.getInstance().getCriticalModelVariablesInfo();
         try {
-            hc    = nR.readScalarDouble(cmvi.getNameInROMSDataset(VAR_hc));
-            Cs_w  = nR.getModelData(cmvi.getNameInROMSDataset(VAR_Cs_w),VAR_Cs_w);
-            sc_w  = nR.getModelData(cmvi.getNameInROMSDataset(VAR_sc_w),VAR_sc_w);
+            hc    = nR.readScalarDouble(cmvis.getNameInROMSDataset(VAR_hc));
+            Cs_w  = nR.getModelData(cmvis.getNameInROMSDataset(VAR_Cs_w),VAR_Cs_w);
+            sc_w  = nR.getModelData(cmvis.getNameInROMSDataset(VAR_sc_w),VAR_sc_w);
             
             N = sc_w.getShape()[0]-1;
+            hasVertInfo = true;
         } catch (IOException ex) {
             System.out.println("Error reading constant fields");
             throw ex;
         }
     }
     
+    /**
+     * Returns whether the object has read the vertical grid information.
+     * @return 
+     */
+    public boolean hasVerticalGridInfo(){
+        return hasVertInfo;
+    }
 }

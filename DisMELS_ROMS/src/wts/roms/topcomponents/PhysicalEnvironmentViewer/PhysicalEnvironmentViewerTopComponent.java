@@ -36,9 +36,14 @@ import org.openide.windows.WindowManager;
 import wts.GIS.styling.ColorBarStyle;
 import wts.GIS.styling.VectorStyle;
 import wts.models.utilities.CalendarIF;
-import wts.roms.gis.MapDataGradientHorizontal;
-import wts.roms.gis.MapDataScalar;
-import wts.roms.gis.MapDataVector;
+import wts.roms.gis.MapDataGradientHorizontal2D;
+import wts.roms.gis.MapDataScalar2D;
+import wts.roms.gis.MapDataGradientHorizontal3D;
+import wts.roms.gis.MapDataScalar3D;
+import wts.roms.gis.MapDataInterfaceScalarBase;
+import wts.roms.gis.MapDataInterfaceVectorBase;
+import wts.roms.gis.MapDataVector2D;
+import wts.roms.gis.MapDataVector3D;
 import wts.roms.model.*;
 import wts.roms.topcomponents.MapViewer.MapViewerTopComponent;
 
@@ -104,26 +109,22 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private boolean doEvents = true;//flag indicates whether to pay attention to events
 
+    /** singleton instance of GlobalInfo */
+    private GlobalInfo romsGI;
+
     private NetcdfReader netcdfReader = null;
     private CalendarIF calendar       = null;
-    private ModelGrid3D grid3D        = null;
     private PhysicalEnvironment pe    = null;
     private Interpolator3D i3d        = null;
 
-    private MapDataScalar smd         = null;
     private ColorBarStyle scalarStyle = null;
     private MapLayer scalarLayer      = null;
 
-    private MapDataVector vmd       = null;
     private VectorStyle vectorStyle = null;
     private MapLayer vectorLayer    = null;
 
-    private MapDataGradientHorizontal hgmd = null;
     private VectorStyle     horizGradStyle = null;
     private MapLayer        horizGradLayer = null;
-
-    /** singleton instance of GlobalInfo */
-    private GlobalInfo globalInfo;
     
     /** the singleton instance of the MapViewerTopComponent */
     private MapViewerTopComponent tcMapViewer = null;
@@ -149,8 +150,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void initComponents1() {
         doOnOpen = true;
-        globalInfo = GlobalInfo.getInstance();
-        globalInfo.addPropertyChangeListener(this);
+        romsGI = GlobalInfo.getInstance();
+        romsGI.addPropertyChangeListener(this);
         
         jfbDataset.addFileFilter("nc", "netCDF file");
         sfCustomizer.setVisible(false);//set invisible, initially
@@ -1019,34 +1020,34 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         }
     }//GEN-LAST:event_jfbDatasetActionPerformed
 
-    /**
-     * Loads the 3D model info from the canonical dataset and creates the grid3D
-     * object.
-     */
-    private void load3DInfo(){
-        logger.info("Reading 3D model info");
-        ProgressRunnable<Integer> r = new ProgressRunnable<Integer>(){
-            @Override
-            public Integer run(ProgressHandle handle) {
-                try {
-                    //read grid
-                    grid3D = new ModelGrid3D(globalInfo.getGridFile()); 
-                    //read canonical dataset from netcdf file
-                    netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
-                    calendar = netcdfReader.getCalendar();
-                    grid3D.readConstantFields(netcdfReader);
-                    jfbDataset.setEnabled(true);
-                    validate();
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-                return new Integer(0);
-            }
-
-        };
-        ProgressHandle h = ProgressHandleFactory.createHandle("Reading ROMS 3D model info...");
-        ProgressUtils.showProgressDialogAndRunLater(r, h, false);
-    }
+//    /**
+//     * Loads the 3D model info from the canonical dataset and creates the grid3D
+//     * object.
+//     */
+//    private void load3DInfo(){
+//        logger.info("Reading 3D model info");
+//        ProgressRunnable<Integer> r = new ProgressRunnable<Integer>(){
+//            @Override
+//            public Integer run(ProgressHandle handle) {
+//                try {
+//                    //read grid
+//                    grid3D = new ModelGrid3D(romsGI.getGridFile()); 
+//                    //read canonical dataset from netcdf file
+//                    netcdfReader = new NetcdfReader(romsGI.getCanonicalFile());
+//                    calendar = netcdfReader.getCalendar();
+//                    grid3D.readConstantFields(netcdfReader);
+//                    jfbDataset.setEnabled(true);
+//                    validate();
+//                } catch (IOException ex) {
+//                    Exceptions.printStackTrace(ex);
+//                }
+//                return new Integer(0);
+//            }
+//
+//        };
+//        ProgressHandle h = ProgressHandleFactory.createHandle("Reading ROMS 3D model info...");
+//        ProgressUtils.showProgressDialogAndRunLater(r, h, false);
+//    }
 
     /**
      * Loads the ROMS model dataset specified by jfbDatset.getFilename().
@@ -1059,7 +1060,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 try {
                     //read dataset from netcdf file
                     netcdfReader = new NetcdfReader(jfbDataset.getFilename());
-                    pe = new PhysicalEnvironment(0, netcdfReader, grid3D);
+                    pe = new PhysicalEnvironment(0, netcdfReader, romsGI.getGrid());
                     i3d = new Interpolator3D(pe);
                     setOceanTime(0);
                     setVariables();
@@ -1070,7 +1071,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 } catch (IOException ex) {
                     logger.severe(ex.getMessage());
                 }
-                return new Integer(0);
+                return 0;
             }
 
         };
@@ -1088,7 +1089,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jspTimeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jspTimeStateChanged
         //update the oceantime shown in the text fields 
         //use update() to update map to this time
-        int i = ((Integer) jspTime.getValue()).intValue() - 1;
+        int i = ((Integer) jspTime.getValue()) - 1;
         double ot = netcdfReader.getOceanTime(i);
         calendar.setTimeOffset((long) ot);
         jtfTime.setText(calendar.getDate().getDateTimeString());
@@ -1102,6 +1103,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jcbScalarVarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbScalarVarActionPerformed
         if (doEvents) {
             try {
+                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbScalarVar.getSelectedItem();
                 if (obj instanceof String) {
@@ -1190,6 +1192,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jcbVectorXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVectorXActionPerformed
         if (doEvents) {
             try {
+                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbVectorX.getSelectedItem();
                 if (obj instanceof String) {
@@ -1262,6 +1265,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jcbVectorYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVectorYActionPerformed
         if (doEvents) {
             try {
+                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbVectorY.getSelectedItem();
                 if (obj instanceof String) {
@@ -1354,6 +1358,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jcbHGradFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbHGradFieldActionPerformed
         if (doEvents) {
             try {
+                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbHGradField.getSelectedItem();
                 if (obj instanceof String) {
@@ -1532,7 +1537,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         file_ROMSDataset = String.valueOf(dfnc);
         logger.info("Switching to new netCDF file: "+file_ROMSDataset);
         netcdfReader.setNetcdfDataset(file_ROMSDataset);
-        pe = new PhysicalEnvironment(0,netcdfReader,grid3D);
+        pe = new PhysicalEnvironment(0,netcdfReader,romsGI.getGrid());
         i3d.setPhysicalEnvironment(pe);
         doEvents = false;
         jfbDataset.setFilename(file_ROMSDataset);
@@ -1595,7 +1600,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         logger.info("Switching to new netCDF file: "+file_ROMSDataset);
         netcdfReader.setNetcdfDataset(file_ROMSDataset);
         int nt = netcdfReader.getNumTimeSteps();
-        pe = new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+        pe = new PhysicalEnvironment(nt-1,netcdfReader,romsGI.getGrid());
         i3d.setPhysicalEnvironment(pe);
         doEvents = false;
         jfbDataset.setFilename(file_ROMSDataset);
@@ -1629,36 +1634,50 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             String strHG = (String)jcbHGradField.getSelectedItem();
             CalendarIF cal = netcdfReader.getCalendar();
             cal.setTimeOffset((long)pe.getOceanTime());
-            hgmd = new MapDataGradientHorizontal(strHG,i3d,cal.getDate());
-            logger.info("created hgmd");
+            ModelData md = i3d.getPhysicalEnvironment().getField(strHG);
+            MapDataInterfaceVectorBase hgmd;
             //remove last map layer
             if (horizGradLayer!=null) tcMapViewer.removeGISLayer(horizGradLayer);
             //create new vector style, if required
             boolean wasNull = false;
-            if (horizGradStyle==null){
-                logger.info("Creating a new horizontal gradient style");
-                FeatureType ft = hgmd.getFeatureType();
-                horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
-                hgCustomizer.setObject(horizGradStyle);
-                hgCustomizer.repaint();
-                wasNull = true;
-            }
-            hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
-            logger.info("set style on hgmd");
             //create feature collection
             FeatureCollection fc;
             if (jpHGradDepthSelector.isVisible()) {
                 //ModelData is 3D
+                hgmd = new MapDataGradientHorizontal3D(md,i3d,cal.getDate());
+                logger.info("created hgmd");
+                if (horizGradStyle==null){
+                    logger.info("Creating a new horizontal gradient style");
+                    FeatureType ft = hgmd.getFeatureType();
+                    horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
+                    hgCustomizer.setObject(horizGradStyle);
+                    hgCustomizer.repaint();
+                    wasNull = true;
+                }
+                hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
+                logger.info("set style on hgmd");
                 if (jrbHGradK.isSelected()) {
                     int k = ((Integer)jspHGradK.getValue()).intValue();
-                    fc = hgmd.createFeatureCollection(k);
+                    fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(k);
                 } else {
                     double d = Double.parseDouble(jtfHGradDepth.getText());
-                    fc = hgmd.createFeatureCollection(-d);
+                    fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(-d);
                 }
             } else {
                 //ModelData is 2D
-                fc = hgmd.createFeatureCollection();
+                hgmd = new MapDataGradientHorizontal2D(md,cal.getDate());
+                logger.info("created hgmd");
+                if (horizGradStyle==null){
+                    logger.info("Creating a new horizontal gradient style");
+                    FeatureType ft = hgmd.getFeatureType();
+                    horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
+                    hgCustomizer.setObject(horizGradStyle);
+                    hgCustomizer.repaint();
+                    wasNull = true;
+                }
+                hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
+                logger.info("set style on hgmd");
+                fc = ((MapDataGradientHorizontal2D)hgmd).createFeatureCollection();
             }
             double mx = hgmd.getMax();
             NumberFormat frmt = NumberFormat.getNumberInstance();
@@ -1696,44 +1715,63 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             NumberFormat frmt = NumberFormat.getNumberInstance();
             frmt.setMinimumFractionDigits(0);
             frmt.setMaximumFractionDigits(3);
-            vmd = new MapDataVector(strX,strY,i3d,cal.getDate());
-            logger.info("created vmd");
+            
+            MapDataInterfaceVectorBase vmd;
             //remove last vector map layer
             if (vectorLayer!=null) tcMapViewer.removeGISLayer(vectorLayer);
             //create new vector style, if required
             boolean wasNull = false;
-            if (vectorStyle==null){
-                logger.info("Creating a new vector style");
-                FeatureType ft = vmd.getFeatureType();
-                vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
-                vsCustomizer.setObject(vectorStyle);
-                vsCustomizer.repaint();
-                wasNull = true;
-            } else {
-                if (vectorStyle.mustUpdateStyle()){
-                    logger.info("Updating existing vector style");
-                    vectorStyle.updateStyle();
-                }
-            }
-            vmd.setStyle(vectorStyle);//must set this before creating feature collection
-            logger.info("set style on vmd");
             //create feature collection
             FeatureCollection fc;
             if (jpVectorDepthSelector.isVisible()) {
                 //ModelData is 3D
+                vmd = new MapDataVector3D(strX,strY,i3d,cal.getDate());
+                logger.info("created 3D vmd");
+                if (vectorStyle==null){
+                    logger.info("Creating a new vector style");
+                    FeatureType ft = vmd.getFeatureType();
+                    vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
+                    vsCustomizer.setObject(vectorStyle);
+                    vsCustomizer.repaint();
+                    wasNull = true;
+                } else {
+                    if (vectorStyle.mustUpdateStyle()){
+                        logger.info("Updating existing vector style");
+                        vectorStyle.updateStyle();
+                    }
+                }
+                vmd.setStyle(vectorStyle);//must set this before creating feature collection
+                logger.info("set style on vmd");
                 if (jrbVectorK.isSelected()) {
                     int k = ((Integer)jspVectorK.getValue()).intValue();
                     logger.info("creating vector feature collection for vertical grid "+k);
-                    fc = vmd.createFeatureCollection(k);
+                    fc = ((MapDataVector3D)vmd).createFeatureCollection(k);
                 } else {
                     double d = Double.parseDouble(jtfVectorDepth.getText());
                     logger.info("creating vector feature collection for depth "+d);
-                    fc = vmd.createFeatureCollection(-d);
+                    fc = ((MapDataVector3D)vmd).createFeatureCollection(-d);
                 }
             } else {
                 //ModelData is 2D
+                vmd = new MapDataVector2D(strX,strY,cal.getDate());
+                logger.info("created 2D vmd");
+                if (vectorStyle==null){
+                    logger.info("Creating a new vector style");
+                    FeatureType ft = vmd.getFeatureType();
+                    vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
+                    vsCustomizer.setObject(vectorStyle);
+                    vsCustomizer.repaint();
+                    wasNull = true;
+                } else {
+                    if (vectorStyle.mustUpdateStyle()){
+                        logger.info("Updating existing vector style");
+                        vectorStyle.updateStyle();
+                    }
+                }
+                vmd.setStyle(vectorStyle);//must set this before creating feature collection
+                logger.info("set style on vmd");
                 logger.info("creating 2D vector feature collection");
-                fc = vmd.createFeatureCollection();
+                fc = ((MapDataVector2D)vmd).createFeatureCollection();
             }
             jtfMinVel.setText(frmt.format(vmd.getMin()));
             jtfMaxVel.setText(frmt.format(vmd.getMax()));
@@ -1761,33 +1799,36 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         try {
             //remove last scalar data map layer
             if (scalarLayer!=null) {
-//                scalarStyle = (ColorBarStyle) scalarLayer.getStyle();
                 tcMapViewer.removeGISLayer(scalarLayer);
                 scalarLayer = null;
             }
             String strFld = (String)jcbScalarVar.getSelectedItem();
             CalendarIF cal = netcdfReader.getCalendar();
             cal.setTimeOffset((long)pe.getOceanTime());
-            smd = new MapDataScalar(strFld,i3d,cal.getDate());
             NumberFormat frmt = NumberFormat.getNumberInstance();
             frmt.setMinimumFractionDigits(0);
             frmt.setMaximumFractionDigits(3);
             FeatureCollection fc = null;
+            MapDataInterfaceScalarBase smd;
+            
+            ModelData md = i3d.getPhysicalEnvironment().getField(strFld);
             if (jpScalarDepthSelector.isVisible()) {
+                smd = new MapDataScalar3D(md,i3d,cal.getDate());
                 //ModelData is 3D
                 if (jrbScalarK.isSelected()) {
                     int k = ((Integer)jspScalarK.getValue()).intValue();
                     logger.info("creating scalar feature collection for vertical layer "+k);
-                    fc = smd.createFeatureCollection(k);
+                    fc = ((MapDataScalar3D)smd).createFeatureCollection(k);
                 } else {
                     double d = Double.parseDouble(jtfScalarDepth.getText());
                     logger.info("creating scalar feature collection for depth "+d);
-                    fc = smd.createFeatureCollection(-d);
+                    fc = ((MapDataScalar3D)smd).createFeatureCollection(-d);
                 }
             } else {
                 //ModelData is 2D
                 logger.info("creating 2D scalar feature collection");
-                fc = smd.createFeatureCollection();
+                smd = new MapDataScalar2D(md,cal.getDate());
+                fc = ((MapDataScalar2D)smd).createFeatureCollection();
             }
             jtfScalarMin.setText(frmt.format(smd.getMin()));
             jtfScalarMax.setText(frmt.format(smd.getMax()));
@@ -1917,16 +1958,15 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         
         if (doOnOpen){
             File cdF;
-            if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
-                cdF = new File(globalInfo.getCanonicalFile());
+            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+                cdF = new File(romsGI.getCanonicalFile());
                 setCurrentDirectory(cdF);
-            } else if (!globalInfo.getGridFile().equals(GlobalInfo.PROP_NotSet)){
-                cdF = new File(globalInfo.getGridFile());
+            } else if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
+                cdF = new File(romsGI.getGridFile());
                 setCurrentDirectory(cdF);
             }
 
-            if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
-                load3DInfo();
+            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
                 String f = jfbDataset.getFilename();
                 if ((f!=null)&&(!f.isEmpty())) {
                     loadDataset();
@@ -2011,12 +2051,11 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             jbUpdate.setEnabled(false);
             jbPrev.setEnabled(false);
             jbNext.setEnabled(false);
-            if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
                 if (isOpened()){
                     logger.info("ROMS Canonical file changed--loading 3D info");
-                    File f = new File(globalInfo.getCanonicalFile());
+                    File f = new File(romsGI.getCanonicalFile());
                     setCurrentDirectory(f);
-                    load3DInfo();
                     jfbDataset.setEnabled(true);
                 } else {
                     doOnOpen = true;
@@ -2027,11 +2066,11 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             jbUpdate.setEnabled(false);
             jbPrev.setEnabled(false);
             jbNext.setEnabled(false);
-            if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
                 if (!isOpened()) doOnOpen = true;//don't change directory
-            } else if (!globalInfo.getGridFile().equals(GlobalInfo.PROP_NotSet)){
+            } else if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
                 if (isOpened()){
-                    File f = new File(globalInfo.getGridFile());
+                    File f = new File(romsGI.getGridFile());
                     setCurrentDirectory(f);
                 } else {
                     doOnOpen = true;

@@ -39,6 +39,7 @@ import wts.GIS.shapefile.ShapefileCreator;
 import wts.GIS.styling.VectorStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.ModelGrid3D;
 
@@ -46,8 +47,10 @@ import wts.roms.model.ModelGrid3D;
  *
  * @author William Stockhausen
  */
-public class MapDataVector implements MapDataVectorInterface {
+public class MapDataVector3D implements MapDataInterfaceVector3D {
 
+    GlobalInfo romsGI;
+    
     private DateTime date = null;
         
     private GeometryFactory gf   = null;
@@ -61,8 +64,6 @@ public class MapDataVector implements MapDataVectorInterface {
     private String yComp = null;
     /** ROMS spatial interpolator object */
     private Interpolator3D i3d = null;
-    /** ROMS model grid object */
-    private ModelGrid3D grid   = null;
 
     private double min = Double.POSITIVE_INFINITY;
     private double max = Double.NEGATIVE_INFINITY;
@@ -70,14 +71,14 @@ public class MapDataVector implements MapDataVectorInterface {
     /** style used to create and visualize vector field */
     private VectorStyle style = null;
     
-    private static final Logger logger = Logger.getLogger(MapDataVector.class.getName());
+    private static final Logger logger = Logger.getLogger(MapDataVector3D.class.getName());
 
-    public MapDataVector(String u, String v, Interpolator3D i3d, DateTime date) throws Exception {
+    public MapDataVector3D(String u, String v, Interpolator3D i3d, DateTime date) throws Exception {
+        romsGI = GlobalInfo.getInstance();
         this.date = date;
         this.xComp   = u;
         this.yComp   = v;
         this.i3d = i3d;
-        this.grid = i3d.getGrid();
         fc = FeatureCollections.newCollection();
         initialize();
     }
@@ -202,70 +203,6 @@ public class MapDataVector implements MapDataVectorInterface {
     }
 
     /**
-     * Creates and returns a FeatureCollection for a 2D field suitable for
-     * plotting using a wts.roms.gis.MapGUI_JPanel.
-     *
-     * @return FeatureCollection.
-     */
-    @Override
-    public FeatureCollection createFeatureCollection()
-            throws SchemaException, IllegalAttributeException, TransformException {
-        gf = new GeometryFactory();
-
-        int Lm = grid.getLm();
-        int Mm = grid.getMm();
-        double lon,lat;
-        double[] srcPts = new double[2];//gt2.1-
-        double[] dstPts = new double[2];//gt2.1-
-        Coordinate[] c;
-        LineString ls;
-        Feature f;
-        double uVal;
-        double vVal;
-        double sVal;
-        double aVal;
-        double rVal;
-        double aa   = Math.toRadians(180-style.getArrowheadAngle());
-        double[] pos = new double[2];
-        //need to create a line feature that creates the vector shape
-        double stride = style.getStride();
-        for (double j=Math.max(1, stride);j<=Mm;j=j+stride) {//TODO: make sure indices are correct!
-            for (double i=Math.max(1,stride);i<=Lm;i=i+stride) {
-                if (grid.getMask_RHO((int)i,(int)j)>0.0) {
-                    pos[0] = i; pos[1] = j;
-                    lon = PrimeMeridian.adjustToGISlon(i3d.interpolateLon(pos));
-                    lat = i3d.interpolateLat(pos);
-                    uVal = i3d.interpolateValue(pos, xComp, Interpolator3D.INTERP_VAL);
-                    vVal = i3d.interpolateValue(pos, yComp, Interpolator3D.INTERP_VAL);
-                    sVal  = Math.sqrt(uVal*uVal+vVal*vVal);//speed
-                    rVal = i3d.interpolateValue(pos, "angle", null, Interpolator3D.INTERP_VAL);//angle between xi axis & east in radians
-                    //System.out.println("rVal = "+Math.toDegrees(rVal));
-                    if (!isFinite(sVal)) {
-                        sVal = 0.0;
-                        aVal = rVal;
-                    } else {
-                        aVal = Math.atan2(vVal, uVal)+rVal;//CCW angle in radians from east (if rVal interpreted corrctly)
-                    }
-                    srcPts[0] = lon;
-                    srcPts[1] = lat;
-                    AlbersNAD83.transformGtoP(srcPts,0,dstPts,0,1);//gt2.1-
-                    c = createArrow(sVal,aVal,dstPts,aa);
-                    if (c[0]!=null) {
-                        ls = gf.createLineString(c);
-                        f = ft.create(new Object[] {ls,""+(int)i+"_"+(int)j,new Double(lat),new Double(lon),
-                                new Double(sVal), new Double(Math.toDegrees(aVal))});
-                        fc.add(f);
-                    }
-                }
-            }
-        }
-        double[] mm = FeatureCollectionUtilities.findMinMax("speed",fc);
-        min = mm[0];
-        max = mm[1];
-        return fc;
-    }
-
-    /**
      * Creates and returns a FeatureCollection for the 3D field sliced at
      * vertical index k.
      *
@@ -277,6 +214,7 @@ public class MapDataVector implements MapDataVectorInterface {
             throws SchemaException, IllegalAttributeException, TransformException {
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -342,6 +280,7 @@ public class MapDataVector implements MapDataVectorInterface {
             throws SchemaException, IllegalAttributeException, TransformException {
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -435,6 +374,7 @@ public class MapDataVector implements MapDataVectorInterface {
         //Create the mask features and add them to the feature collection
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -476,13 +416,7 @@ public class MapDataVector implements MapDataVectorInterface {
                     if (c!=null) {
                         nf++;
                         pt = gf.createPoint(c);
-                        f = ftp.create(new Object[] {
-                                        pt,
-                                        sDate,
-                                        new Double(lat),
-                                        new Double(lon),
-                                        new Double(sVal),
-                                        new Double(Math.toDegrees(aVal))});
+                        f = ftp.create(new Object[] {pt, sDate, lat, lon, sVal, Math.toDegrees(aVal)});
                         fcp.add(f);
                     }
                 }
@@ -504,7 +438,7 @@ public class MapDataVector implements MapDataVectorInterface {
         int nf = 0;
         String sDate = date.getDateTimeString();
         System.out.println("Creating export FeatureCollection for k = "+k+", date = "+sDate);
-        Integer kSlice = new Integer(k);
+        Integer kSlice = k;
         FeatureCollection fcp = FeatureCollections.newCollection();
         AttributeType[] aTypes = new AttributeType[5];
         GeometryAttributeType gat = (GeometryAttributeType)AttributeTypeFactory.newAttributeType(
@@ -524,6 +458,7 @@ public class MapDataVector implements MapDataVectorInterface {
 
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -584,7 +519,7 @@ public class MapDataVector implements MapDataVectorInterface {
         int nf = 0;
         String sDate = date.getDateTimeString();
         System.out.println("Creating export FeatureCollection for z = "+z+"; date = "+sDate);
-        Double zSlice = new Double(z);
+        Double zSlice = z;
         FeatureCollection fcp = FeatureCollections.newCollection();
         AttributeType[] aTypes = new AttributeType[5];
         GeometryAttributeType gat = (GeometryAttributeType)AttributeTypeFactory.newAttributeType(
@@ -604,6 +539,7 @@ public class MapDataVector implements MapDataVectorInterface {
 
         gf = new GeometryFactory();
 
+        ModelGrid3D grid = romsGI.getGrid();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -645,12 +581,7 @@ public class MapDataVector implements MapDataVectorInterface {
                             if (c!=null) {
                                 nf++;
                                 pt = gf.createPoint(c);
-                                f = ftp.create(new Object[] {
-                                        pt,
-                                        sDate,
-                                        zSlice,
-                                        new Double(sVal),
-                                        new Double(Math.toDegrees(aVal))});
+                                f = ftp.create(new Object[] {pt, sDate, zSlice, sVal, Math.toDegrees(aVal)});
                                 fcp.add(f);
                             }
                         }
@@ -662,41 +593,6 @@ public class MapDataVector implements MapDataVectorInterface {
         }
         System.out.println("Created "+nf+" features.");
         return fcp;
-    }
-
-    /**
-     * Exports the 2D vector field to a point shapefile.
-     * Shapefile fields are date (as String), speed, and angle.
-     *
-     * @param shpFile - String;  name of shapefile to export to
-     * @param add     - boolean; flag to create new (false) or add to existing (true) shapefile
-     *
-     * @throws java.net.MalformedURLException
-     * @throws java.io.IOException
-     * @throws org.geotools.factory.FactoryConfigurationError
-     * @throws org.geotools.feature.SchemaException
-     * @throws org.geotools.feature.IllegalAttributeException
-     * @throws org.opengis.referencing.operation.TransformException
-     */
-    @Override
-    public void exportToShapefile(String shpFile,boolean add)
-            throws MalformedURLException, IOException, FactoryConfigurationError, SchemaException,
-                   IllegalAttributeException, TransformException {
-        URL url = (new File(shpFile)).toURI().toURL();
-        //Create feature type for vector map data
-        FeatureCollection fcp = createFeatureCollection1();
-
-        if (!fcp.isEmpty()) {
-            ShapefileCreator sc = new ShapefileCreator();
-            sc.setShapefileURL(url);
-            if (add) {
-                sc.addToShapefile(fcp);
-            } else {
-                sc.createShapefile(fcp);
-            }
-        } else {
-            System.out.println("FeatureCollection was empty!");
-        }
     }
 
     /**
@@ -776,11 +672,6 @@ public class MapDataVector implements MapDataVectorInterface {
         if (evt.getPropertyName().equals(VectorStyle.PROP_STYLE)){
             logger.info("Style changed");
         }
-    }
-
-    @Override
-    public void exportFeatureCollection(String shpFile) throws MalformedURLException, IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**

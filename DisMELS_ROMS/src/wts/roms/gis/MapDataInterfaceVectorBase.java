@@ -12,7 +12,7 @@ import wts.GIS.styling.VectorStyle;
  *
  * @author William.Stockhausen
  */
-public interface MapDataVectorInterface extends MapDataScalarInterface, PropertyChangeListener {
+public interface MapDataInterfaceVectorBase extends MapDataInterfaceScalarBase, PropertyChangeListener {
 
     /**
      * Returns the vector arrow shape for plotting as a Coordinate vector.

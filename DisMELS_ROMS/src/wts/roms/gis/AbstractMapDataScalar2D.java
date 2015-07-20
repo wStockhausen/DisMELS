@@ -10,36 +10,32 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import org.geotools.ct.MathTransform;
-import org.geotools.factory.FactoryConfigurationError;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureType;
-import org.geotools.feature.IllegalAttributeException;
-import org.geotools.feature.SchemaException;
-import org.geotools.styling.Style;
-import org.opengis.referencing.operation.TransformException;
 import wts.GIS.shapefile.ShapefileCreator;
 import wts.models.utilities.DateTime;
-import wts.roms.model.Interpolator3D;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.ModelData;
-import wts.roms.model.ModelGrid3D;
 
 /**
  *
  * @author William.Stockhausen
  */
-public abstract class AbstractMapDataScalar implements MapDataScalarInterface {
+public abstract class AbstractMapDataScalar2D implements MapDataInterfaceScalar2D {
+    
+    protected GlobalInfo romsGI;
+    protected ModelData mask = null;
+    
     protected DateTime date = null;
     protected FeatureCollection fc = null;
     protected FeatureType ft = null;
     protected GeometryFactory gf = null;
-    protected ModelGrid3D grid = null;
-    protected Interpolator3D i3d;
-    protected ModelData mask = null;
     protected double max = Double.NEGATIVE_INFINITY;
     protected double min = Double.POSITIVE_INFINITY;
     protected MathTransform mt = null; //gt2.1-
 
-    protected AbstractMapDataScalar() {
+    protected AbstractMapDataScalar2D() {
+        romsGI = GlobalInfo.getInstance();
     }
 
     /**
@@ -48,7 +44,6 @@ public abstract class AbstractMapDataScalar implements MapDataScalarInterface {
      * @throws MalformedURLException
      * @throws IOException 
      */
-    @Override
     public void exportFeatureCollection(String shpFile) throws MalformedURLException, IOException {
         if (fc!=null) {
             ShapefileCreator sc = new ShapefileCreator();

@@ -15,6 +15,8 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -39,15 +41,17 @@ import org.opengis.referencing.operation.TransformException;
 import org.openide.util.Exceptions;
 import wts.models.utilities.DateTime;
 import wts.roms.gui.JPanel_OceanTime;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.ModelGrid2D;
 
 /**
  *
  * @author  William Stockhausen
  */
-public class MapGUI_JPanel extends javax.swing.JPanel {
+public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeListener {
     
-    private String gridFileName = "";
+    private GlobalInfo globalInfo;
+    
     private ModelGrid2DMapData gridMapData;
 
     private MapContext context;
@@ -67,8 +71,11 @@ public class MapGUI_JPanel extends javax.swing.JPanel {
     
     /** Creates new form MapTester */
     public MapGUI_JPanel() {
+        globalInfo = GlobalInfo.getInstance();
         initComponents();
         initComponents1();
+        setGrid();
+        globalInfo.addPropertyChangeListener(this);
     }
     
     /** This method is called from within the constructor to
@@ -323,44 +330,6 @@ public class MapGUI_JPanel extends javax.swing.JPanel {
         ImageIO.write(bi,ext,f);
     }
     
-    private void createGridLayers() {
-        try {
-            if (gridLayer!=null) context.clearLayerList();
-            FeatureCollection fc;
-            Style style;
-            StyleBuilder sb = new StyleBuilder();
-            
-            //Make the grid fc
-            ModelGrid2D mg = new ModelGrid2D(gridFileName);
-            gridMapData = new ModelGrid2DMapData();
-            gridMapData.setGrid2D(mg);
-            fc = gridMapData.getGridLines(5);
-            System.out.println("line bounds: "+fc.getBounds().toString());
-//            System.out.println("grid coordinate system: "+
-//                    fc.getFeatureType().getDefaultGeometry().getCoordinateSystem().getName());
-            style = sb.createStyle(sb.createLineSymbolizer(Color.RED,1.0));
-            gridLayer = new DefaultMapLayer(fc,style,"model grid");
-            context.addLayer(gridLayer);
-            
-            //and the mask fc
-            fc = gridMapData.getMask();
-            System.out.println("polygon bounds: "+fc.getBounds().toString());
-            style = sb.createStyle(sb.createPolygonSymbolizer(Color.GRAY));
-            maskLayer = new DefaultMapLayer(fc,style,"land mask");
-            context.addLayer(maskLayer);
-            
-            setContext();
-            validate();
-        } catch (IllegalAttributeException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (SchemaException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        
-    }
-    
     /**
      * Interpolates the bathymetric depth grid to the input
      * lat, lon coordinates.
@@ -413,33 +382,52 @@ public class MapGUI_JPanel extends javax.swing.JPanel {
     public EditingMapPane getMapPane() {
         return mapPane;
     }
-    
-    /**
-     * Getter for property gridFile.
-     * @return Value of property gridFile.
-     */
-    public String getGridFileName() {
-        return gridFileName;
-    }
 
     /**
-     * Setter for property gridFile.
-     * @param gridFile New value of property gridFile.
+     * Maps the GlobalInfo grid
      */
-    public void setGridFileName(String gridFileName) {
-        this.gridFileName = gridFileName;
-        if (!ModelGrid2D.isGrid(gridFileName)) {
-            JOptionPane jop = new JOptionPane("Error opening grid file:\n"+
-                                              gridFileName+
-                                              "\nThis is not a ROMS grid.",
-                                              JOptionPane.ERROR_MESSAGE);
-            jop.setVisible(true);
-            return;
+    public void setGrid() {
+        if (gridLayer!=null) context.clearLayerList();
+        ModelGrid2D mg = globalInfo.getGrid();
+        if (mg!=null){
+            try {
+                //create the grid and mask MapLayers
+                FeatureCollection fc;
+                Style style;
+                StyleBuilder sb = new StyleBuilder();
+
+                //Make the grid fc
+                gridMapData = new ModelGrid2DMapData();
+                fc = gridMapData.getGridLines(5);
+                System.out.println("line bounds: "+fc.getBounds().toString());
+    //            System.out.println("grid coordinate system: "+
+    //                    fc.getFeatureType().getDefaultGeometry().getCoordinateSystem().getName());
+                style = sb.createStyle(sb.createLineSymbolizer(Color.RED,1.0));
+                gridLayer = new DefaultMapLayer(fc,style,"model grid");
+                context.addLayer(gridLayer);
+
+                //and the mask fc
+                fc = gridMapData.getMask();
+                System.out.println("polygon bounds: "+fc.getBounds().toString());
+                style = sb.createStyle(sb.createPolygonSymbolizer(Color.GRAY));
+                maskLayer = new DefaultMapLayer(fc,style,"land mask");
+                context.addLayer(maskLayer);
+
+                setContext();
+                validate();
+                //enable input methods on mapPane
+                mapPane.enableInputMethods(true);
+            } catch (IllegalAttributeException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (SchemaException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (Exception ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        } else {
+            //enable input methods on mapPane
+            mapPane.enableInputMethods(false);
         }
-        //create the grid and mask MapLayers
-        createGridLayers();
-        //enable input methods on mapPane
-        mapPane.enableInputMethods(true);
     }
     
     public boolean getMouseDragZooms() {
@@ -502,5 +490,14 @@ public class MapGUI_JPanel extends javax.swing.JPanel {
     private wts.roms.gui.JPanel_OceanTime oceanTimeJP;
     private javax.swing.JSplitPane splitPane;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void propertyChange(PropertyChangeEvent pce) {
+        if (pce.getSource().equals(globalInfo)){
+            if (pce.getPropertyName().equals(GlobalInfo.PROP_GridFile)){
+                setGrid();
+            }
+        }
+    }
     
 }

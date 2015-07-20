@@ -16,16 +16,21 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.shapefile.ShapefileDataStore;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.IllegalAttributeException;
+import org.geotools.feature.SchemaException;
 import org.geotools.map.DefaultMapLayer;
 import org.geotools.map.MapLayer;
 import org.geotools.styling.*;
 import org.netbeans.api.progress.ProgressUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.opengis.referencing.operation.TransformException;
 import org.openide.awt.ActionID;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
@@ -33,7 +38,9 @@ import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import wts.GIS.shapefile.ShapefileCreator;
 import wts.roms.gis.AlbersNAD83;
+import wts.roms.gis.ModelGrid2DMapData;
 import wts.roms.model.GlobalInfo;
 import wts.roms.model.ModelGrid2D;
 
@@ -102,8 +109,10 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** file chooser for GIS layers */
     private JFileChooser jfcLayer = new JFileChooser();
-    /** file chooser for GIS layers */
+    /** file chooser for output images */
     private JFileChooser jfcImage = new JFileChooser();
+    /** file chooser for output shapefiles */
+    private JFileChooser jfcShape = new JFileChooser();
     
     /** Geotools 2.0 style builder for shapefile layers */
     private StyleBuilder sb = new StyleBuilder();
@@ -224,11 +233,19 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     }
     
     /**
+     * Gets the  ModelGrid2DMapData associated with the map
+     * @return 
+     */
+    public ModelGrid2DMapData getGrid2DMapData(){
+        return mapGUI.getGridMapData();
+    }
+    
+    /**
      * Gets the ModelGrid2D associated with the map
      * @return 
      */
     public ModelGrid2D getModelGrid(){
-        return mapGUI.getGridMapData().getGrid2D();
+        return GlobalInfo.getInstance().getGrid();
     }
 
     /**
@@ -243,7 +260,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                 try {
                     if ((!grdFN.equals("<not set>"))&&(wts.roms.model.ModelGrid2D.isGrid(grdFN))) {
                         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        mapGUI.setGridFileName(grdFN);
+                        mapGUI.setGrid();
                         mapGUI.validate();
                         mapGUI.repaint();
                     } else {
@@ -286,6 +303,12 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         jfcImage.setFileFilter(fileFilter1);
         jfcImage.setCurrentDirectory(wdF);
         jfcImage.setDialogTitle("Save map as image");
+
+        FileFilter fileFilter2 = new FileFilterImpl("shp","Shape files");
+        jfcShape.addChoosableFileFilter(fileFilter2);
+        jfcShape.setFileFilter(fileFilter1);
+        jfcShape.setCurrentDirectory(wdF);
+        jfcShape.setDialogTitle("Save as ESRI shapefile");
 
     }
     
@@ -337,7 +360,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         int res = jfcLayer.showOpenDialog(this);
         if (res==JFileChooser.APPROVE_OPTION) {
             File f = jfcLayer.getSelectedFile();
-            createShapefileLayer(f);
+            createLayerFromShapefile(f);
         }
     }
     
@@ -386,7 +409,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * 
      * @param f - the shapefile
      */
-    public void createShapefileLayer(File f) {
+    public void createLayerFromShapefile(File f) {
         try {
             URL url = f.toURI().toURL();
             ShapefileDataStore store = new ShapefileDataStore(url);
@@ -440,14 +463,14 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                     f.getAbsolutePath(),
                     "Error opening GIS layer: problem with file name?",
                     javax.swing.JOptionPane.ERROR_MESSAGE);
-            Exceptions.printStackTrace(ex);
+            logger.severe(ex.getLocalizedMessage());
         } catch (java.io.IOException ex) {
             javax.swing.JOptionPane.showMessageDialog(
                     null,
                     f.getAbsolutePath(),
                     "I/O error creating GIS layer: expected a shapefile.",
                     javax.swing.JOptionPane.ERROR_MESSAGE);
-            Exceptions.printStackTrace(ex);
+            logger.severe(ex.getLocalizedMessage());
         }
     }
 
@@ -516,4 +539,79 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     public void saveMapAsImage(String fn) throws IOException{
         mapGUI.saveMapAsImage(fn);
     }
+    
+    /**
+     * Create a polyline shapefile from the model grid.
+     */
+    public void createLineShapefile(){
+        jfcShape.setDialogTitle("Select output shapefile for grid lines");
+        int res = jfcShape.showSaveDialog(this);
+        if (res==JFileChooser.APPROVE_OPTION) {
+            try {
+                File fshp = jfcShape.getSelectedFile();                                                      
+                URL url = fshp.toURI().toURL();
+                FeatureCollection fc = mapGUI.getGridMapData().getGridLines();
+                ShapefileCreator sc = new ShapefileCreator();
+                sc.setShapefileURL(url);
+                sc.createShapefile(fc);
+            } catch (MalformedURLException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (SchemaException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IllegalAttributeException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (TransformException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public void createMaskShapefile(){
+        jfcShape.setDialogTitle("Select output shapefile for land mask");
+        int res = jfcShape.showSaveDialog(this);
+        if (res==jfcShape.APPROVE_OPTION) {
+            try {
+                File fshp = jfcShape.getSelectedFile();
+                URL url = fshp.toURI().toURL();
+                FeatureCollection fc = mapGUI.getGridMapData().getMask();
+                ShapefileCreator sc = new ShapefileCreator();
+                sc.setShapefileURL(url);
+                sc.createShapefile(fc);
+            } catch (MalformedURLException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (SchemaException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IllegalAttributeException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (TransformException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+    }                                                      
+    
+    public void createShapefileFromLayer(String layerName){
+         MapLayer layer = mapLayers.get(layerName);
+         if (layer!=null){
+            jfcShape.setDialogTitle("Select output shapefile for layer");
+            int res = jfcShape.showSaveDialog(this);
+            if (res==jfcShape.APPROVE_OPTION) {
+                try {
+                    File fshp = jfcShape.getSelectedFile();
+                    URL url = fshp.toURI().toURL();
+                    FeatureCollection fc = layer.getFeatureSource().getFeatures();
+                    ShapefileCreator sc = new ShapefileCreator();
+                    sc.setShapefileURL(url);
+                    sc.createShapefile(fc);
+                } catch (MalformedURLException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+         }
+    }                                                      
 }

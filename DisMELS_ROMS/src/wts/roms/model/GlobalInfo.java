@@ -98,6 +98,11 @@ public class GlobalInfo implements PropertyChangeListener {
     /** flag to enable PropertyChangeEvent processing internally */
     private boolean doEvents = true;
     
+    /** global ROMS grid object */
+    private ModelGrid3D grid3d = null;
+    /** global ROMS 2d interpolator object */
+    private Interpolator2D i2d = null;
+    
     /** 
      * Map projection region (must match a region from CSCreator).
      * CSCreator.REGION_ALASKA is the default.
@@ -128,7 +133,33 @@ public class GlobalInfo implements PropertyChangeListener {
         }
         propertySupport = new PropertyChangeSupport(this);
         logger.info("Instantiated singleton");
-    }   
+    }
+    
+    /**
+     * Get the ROMS model grid object.
+     * 
+     * @return 
+     */
+    public ModelGrid3D getGrid(){
+        if (grid3d==null){
+            if (!gridFile.equalsIgnoreCase(PROP_NotSet)){
+                grid3d = new ModelGrid3D(gridFile);
+            }
+        }
+        return grid3d;
+    }
+    
+    /**
+     * Get the ROMS model interpolator.
+     * 
+     * @return 
+     */
+    public Interpolator2D getInterpolator(){
+        if (i2d==null){
+            i2d = new Interpolator2D();
+        }
+        return i2d;
+    }
     
     /**
      * Resets the ROMS info properties to their default values.
@@ -195,6 +226,8 @@ public class GlobalInfo implements PropertyChangeListener {
             gridFile = file;
             doEvents = false;//turn off PropertyChangeEvent processing
             cviGrid2D.reset();
+            grid3d = null;
+            i2d = null;
             doEvents = true;//turn on PropertyChangeEvent processing
             setCanonicalFile(PROP_NotSet);
             propertySupport.firePropertyChange(PROP_GridFile,oldval,gridFile);
@@ -261,7 +294,7 @@ public class GlobalInfo implements PropertyChangeListener {
     /**
      * Sets the optional variables info for the ROMS model.
      * 
-     * @param - the CVI 
+     * @param ovi - the optional model variables information object 
      */
     public void setOptionalModelVariablesInfo(OptionalModelVariablesInfo ovi){
         OptionalModelVariablesInfo oldOVI = oviModel;
@@ -270,9 +303,9 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Gets the ROMS grid file name.
+     * Gets the map region
      * 
-     * @return - the filename 
+     * @return - the map region 
      */
     public String getMapRegion(){
         return mapRegion;
