@@ -9,6 +9,8 @@ import java.awt.Cursor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
+import java.util.Iterator;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import org.geotools.feature.FeatureCollection;
@@ -96,8 +98,6 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         return getDefault();
     }
     
-
-
     private boolean doEvents = true;//flag indicates whether to pay attention to events
 
     private String strFld = null;
@@ -135,8 +135,36 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         doOnOpen = true;
         romsGI = GlobalInfo.getInstance();
         romsGI.addPropertyChangeListener(this);
-        
+    
         sfCustomizer.setVisible(false);//set invisible, initially
+        setVariables();
+    }
+    
+    /**
+     * Sets the potential fields lists for the scalar and 
+     * the x- and y-components of th vector field based on the
+     * fields from the netcdf file.
+     */
+    private void setVariables() {
+        logger.info("setVariables()");
+        doEvents = false;
+        String selScl = (String) jcbScalarVar.getSelectedItem();
+        logger.info("setVariables(): previously selected variable = '"+selScl+"'.");
+        jcbScalarVar.removeAllItems();
+        jcbScalarVar.setSelectedIndex(-1);//set to "no item"
+        if (romsGI.getGrid()!=null){
+            TreeSet<String> fields = new TreeSet<>(romsGI.getGrid().getFieldNames());
+            Iterator<String> vars = fields.iterator();
+            while (vars.hasNext()) {
+                String str = vars.next();
+                jcbScalarVar.addItem(str);
+            }
+            doEvents = true;
+            if ((selScl!=null)&&(!selScl.equals(""))){
+                jcbScalarVar.setSelectedItem(selScl);
+            }
+        }
+        doEvents = true;//make sure doEvents is true (@TODO: SHOULD it be?)
     }
 
     /**
@@ -216,6 +244,11 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         });
 
         sfCustomizer.setEnabled(false);
+        sfCustomizer.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                sfCustomizerPropertyChange(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -306,6 +339,10 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         }
     }//GEN-LAST:event_jbScalarColorScaleActionPerformed
 
+    private void sfCustomizerPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_sfCustomizerPropertyChange
+        logger.info("sfCustomizerPropertyChange");
+    }//GEN-LAST:event_sfCustomizerPropertyChange
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -320,6 +357,8 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
     @Override
     public void componentOpened() {
         logger.info("starting componentOpened");
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         doEvents = false;
         //make sure MapViewerTopComponent is open
         WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
@@ -335,6 +374,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         });
         doOnOpen = false;
         
+        setCursor(c);
         doEvents = true;
         logger.info("done componentOpened");
     }

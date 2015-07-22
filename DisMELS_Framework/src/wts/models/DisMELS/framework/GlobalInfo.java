@@ -12,7 +12,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
@@ -64,7 +63,7 @@ public class GlobalInfo implements LookupListener {
     private String workingDirFN  = PROP_NotSet;
     
     /** ROMS Global Info object */
-    private wts.roms.model.GlobalInfo romsGI;
+    private final wts.roms.model.GlobalInfo romsGI;
     
     /** lookup result for "plugin" LHS classes */
     transient private Lookup.Result<LifeStageInterface> lkResLHSs = null;
@@ -81,11 +80,11 @@ public class GlobalInfo implements LookupListener {
     private Interpolator3D i3d = null;
     
     /** support for throwing property changes */
-    transient private PropertyChangeSupport propertySupport;
+    private final transient PropertyChangeSupport propertySupport;
     
     /** class-private constructor */
     private GlobalInfo(){
-        logger.info("Instantiating singleton");
+        logger.info("--Instantiating singleton");
         /* look up LHS classes */
         lkResLHSs = Lookup.getDefault().lookupResult(LifeStageInterface.class);
         lkResLHSs.addLookupListener(this);//add info object as listener on LHS class changes
@@ -107,10 +106,12 @@ public class GlobalInfo implements LookupListener {
         
         rng = new RandomNumberGenerator();
         
-        /* set time zone and format reference date */
+        /* get ROMS global info object */
         romsGI = wts.roms.model.GlobalInfo.getInstance();
+        
+        /* add property support */
         propertySupport = new PropertyChangeSupport(this);
-        logger.info("Instantiated singleton");
+        logger.info("--Instantiated singleton");
     }
     
     /**
@@ -180,12 +181,13 @@ public class GlobalInfo implements LookupListener {
      * @param dir - path to new working directory directory
      */
     public void setWorkingDir(String dir){
+        logger.info("setWorkingDir('"+dir+")");
         String oldVal = workingDirFN;
         workingDirFN = dir;
         romsGI.setWorkingDir(dir);
         LHS_Types.getInstance().readXML();//read LHS_Types.xml file in dir
         LHS_Factory.reset();              //reset the lhs maps in LHS_Factory 
-        logger.info("Changed working directory to "+workingDirFN);
+        logger.info("Changed working directory to '"+workingDirFN+"'");
         propertySupport.firePropertyChange(PROP_WorkingDirFN, oldVal, workingDirFN);//fire property change to listeners
     }
     
@@ -334,8 +336,8 @@ public class GlobalInfo implements LookupListener {
      */
     public void writeProperties(String fn) throws IOException{
         logger.info("Writing properties to "+fn);
-        String rfn = workingDirFN+File.separator+romsGI.propsFN; 
-        romsGI.writeProperties(rfn);
+//        String rfn = workingDirFN+File.separator+romsGI.propsFN; 
+//        romsGI.writeProperties(rfn);
         File f = new File(fn);
         writeProperties(f);
         logger.info("Done writing properties to "+fn);
@@ -376,10 +378,10 @@ public class GlobalInfo implements LookupListener {
      * @param fn - the Properties file name
      */
     public void readProperties(String fn) throws IOException{
-        logger.info("reading properties from "+fn);
+        logger.info("--readProperties(String fn): reading properties from "+fn);
         File f = new File(fn);
         readProperties(f);
-        logger.info("done reading properties from "+fn);
+        logger.info("--readProperties(String fn): done reading properties from "+fn);
     }
     
     /**
@@ -389,13 +391,13 @@ public class GlobalInfo implements LookupListener {
      * @param f - the File object
      */
     public void readProperties(java.io.File f) throws IOException{
-        logger.info("reading properties from "+f.getAbsolutePath());
+        logger.info("----readProperties(java.io.File f): reading properties from "+f.getAbsolutePath());
         Properties p = new Properties();
         FileInputStream fis = new FileInputStream(f);
         p.load(fis);
         readProperties(p);
         fis.close();
-        logger.info("done reading properties from "+f.getAbsolutePath());
+        logger.info("----readProperties(java.io.File f): done reading properties from "+f.getAbsolutePath());
     }
     
     /**
@@ -405,10 +407,11 @@ public class GlobalInfo implements LookupListener {
      * @param p - the Properties object
      */
     public void readProperties(java.util.Properties p){
+        logger.info("------readProperties(java.util.Properties p): reading properties");
         String version = p.getProperty(this.getClass().getName()+"_version");
         if (version.equals(GlobalInfo.version)){
             setWorkingDir(p.getProperty(PROP_WorkingDirFN, workingDirFN));
         }
-        
+        logger.info("------readProperties(java.util.Properties p): done reading properties");        
     }
 }

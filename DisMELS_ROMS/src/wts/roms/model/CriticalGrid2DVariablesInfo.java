@@ -20,8 +20,6 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
     /** version */
     public static final String version = "1.0";
     
-    public static final String PROP_RESET = "RESET";
-    
     /** the singleton instance */
     private static CriticalGrid2DVariablesInfo instance = null;
     
@@ -41,14 +39,38 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
         propertySupport = new PropertyChangeSupport(this);
     }
     
+    /**
+     * Resets the collection of CriticalVariableInfo instances to their default values.
+     */
+    @Override
+    public void reset(){
+        logger.info("-Starting reset()");
+        throwPCEs = false;
+        mapAVI.clear();
+        constructCVIs();
+        throwPCEs = true;
+        propertySupport.firePropertyChange(PROP_RESET, null, null);
+        logger.info("-Done reset()");
+    }
+    
+    /**
+     * Convenience method to construct a CriticalVariableInfo instance.
+     * @param name
+     * @param isField
+     * @param mask
+     * @param description 
+     */
     private void constructCVI(String name, boolean isField, String mask, String description){
+        logger.info("---Constructing cvi '"+name+"'");
         CriticalVariableInfo cvi = new CriticalVariableInfo(name, isField, mask, description);
         cvi.setNameInROMSDataset(name);//set as default
         cvi.addPropertyChangeListener(this);
         mapAVI.put(name,cvi);
+        logger.info("---Done constructing cvi '"+name+"'");
     }
         
     private void constructCVIs(){
+        logger.info("--Constructing CVIs");
         String name; String desc; boolean isField; String mask;
         //xl
         name = "xl";
@@ -224,6 +246,7 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
         isField = true;
         mask    = ModelTypes.MASKTYPE_NONE;
         constructCVI(name,isField,mask,desc);
+        logger.info("--Done constructing CVIs");
     }
     
     /**
@@ -245,11 +268,13 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
     @Override
     public void readProperties(Properties p){
         logger.info("Reading properties");
+        throwPCEs = false;
         String clazz = this.getClass().getName();
         String version = p.getProperty(clazz+"_version");
         if ((version!=null)&&(version.equals("1.0"))){
             int n = Integer.parseInt(p.getProperty(clazz+"_"+"vars","0"));
-            System.out.println("Reading n = "+n);
+            logger.info("Reading n = "+n);
+            mapAVI.clear();
             for (int i=0;i<n;i++){
                 String str = clazz+"_var"+i+".";
                 boolean checked = Boolean.parseBoolean(p.getProperty(str+AbstractVariableInfo.PROP_Checked));
@@ -258,13 +283,15 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
                 boolean isField   = Boolean.parseBoolean(p.getProperty(str+AbstractVariableInfo.PROP_Field));
                 String maskType = p.getProperty(str+AbstractVariableInfo.PROP_MaskType);
                 String descr    = p.getProperty(str+AbstractVariableInfo.PROP_Description);
-                logger.info("Creating VI "+varName+"; rn = "+romsName+"; mt = "+maskType+"; de = "+descr);
+                logger.info("Creating 2DVI "+varName+"; rn = "+romsName+"; mt = "+maskType+"; de = "+descr);
                 CriticalVariableInfo cvi = new CriticalVariableInfo(varName, isField, maskType, descr);
                 cvi.setChecked(checked);
                 cvi.setNameInROMSDataset(romsName);
                 mapAVI.put(varName, cvi);
             }       
         }
+        throwPCEs = true;
+        propertySupport.firePropertyChange(PROP_RESET, null, null);
         logger.info("Done reading properties");
     }
     
@@ -286,11 +313,17 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        propertySupport.firePropertyChange(evt);//propagate event up chain
+        logger.info("PropertyChange detected: "+evt.toString());
+        if (throwPCEs) {
+            propertySupport.firePropertyChange(evt);//propagate event up chain
+            logger.info("Threw PropertyChange");
+        } else {
+            logger.info("Ignored PropertyChange");
+        }
     }
 
     /**
-     * This method does NOTHING!!
+     * This method does NOTHING!! All critical grid variables are already defined.
      * 
      * @param name
      * @param desc 

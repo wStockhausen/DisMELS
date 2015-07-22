@@ -10,6 +10,7 @@
 package wts.roms.model;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  *
@@ -22,16 +23,19 @@ public class ModelGrid3D extends ModelGrid2D {
     public static final String VAR_Cs_w = "Cs_w";
     
     /** number of vertical layers */
-    protected int N;
+    protected int N = 0;
     /** critical depth parameter */
-    protected double hc;
+    protected double hc = 0.0;
     /** vertical grid scaling parameters */
-    protected ModelData sc_w;
+    protected ModelData sc_w = null;
     /** vertical grid scaling parameters */
-    protected ModelData Cs_w;
+    protected ModelData Cs_w = null;
     
     /** flag indicating whether constant fields have been read */
     private boolean hasVertInfo = false;
+    
+    /** logger for run-time information */
+    private static final Logger logger = Logger.getLogger(ModelGrid3D.class.getName());
         
     /**
      * Creates a new instance of ModelGrid3D based on the input filename, which
@@ -101,8 +105,13 @@ public class ModelGrid3D extends ModelGrid2D {
      * @throws IOException 
      */
     public void readConstantFields(NetcdfReader nR) throws IOException {
+        logger.info("readConstantFields(nR)");
         hasVertInfo = false;//reset to false
         CriticalModelVariablesInfo cmvis = GlobalInfo.getInstance().getCriticalModelVariablesInfo();
+        hc = 0.0;
+        Cs_w = null;
+        sc_w = null;
+        N = 0;
         try {
             hc    = nR.readScalarDouble(cmvis.getNameInROMSDataset(VAR_hc));
             Cs_w  = nR.getModelData(cmvis.getNameInROMSDataset(VAR_Cs_w),VAR_Cs_w);
@@ -111,7 +120,7 @@ public class ModelGrid3D extends ModelGrid2D {
             N = sc_w.getShape()[0]-1;
             hasVertInfo = true;
         } catch (IOException ex) {
-            System.out.println("Error reading constant fields");
+            logger.info("Error reading constant fields from netcdf file");
             throw ex;
         }
     }
@@ -122,5 +131,10 @@ public class ModelGrid3D extends ModelGrid2D {
      */
     public boolean hasVerticalGridInfo(){
         return hasVertInfo;
+    }
+
+    void resetVerticalGridInfo() {
+        logger.info("Restting vertical grid info");
+        hasVertInfo = false;
     }
 }

@@ -7,6 +7,7 @@
 package wts.roms.gis;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -19,9 +20,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import org.geotools.cs.CoordinateSystem;
 import org.geotools.ct.MathTransform;
@@ -66,6 +67,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
     
     private Legend legend;
     private Dimension2D dim;
+    
+    private static final Logger logger = Logger.getLogger(MapGUI_JPanel.class.getName());
     
 //    private JPanel_OceanTime oceanTimeJP;
     
@@ -250,9 +253,12 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayer(MapLayer layer) {
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(layer);
         if (mapPane.getMapContext()!=null) return;//only set context if not already set
         setContext();
+        setCursor(c);
     }
 
     /**
@@ -262,6 +268,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayer(int idx, MapLayer layer) {
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(idx,layer);
         if (mapPane.getMapContext()!=null) return;//only set context if not already set
         setContext();
@@ -273,6 +281,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayerAtBottom(MapLayer layer) {
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(0, layer);//add as 1st element in context, as this gets painted first
         MapLayer[] mls = context.getLayers();
         for (int i=0;i<mls.length;i++) {
@@ -297,6 +307,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
     }
     
     public Image getMapAsImage() {
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         int width      = jpDrawing.getWidth();
         int height     = jpDrawing.getHeight();
         Image img      = jpDrawing.createImage(width,height);
@@ -307,6 +319,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
     }
     
     public BufferedImage getMapAsBufferedImage() {
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         int width      = jpDrawing.getWidth();
         int height     = jpDrawing.getHeight();
         BufferedImage bi = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
@@ -387,6 +401,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * Maps the GlobalInfo grid
      */
     public void setGrid() {
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         if (gridLayer!=null) context.clearLayerList();
         ModelGrid2D mg = globalInfo.getGrid();
         if (mg!=null){
@@ -428,6 +444,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
             //enable input methods on mapPane
             mapPane.enableInputMethods(false);
         }
+        setCursor(c);
     }
     
     public boolean getMouseDragZooms() {
@@ -493,6 +510,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
 
     @Override
     public void propertyChange(PropertyChangeEvent pce) {
+        logger.info("PropertyChange: "+pce.toString());
         if (pce.getSource().equals(globalInfo)){
             if (pce.getPropertyName().equals(GlobalInfo.PROP_GridFile)){
                 setGrid();

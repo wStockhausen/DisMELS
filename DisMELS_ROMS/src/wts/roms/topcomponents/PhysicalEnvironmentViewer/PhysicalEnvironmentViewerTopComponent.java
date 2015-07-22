@@ -2046,6 +2046,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+        logger.info("PropertyChangeEvent: "+evt.toString());
         if (evt.getPropertyName().equals(GlobalInfo.PROP_CanonicalFile)){
             jfbDataset.setEnabled(false);
             jbUpdate.setEnabled(false);

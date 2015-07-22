@@ -39,15 +39,38 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
         propertySupport = new PropertyChangeSupport(this);
     }
     
+    /**
+     * Resets the collection of CriticalVariableInfo instances to their default values.
+     */
+    @Override
+    public void reset(){
+        throwPCEs = false;
+        mapAVI.clear();
+        throwPCEs = true;
+        propertySupport.firePropertyChange(PROP_RESET, null, null);
+    }
+    
+    /**
+     * Convenience method to construct an OptionalVariableInfo instance.
+     * @param name
+     * @param desc
+     */
+    
     @Override
     public void addVariable(String name,String desc){
         OptionalVariableInfo ovi = new OptionalVariableInfo(name,desc);
         ovi.setNameInROMSDataset(name);//set as default
         ovi.addPropertyChangeListener(this);
         mapAVI.put(name,ovi);
-        propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,ovi);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,ovi);
     }
     
+    /**
+     * Returns the OptionalVariableInfo instance associated with the internal variable name.
+     * 
+     * @param name - internal variable name 
+     * @return 
+     */
     @Override
     public OptionalVariableInfo removeVariable(String name){
         logger.info("Removing ovi "+name);
@@ -73,12 +96,13 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
      */
     @Override
     public void readProperties(Properties p){
+        throwPCEs = false;
         logger.info("reading properties");
         String clazz = this.getClass().getName();
         String version = p.getProperty(clazz+"_version");
         if ((version!=null)&&(version.equals("1.0"))){
             int n = Integer.parseInt(p.getProperty(clazz+"_"+"vars","0"));
-            System.out.println("Reading n = "+n);
+            logger.info("Reading n = "+n);
             for (int i=0;i<n;i++){
                 String str = clazz+"_var"+i+".";
                 boolean checked = Boolean.parseBoolean(p.getProperty(str+AbstractVariableInfo.PROP_Checked));
@@ -96,6 +120,9 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
                 mapAVI.put(varName, ovi);
             }       
         }
+        throwPCEs = true;
+        propertySupport.firePropertyChange(PROP_RESET, null, null);
+        logger.info("reading properties");
     }
     
     /**
@@ -122,7 +149,7 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
             String old = (String) evt.getOldValue();
             AbstractVariableInfo ovi = mapAVI.remove(old);//remove under old name
             mapAVI.put(ovi.getName(),ovi);                //put under new name
-            propertySupport.firePropertyChange(PROP_VARIABLE_RENAMED,old,ovi.getName());//propagate event up chain
+            if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_RENAMED,old,ovi.getName());//propagate event up chain
         }
     }
 }

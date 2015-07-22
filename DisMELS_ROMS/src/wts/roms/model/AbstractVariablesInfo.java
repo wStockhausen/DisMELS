@@ -10,18 +10,26 @@ import java.beans.PropertyChangeSupport;
 import java.util.*;
 
 /**
- *
+ * Abstract class representing a collection of AbstractVariableInfo instances.
+ * 
+ * 
  * @author William.Stockhausen
  */
 public abstract class AbstractVariablesInfo implements PropertyChangeListener {
-    public static final String PROP_RESET = "RESET";
+    /**String for PropertyChange indicating removal of ALL AbstractVariableInfo instances from collection. */
+    public static final String PROP_RESET = "wts.roms.model.AbstractVariablesInfo.RESET";
 
-    public static final String PROP_VARIABLE_ADDED = "VARIABLE_ADDED";
-    public static final String PROP_VARIABLE_REMOVED = "VARIABLE_REMOVED";
-    public static final String PROP_VARIABLE_RENAMED = "VARIABLE_RENAMED";
+    /**String for PropertyChanges indicating AbstractVariableInfo instance added to collection */
+    public static final String PROP_VARIABLE_ADDED = "wts.roms.model.AbstractVariablesInfo.VARIABLE_ADDED";
+    /**String for PropertyChanges indicating AbstractVariableInfo instance removed from collection */
+    public static final String PROP_VARIABLE_REMOVED = "wts.roms.model.AbstractVariablesInfo.VARIABLE_REMOVED";
+    /**String for PropertyChanges indicating AbstractVariableInfo instance renamed in collection */
+    public static final String PROP_VARIABLE_RENAMED = "wts.roms.model.AbstractVariablesInfo.VARIABLE_RENAMED";
 
+    /** flag to throw PropertyChange events */
+    protected boolean throwPCEs = true;
     
-    /** */
+    /**Collection of VariableInfo instances */
     protected final Map<String,AbstractVariableInfo> mapAVI; 
     
     /** support for throwing property changes */
@@ -31,18 +39,35 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
         mapAVI = new HashMap<>(n);
     }
 
+    /**
+     * Method called to clear all VariableInfo instances from collection.
+     */
+    protected abstract void reset();
+
+    /**
+     * Add a VariableInfo instance class to the collection.
+     * 
+     * @param mvi 
+     */
     protected void addVariable(AbstractVariableInfo mvi){
         String name = mvi.getName();
         mvi.addPropertyChangeListener(this);
         mapAVI.put(name, mvi);
-        propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,mvi);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,mvi);
     }
 
+    /** 
+     * Abstract class to add a VariableInfo instance to the collection, assigning it
+     * the (internal) name and description provided.
+     * @param name
+     * @param desc 
+     */
     protected abstract void addVariable(String name, String desc);
 
     /**
      * Returns the description associated with the variable name.
      *
+     * @param name
      * @return - the name used in the ROMS dataset
      */
     public String getDescription(String name) {
@@ -53,6 +78,7 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
      * Returns the ROMS name (alias) associated with the variable name,
      * null if the name was not found.
      *
+     * @param name
      * @return - the name used in the ROMS dataset
      */
     public String getNameInROMSDataset(String name) {
@@ -93,21 +119,20 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
     public AbstractVariableInfo removeVariable(String name){
         AbstractVariableInfo mvi = mapAVI.remove(name);
         if (mvi!=null) mvi.removePropertyChangeListener(this);
-        propertySupport.firePropertyChange(PROP_VARIABLE_REMOVED,mvi,null);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_REMOVED,mvi,null);
         return mvi;
     }
 
 
     /**
-     * Resets the set of model variable info objects to "unchecked".
+     * Resets all VariableInfo objects to "unchecked".
      */
-    public void reset() {
+    public void resetCheckedStatus() {
         Iterator<String> keys = mapAVI.keySet().iterator();
         while (keys.hasNext()) {
             AbstractVariableInfo mvi = mapAVI.get(keys.next());
             mvi.setChecked(false);
         }
-        propertySupport.firePropertyChange(OptionalModelVariablesInfo.PROP_RESET, null, null);
     }
     
     /**

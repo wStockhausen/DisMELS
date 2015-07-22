@@ -5,17 +5,25 @@
 package wts.roms.model;
 
 import java.beans.Customizer;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.logging.Logger;
 
 /**
- * Customizer for ModelVarableInfo instances.
+ * Customizer for CriticalModelVariableInfo instances.
  * 
  * @author William.Stockhausen
  */
 public class CriticalVariableInfoCustomizer extends javax.swing.JPanel
-                                            implements Customizer {
+                                            implements Customizer, PropertyChangeListener {
 
+    /** the object being customized */
     private CriticalVariableInfo obj;
-    private boolean doEvents = true;
+    /** flag to enable responses to gui actions */
+    private boolean doActions = true;
+    
+    /** class-level logger */
+    private static final Logger logger = Logger.getLogger(CriticalVariableInfoCustomizer.class.getName());
     
     /**
      * Creates new form ModelVariableInfoCustomizer
@@ -117,27 +125,27 @@ public class CriticalVariableInfoCustomizer extends javax.swing.JPanel
     }// </editor-fold>//GEN-END:initComponents
 
     private void jtfNameInROMSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNameInROMSActionPerformed
-        if (doEvents) obj.setNameInROMSDataset(jtfNameInROMS.getText());
+        if (doActions) obj.setNameInROMSDataset(jtfNameInROMS.getText());
     }//GEN-LAST:event_jtfNameInROMSActionPerformed
 
     private void jtfNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNameActionPerformed
-        if (doEvents) obj.setName(jtfName.getText());
+        if (doActions) obj.setName(jtfName.getText());
     }//GEN-LAST:event_jtfNameActionPerformed
 
     private void jtfDescriptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfDescriptionActionPerformed
-        if (doEvents) obj.setDescription(jtfDescription.getText());
+        if (doActions) obj.setDescription(jtfDescription.getText());
     }//GEN-LAST:event_jtfDescriptionActionPerformed
 
     private void jcbMaskTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbMaskTypeActionPerformed
-        if (doEvents) obj.setMaskType((String)jcbMaskType.getSelectedItem());
+        if (doActions) obj.setMaskType((String)jcbMaskType.getSelectedItem());
     }//GEN-LAST:event_jcbMaskTypeActionPerformed
 
     private void jchkSpatialFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkSpatialFieldActionPerformed
-        if (doEvents) if (doEvents) obj.setSpatialField(jchkSpatialField.isSelected());
+        if (doActions) if (doActions) obj.setSpatialField(jchkSpatialField.isSelected());
     }//GEN-LAST:event_jchkSpatialFieldActionPerformed
 
     private void jchkCheckedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkCheckedActionPerformed
-        if (doEvents) obj.setChecked(jchkChecked.isSelected());
+        if (doActions) obj.setChecked(jchkChecked.isSelected());
     }//GEN-LAST:event_jchkCheckedActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -153,7 +161,7 @@ public class CriticalVariableInfoCustomizer extends javax.swing.JPanel
     public void setObject(Object bean) {
         if (bean instanceof CriticalVariableInfo){
             obj = (CriticalVariableInfo) bean;
-            doEvents = false;
+            doActions = false;
             jchkChecked.setSelected(obj.isChecked());
             jtfNameInROMS.setText(obj.getNameInROMSDataset());
             jtfName.setText(obj.getName());
@@ -163,7 +171,8 @@ public class CriticalVariableInfoCustomizer extends javax.swing.JPanel
             jtfDescription.setToolTipText("Description: "+obj.getDescription());
             setEnabled(true);
             validate();
-            doEvents = true;
+            obj.addPropertyChangeListener(this);
+            doActions = true;
         }
     }
     
@@ -176,5 +185,19 @@ public class CriticalVariableInfoCustomizer extends javax.swing.JPanel
         jchkSpatialField.setEnabled(false);
         jcbMaskType.setEnabled(false);
         jtfDescription.setEnabled(false);
+    }
+
+    /**
+     * Updates the interface for "external" changes to the 
+     * CriticalVariableInfo object.
+     * 
+     * @param pce 
+     */
+    @Override
+    public void propertyChange(PropertyChangeEvent pce) {
+        logger.info("PropertyChange detected: "+pce.toString());
+        if (pce.getPropertyName().equals(CriticalVariableInfo.PROP_NameInROMS)){
+            jtfNameInROMS.setText(obj.getNameInROMSDataset());
+        }
     }
 }

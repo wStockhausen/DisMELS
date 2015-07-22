@@ -8,11 +8,16 @@ import java.beans.PropertyChangeSupport;
 import java.util.logging.Logger;
 
 /**
- *
+ * Class describing the map between a critical DisMELS variable and an
+ * associated variable in a ROMS model file. Since critical DisMELS variables are predefined
+ * up to the field name in the ROMS file, the only instance variable that can be set is
+ * the name in the ROMS dataset (which defaults to the DisMELS variable name).
+ * 
  * @author William.Stockhausen
  */
 public class CriticalVariableInfo extends AbstractVariableInfo {
     
+    /** class-level logger */
     private static final Logger logger = Logger.getLogger(CriticalVariableInfo.class.getName());
     
     /**

@@ -8,23 +8,25 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 /**
- *
+ * Abstract class to facilitate concrete VariableInfo classes.
+ * 
+ * Set methods throw PropertyChange events if newVal != oldVal.
+ * 
  * @author William.Stockhausen
  */
 public abstract class AbstractVariableInfo implements Serializable {
-    /** */
+    /**property: variable info has been checked */
     public static final String PROP_Checked = "checked";
-    /** */
-    public static final String PROP_NameInROMS = "nameInROMSdataset";
+    /**property: name in ROMS dataset*/
+    public static final String PROP_NameInROMS  = "nameInROMSdataset";
     public final static String PROP_Name        = "internalVariableName";
     public final static String PROP_Field       = "isSpatialField";
     public final static String PROP_MaskType    = "maskType";
     public final static String PROP_Description = "description";
             
-    /** */
+    /**flag indicating variable info has been checked */
     protected boolean checked = false;
     /** a description of this variable */
     protected String description = "";
@@ -37,10 +39,8 @@ public abstract class AbstractVariableInfo implements Serializable {
     /** the variable name in the ROMS dataset */
     protected String romsName = null;
 
-    /** */ 
+    /**object to support throwing PropertyChange's */ 
     protected PropertyChangeSupport propSupport = null;
-    
-//    private static final Logger logger = Logger.getLogger(AbstractVariableInfo.class.getName());
     
     protected AbstractVariableInfo() {
     }

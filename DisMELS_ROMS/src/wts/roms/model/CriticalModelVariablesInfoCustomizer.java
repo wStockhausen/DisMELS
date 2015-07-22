@@ -4,6 +4,7 @@
  */
 package wts.roms.model;
 
+import java.awt.Component;
 import java.beans.Customizer;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -12,7 +13,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-import org.openide.util.Exceptions;
 
 /**
  * Customizer for CriticalModelVariablesInfo objects.
@@ -33,13 +33,14 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
     /** the object being customized */
     private CriticalModelVariablesInfo obj = null;
     /** the GlobalInfo object */
-    private GlobalInfo globalInfo;
+    private GlobalInfo romsGI;
     /**
      * Creates new form CriticalModelVariablesInfoCustomizer
      */
     public CriticalModelVariablesInfoCustomizer() {
         initComponents();
-        globalInfo = GlobalInfo.getInstance();
+        romsGI = GlobalInfo.getInstance();
+        initComponents();
     }
 
     /**
@@ -54,7 +55,7 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
         jpPanel3 = new javax.swing.JPanel();
         jspVariables = new javax.swing.JScrollPane();
         jpVariables = new javax.swing.JPanel();
-        criticalVariableInfoCustomizer1 = new wts.roms.model.CriticalVariableInfoCustomizer();
+        cviCustomizer = new wts.roms.model.CriticalVariableInfoCustomizer();
         jPanel1 = new javax.swing.JPanel();
         jcbROMSvariables = new javax.swing.JComboBox();
 
@@ -64,8 +65,8 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
 
         jpVariables.setLayout(new java.awt.GridLayout(0, 1));
 
-        criticalVariableInfoCustomizer1.setEnabled(false);
-        jpVariables.add(criticalVariableInfoCustomizer1);
+        cviCustomizer.setEnabled(false);
+        jpVariables.add(cviCustomizer);
 
         jspVariables.setViewportView(jpVariables);
 
@@ -77,7 +78,7 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
         );
         jpPanel3Layout.setVerticalGroup(
             jpPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jspVariables, javax.swing.GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
+            .addComponent(jspVariables)
         );
 
         add(jpPanel3, java.awt.BorderLayout.CENTER);
@@ -100,7 +101,7 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
         add(jPanel1, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    protected wts.roms.model.CriticalVariableInfoCustomizer criticalVariableInfoCustomizer1;
+    protected wts.roms.model.CriticalVariableInfoCustomizer cviCustomizer;
     protected javax.swing.JPanel jPanel1;
     protected javax.swing.JComboBox jcbROMSvariables;
     protected javax.swing.JPanel jpPanel3;
@@ -124,35 +125,57 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
     }
 
     private void setObject(){
+        logger.info("starting SetObject()");
+        obj.removePropertyChangeListener(this);
         Set<String> names = obj.getNames();
+        jpVariables.removeAll();//remove all ovi customizers
+        jpVariables.add(cviCustomizer);//this functions as a header
         for (String name: names){
-            logger.info("Found critical variable "+name);
+            logger.info("Found critical model variable "+name);
             CriticalVariableInfo cvi = obj.getVariableInfo(name);
             CriticalVariableInfoCustomizer cvic = new CriticalVariableInfoCustomizer();
             cvic.setObject(cvi);
             jpVariables.add(cvic);
         }
         setROMSVariables();
+        setEnabled(!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet));
+        setVisible(!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet));
         validate();
+        repaint();
+        obj.addPropertyChangeListener(this);
+        logger.info("finished SetObject()");
     }
 
     /**
-     * Sets the variables listed in jcbROMSvariables by reading them from the
+     * Sets the variable names listed in jcbROMSvariables by reading them from the
      * grid file given in the GlobalInfo singleton.
      */
     private void setROMSVariables(){
         jcbROMSvariables.removeAllItems();
-        if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+        if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
             try {
-                NetcdfReader nR = new NetcdfReader(globalInfo.getCanonicalFile());
+                NetcdfReader nR = new NetcdfReader(romsGI.getCanonicalFile());
                 String[] romsNames = nR.getVariableNames();
                 Set<String> names = new TreeSet<>();
                 for (String romsName: romsNames) names.add(romsName);
                 Iterator<String> it = names.iterator();
                 while (it.hasNext()) jcbROMSvariables.addItem(it.next());
             } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+                logger.severe(ex.getLocalizedMessage());
             }
+        }
+    }
+
+    /**
+     * Enable/disable all sub-components
+     * @param b 
+     */
+    @Override
+    public void setEnabled(boolean b){
+        super.setEnabled(b);
+        Component[] comps = getComponents();
+        for (Component c: comps){
+            c.setEnabled(b);
         }
     }
     
@@ -164,9 +187,13 @@ public class CriticalModelVariablesInfoCustomizer extends javax.swing.JPanel
      */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+//        logger.info("PropertyChange: "+evt.toString());
         if (evt.getPropertyName().equals(GlobalInfo.PROP_CanonicalFile)){
-            setROMSVariables();
-            validate();
+            logger.info("PropertyChange: "+evt.toString());
+            setObject(obj);//reset object to register changes
+        } else if (evt.getPropertyName().equals(CriticalModelVariablesInfo.PROP_RESET)){
+            logger.info("PropertyChange: "+evt.toString());
+            setObject();//reset object
         }
     }
 }

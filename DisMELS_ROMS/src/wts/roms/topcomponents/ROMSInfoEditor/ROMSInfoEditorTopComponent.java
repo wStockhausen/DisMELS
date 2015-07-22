@@ -93,7 +93,7 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     }
     
     /** GlobalInfo singleton */
-    private GlobalInfo globalInfo = null;
+    private GlobalInfo romsGI = null;
     
     /** ReverseListModel for recent grid files */
     private ReverseListModel grdLM = null;
@@ -120,15 +120,17 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     
     public ROMSInfoEditorTopComponent() {
         logger.info("++starting ROMSInfoEditorTopComponent()");
-        initializing = true;
-        globalInfo = GlobalInfo.getInstance();
+        romsGI = GlobalInfo.getInstance();
         
         //add the actionMap, the instance content (wrapped in an AbstractLookup) and 'this' to the global lookup
         content = new InstanceContent();//will reflect infoSaver, infoLoader capabilities
         associateLookup(new ProxyLookup(Lookups.fixed(getActionMap(),this),new AbstractLookup(content)));
         
+        initializing = true;
         initComponents();
         initComponents1();
+//        initcomponents2();
+        initializing = false;
         
         setName(Bundle.CTL_ROMSInfoEditorTopComponent());
         setToolTipText(Bundle.HINT_ROMSInfoEditorTopComponent());
@@ -146,12 +148,12 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         jfcNC.addChoosableFileFilter(ffNC);
         jfcNC.setFileFilter(ffNC);
         jfcNC.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
-            jfcNC.setCurrentDirectory(new File(globalInfo.getCanonicalFile()));
-        } else if (!globalInfo.getGridFile().equals(GlobalInfo.PROP_NotSet)){
-            jfcNC.setCurrentDirectory(new File(globalInfo.getGridFile()));
+        if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            jfcNC.setCurrentDirectory(new File(romsGI.getCanonicalFile()));
+        } else if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
+            jfcNC.setCurrentDirectory(new File(romsGI.getGridFile()));
         } else {
-            jfcNC.setCurrentDirectory(new File(globalInfo.getWorkingDir()));
+            jfcNC.setCurrentDirectory(new File(romsGI.getWorkingDir()));
         }
         
         
@@ -163,10 +165,12 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         
         //set ROMS grid functionality
         grdLM = new ReverseListModel();
+        grdLM.getData().clear();
         grdLM.setSize(4);
         
         //set canonical ROMS file functionality
         canLM = new ReverseListModel();
+        canLM.getData().clear();
         canLM.setSize(4);
         
         //Set map projections functionality
@@ -176,44 +180,64 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
 
         infoSaver  = new InfoSaver();
         infoLoader = new InfoLoader();
-        resetter = new Resetter();
+        resetter   = new Resetter();
         
         logger.info("++++Ending initComponents1().");        
     }
-    @Override
-    public void componentOpened() {
-        logger.info("+++++starting componentOpened()");
-        jtfROMSRefDate.setText(globalInfo.getRefDateString());
-        jtfROMSRefDate.setToolTipText(globalInfo.getRefDateString());
+    
+    private void initcomponents2(){
+        jtfROMSRefDate.setText(romsGI.getRefDateString());
+        jtfROMSRefDate.setToolTipText(romsGI.getRefDateString());
         
-        jcbGridFiles.setSelectedItem(globalInfo.getGridFile());        
-        jcbCanonicalFiles.setSelectedItem(globalInfo.getCanonicalFile());
+        jcbMapRegions.setSelectedItem(romsGI.getMapRegion());
         
-        jcbMapRegions.setSelectedItem(globalInfo.getMapRegion());
+        String gf = romsGI.getGridFile();
+        addGridFile(gf);
+        jcbGridFiles.setSelectedItem(gf);
+        
+        
+        String cf = romsGI.getCanonicalFile();
+        addCanonicalFile(cf);
+        jcbCanonicalFiles.setSelectedItem(cf);
+        
+        jcbMapRegions.setSelectedItem(romsGI.getMapRegion());
         
         //set critical grid variables information
-        CriticalGrid2DVariablesInfo cvig = globalInfo.getCriticalGrid2DVariablesInfo();
+        CriticalGrid2DVariablesInfo cvig = romsGI.getCriticalGrid2DVariablesInfo();
         grid2DCVIsCustomizer.setObject(cvig);
         
         //set critical model variables information
-        CriticalModelVariablesInfo cvim = globalInfo.getCriticalModelVariablesInfo();
+        CriticalModelVariablesInfo cvim = romsGI.getCriticalModelVariablesInfo();
         criticalMVsCustomizer.setObject(cvim);
         
         //set critical model variables information
-        OptionalModelVariablesInfo ovim = globalInfo.getOptionalModelVariablesInfo();
+        OptionalModelVariablesInfo ovim = romsGI.getOptionalModelVariablesInfo();
         oviCustomizer.setObject(ovim);
         
+        boolean hasGF = !(gf.equals(GlobalInfo.PROP_NotSet));
+        grid2DCVIsCustomizer.setEnabled(hasGF);
+        grid2DCVIsCustomizer.setEnabled(hasGF);
+        
+        boolean hasCF = !(cf.equals(GlobalInfo.PROP_NotSet));
+        criticalMVsCustomizer.setEnabled(hasCF);
+        criticalMVsCustomizer.setVisible(hasCF);
+        oviCustomizer.setEnabled(hasCF);
+        oviCustomizer.setVisible(hasCF);
+        
         validate();
-        
-        globalInfo.addPropertyChangeListener(grid2DCVIsCustomizer);
-        globalInfo.addPropertyChangeListener(criticalMVsCustomizer);
-        globalInfo.addPropertyChangeListener(oviCustomizer);
-        globalInfo.addPropertyChangeListener(this);
-        
-        initializing = false;//initialization stage is finished
+                
         enableLoadAction(true);
-        enableSaveAction(false);
+        enableSaveAction(true);
         enableResetAction(true);
+    }
+    
+    @Override
+    public void componentOpened() {
+        logger.info("+++++starting componentOpened()");
+        initializing=true;
+        initcomponents2();
+        initializing=false;
+        romsGI.addPropertyChangeListener(this);
         logger.info("+++++finished componentOpened()");
     }
 
@@ -223,11 +247,11 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         enableLoadAction(false);
         enableSaveAction(false);
         enableResetAction(false);
-        
-        globalInfo.removePropertyChangeListener(grid2DCVIsCustomizer);
-        globalInfo.removePropertyChangeListener(criticalMVsCustomizer);
-        globalInfo.removePropertyChangeListener(oviCustomizer);
-        globalInfo.removePropertyChangeListener(this);
+//        
+//        romsGI.removePropertyChangeListener(grid2DCVIsCustomizer);
+//        romsGI.removePropertyChangeListener(criticalMVsCustomizer);
+//        romsGI.removePropertyChangeListener(oviCustomizer);
+        romsGI.removePropertyChangeListener(this);
         logger.info("+++finished compnonentClosed()");
     }
 
@@ -300,8 +324,12 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
             }
         });
 
-        jcbGridFiles.setEditable(true);
-        jcbGridFiles.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jcbGridFiles.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "--not set--" }));
+        jcbGridFiles.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jcbGridFilesItemStateChanged(evt);
+            }
+        });
         jcbGridFiles.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcbGridFilesActionPerformed(evt);
@@ -329,14 +357,15 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
 
         org.openide.awt.Mnemonics.setLocalizedText(jbSelCanonicalFile, org.openide.util.NbBundle.getMessage(ROMSInfoEditorTopComponent.class, "ROMSInfoEditorTopComponent.jbSelCanonicalFile.text")); // NOI18N
         jbSelCanonicalFile.setToolTipText(org.openide.util.NbBundle.getMessage(ROMSInfoEditorTopComponent.class, "ROMSInfoEditorTopComponent.jbSelCanonicalFile.toolTipText")); // NOI18N
+        jbSelCanonicalFile.setEnabled(false);
         jbSelCanonicalFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jbSelCanonicalFileActionPerformed(evt);
             }
         });
 
-        jcbCanonicalFiles.setEditable(true);
-        jcbCanonicalFiles.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jcbCanonicalFiles.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "--not set--" }));
+        jcbCanonicalFiles.setEnabled(false);
         jcbCanonicalFiles.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcbCanonicalFilesActionPerformed(evt);
@@ -475,9 +504,9 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     private void jtfROMSRefDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfROMSRefDateActionPerformed
         if (!initializing){
             logger.info("++++starting jtfROMSRefDateActionPerformed()");
-            String oldRef = globalInfo.getRefDateString();
-            globalInfo.setRefDateString(jtfROMSRefDate.getText());
-            jtfROMSRefDate.setToolTipText(globalInfo.getRefDateString());
+            String oldRef = romsGI.getRefDateString();
+            romsGI.setRefDateString(jtfROMSRefDate.getText());
+            jtfROMSRefDate.setToolTipText(romsGI.getRefDateString());
             enableSaveAction(true);
             logger.info("++++finished ROMSInfoEditor.jtfROMSRefDateActionPerformed()\n");
         }
@@ -489,13 +518,14 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
 
     private void jbSelGridFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSelGridFileActionPerformed
         logger.info("++++starting jbSelGridFileActionPerformed()");
-        File f = new File(globalInfo.getGridFile());
+        File f = new File(romsGI.getGridFile());
         jfcNC.setCurrentDirectory(f);
         jfcNC.setDialogTitle("Select ROMS grid:");
         jfcNC.setApproveButtonText("Select");
         int res = jfcNC.showOpenDialog(this);
         if (res==jfcNC.APPROVE_OPTION) {
             f = jfcNC.getSelectedFile();
+            addGridFile(f.getPath());
             jcbGridFiles.setSelectedItem(f.getPath());//this the path in the GlobalInfo instance
             jcbGridFiles.setToolTipText(f.getPath());
         }
@@ -504,13 +534,14 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
 
     private void jbSelCanonicalFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSelCanonicalFileActionPerformed
         logger.info("++++starting jbSelCanonicalFileActionPerformed()");
-        File f = new File(globalInfo.getCanonicalFile());
+        File f = new File(romsGI.getCanonicalFile());
         jfcNC.setCurrentDirectory(f);
         jfcNC.setDialogTitle("Select ROMS model canonical output file:");
         jfcNC.setApproveButtonText("Select");
         int res = jfcNC.showOpenDialog(this);
         if (res==jfcNC.APPROVE_OPTION) {
             f = jfcNC.getSelectedFile();
+            addCanonicalFile(f.getPath());
             jcbCanonicalFiles.setSelectedItem(f.getPath());//this sets the path in the GlobalInfo  instance
             jcbCanonicalFiles.setToolTipText(f.getPath());
         }
@@ -518,24 +549,34 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     }//GEN-LAST:event_jbSelCanonicalFileActionPerformed
 
     private void jcbGridFilesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbGridFilesActionPerformed
+        String grdFN = (String) jcbGridFiles.getSelectedItem();
+        logger.info("++++starting jcbGridFilesActionPerformed(): \n\tROMS grid file set to "+grdFN+"\n");
         if (!initializing){
-            logger.info("++++starting jcbGridFilesActionPerformed()");
-            String grdFN = (String) jcbGridFiles.getSelectedItem();
             jcbGridFiles.setToolTipText(grdFN);
-            globalInfo.setGridFile(grdFN);
+            romsGI.setGridFile(grdFN);
             grdLM.addElement(grdFN);
+            jcbCanonicalFiles.setEnabled(!grdFN.equals(GlobalInfo.PROP_NotSet));
+            jbSelCanonicalFile.setEnabled(!grdFN.equals(GlobalInfo.PROP_NotSet));
             logger.info("++++ending jcbGridFilesActionPerformed(): \n\tROMS grid file set to "+grdFN+"\n");
+            validate();
+            repaint();
+        } else {
+            logger.info("-----jcbGridFilesActionPerformed(): intializing");
         }
     }//GEN-LAST:event_jcbGridFilesActionPerformed
 
     private void jcbCanonicalFilesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbCanonicalFilesActionPerformed
+        String canFN = (String) jcbCanonicalFiles.getSelectedItem();
+        logger.info("++++starting jcbCanonicalFilesActionPerformed(): \n\tROMS canonical file set to "+canFN+"\n");
         if (!initializing){
-            logger.info("++++starting jcbCanonicalFilesActionPerformed()");
-            String canFN = (String) jcbCanonicalFiles.getSelectedItem();
             jcbCanonicalFiles.setToolTipText(canFN);
-            globalInfo.setCanonicalFile(canFN);
+            romsGI.setCanonicalFile(canFN);
             canLM.addElement(canFN);
+            validate();
+            repaint();
             logger.info("++++ending jcbCanonicalFilesActionPerformed(): \n\tROMS canonical file set to "+canFN+"\n");
+        } else {
+            logger.info("-----jcbCanonicalFilesActionPerformed(): intializing");
         }
     }//GEN-LAST:event_jcbCanonicalFilesActionPerformed
 
@@ -544,12 +585,17 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
             logger.info("++++starting jcbMapRegionsActionPerformed()");
             String val = (String) jcbMapRegions.getSelectedItem();
             if (val!=null){
-                globalInfo.setMapRegion(val);//update globalInfo
-                logger.info("map region updated to '"+globalInfo.getMapRegion()+"'");
+                romsGI.setMapRegion(val);//update globalInfo
+                logger.info("map region updated to '"+romsGI.getMapRegion()+"'");
             }
             logger.info("++++ending jcbMapRegionsActionPerformed()\n");
         }
     }//GEN-LAST:event_jcbMapRegionsActionPerformed
+
+    private void jcbGridFilesItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbGridFilesItemStateChanged
+        logger.info("jcbGridFilesItemStateChanged: "+evt.toString());
+        logger.info("selected item is: "+(String)jcbGridFiles.getSelectedItem());
+    }//GEN-LAST:event_jcbGridFilesItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private wts.roms.model.CriticalModelVariablesInfoCustomizer criticalMVsCustomizer;
@@ -571,7 +617,83 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     private javax.swing.JTextField jtfROMSRefDate;
     private wts.roms.model.OptionalModelVariablesInfoCustomizer oviCustomizer;
     // End of variables declaration//GEN-END:variables
-     
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        logger.info("--REACTING TO propertyChange(): "+evt.toString());
+        switch (evt.getPropertyName()) {
+            case GlobalInfo.PROP_CanonicalFile:
+                initializing = true;
+                jcbGridFiles.removeItem((String)evt.getNewValue());//in case it's already on list
+                jcbCanonicalFiles.addItem((String)evt.getNewValue());
+                jcbCanonicalFiles.setSelectedItem((String)evt.getNewValue());
+                initializing = false;
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_GridFile:
+                initializing = true;
+                jcbGridFiles.removeItem((String)evt.getNewValue());
+                jcbGridFiles.addItem((String)evt.getNewValue());
+                jcbGridFiles.setSelectedItem((String)evt.getNewValue());
+                initializing = false;
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_MapRegion:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_RefDate:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_Grid2DCVI_RESET:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelCVI_RESET:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_ADDED:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_REMOVED:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_RENAMED:
+                enableSaveAction(true);
+                break;
+            case GlobalInfo.PROP_ModelOVI_RESET:
+                enableSaveAction(true);
+                break;
+        }
+        logger.info("--finished propertyChange(): "+evt.getPropertyName());
+    }
+    
+    /**
+     * Add a canonical file to the list of canonical files.
+     * 
+     * @param cf 
+     */
+    private void addCanonicalFile(String cf){
+        boolean check = false;
+        if (canLM.getData().lastIndexOf(cf)<0) canLM.addElement(cf);
+        for (int i=0;i<jcbCanonicalFiles.getItemCount();i++){
+            if (jcbCanonicalFiles.getItemAt(i).equals(cf)) check = true;
+        }
+        if (!check) jcbCanonicalFiles.addItem(cf);
+    }
+    
+    /**
+     * Add a grid file to the lists of grid files.
+     * 
+     * @param gf 
+     */
+    private void addGridFile(String gf){
+        boolean check = false;
+        if (grdLM.getData().lastIndexOf(gf)<0) grdLM.addElement(gf);
+        for (int i=0;i<jcbGridFiles.getItemCount();i++){
+            if (jcbGridFiles.getItemAt(i).equals(gf)) check = true;
+        }
+        if (!check) jcbGridFiles.addItem(gf);
+    }
+    
     /**
      * Write editor properties to file:
      *  1. recent grid files
@@ -612,22 +734,29 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         logger.info("++++started readProperties()");
         String version = p.getProperty("version");
         
-        jcbGridFiles.removeAllItems();
-        for (int i=3;i>-1;i--) {
-            String str  = p.getProperty("RecentROMSGridFiles."+i);
-            if (str!=null) {
-                grdLM.addElement(str);
-                jcbGridFiles.addItem(str);
-            }
-        }        
-        jcbCanonicalFiles.removeAllItems();
-        for (int i=3;i>-1;i--) {
-            String str  = p.getProperty("RecentROMSCanonicalFiles."+i);
-            if (str!=null) {
-                canLM.addElement(str);
-                jcbCanonicalFiles.addItem(str);
-            }
-        }        
+        initializing=true;
+        {
+            jcbGridFiles.removeAllItems();
+            jcbGridFiles.addItem(GlobalInfo.PROP_NotSet);
+            for (int i=3;i>-1;i--) {
+                String str  = p.getProperty("RecentROMSGridFiles."+i);
+                if (str!=null) {
+                    addGridFile(str);
+                }
+            }        
+            jcbGridFiles.setSelectedItem(romsGI.getGridFile());
+            
+            jcbCanonicalFiles.removeAllItems();
+            jcbCanonicalFiles.addItem(GlobalInfo.PROP_NotSet);
+            for (int i=3;i>-1;i--) {
+                String str  = p.getProperty("RecentROMSCanonicalFiles."+i);
+                if (str!=null) {
+                    addCanonicalFile(str);
+                }
+            }        
+            jcbCanonicalFiles.setSelectedItem(romsGI.getCanonicalFile());
+        }
+        initializing = false;
         logger.info("++++finished readProperties()");
     }
     
@@ -637,6 +766,7 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
      * @param canLoad 
      */
     public void enableLoadAction(boolean canLoad){
+        logger.info("enableLoadAction()");
         if (canLoad){
             content.add(infoLoader);//add a LoadCookie to the instance content
             logger.info("----Load enabled!!");
@@ -652,6 +782,7 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
      * @param canSave 
      */
     public void enableSaveAction(boolean canSave){
+        logger.info("enableSaveAction()");
         if (canSave){
             content.add(infoSaver);//add the SaveCookie to the instance content
             logger.info("----Save enabled!!");
@@ -667,6 +798,7 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
      * @param canReset 
      */
     public void enableResetAction(boolean canReset){
+        logger.info("enableResetAction()");
         if (canReset){
             content.add(resetter);//add the resettere to the instance content
             logger.info("----Reset enabled!!");
@@ -674,44 +806,6 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
             content.remove(resetter);//remove the resetter from the instance content 
             logger.info("----Reset disabled!!");
         }
-    }
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        logger.info("--starting propertyChange(): "+evt.getPropertyName());
-        switch (evt.getPropertyName()) {
-            case GlobalInfo.PROP_CanonicalFile:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_GridFile:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_MapRegion:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_RefDate:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_Grid2DCVI_RESET:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_ModelCVI_RESET:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_ModelOVI_ADDED:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_ModelOVI_REMOVED:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_ModelOVI_RENAMED:
-                enableSaveAction(true);
-                break;
-            case GlobalInfo.PROP_ModelOVI_RESET:
-                enableSaveAction(true);
-                break;
-        }
-        logger.info("--finished propertyChange(): "+evt.getPropertyName());
     }
     
     //------------------------------------------------------------------------//
@@ -722,18 +816,18 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
 
         @Override
         public void open() {
+            logger.info("\n");
             logger.info("--starting InfoLoader.open()");
-            jfcGI.setCurrentDirectory(new File(globalInfo.getWorkingDir()));
+            jfcGI.setCurrentDirectory(new File(romsGI.getWorkingDir()));
             int res = jfcGI.showOpenDialog(ROMSInfoEditorTopComponent.this);
             if (res!=JFileChooser.APPROVE_OPTION) return;
             try {
                 File f = jfcGI.getSelectedFile();
-                globalInfo.readProperties(f);
-                componentOpened();
+                romsGI.readProperties(f);
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }
-            logger.info("--finished InfoLoader.open()");
+            logger.info("--finished InfoLoader.open()\n");
         }
     }
 
@@ -747,8 +841,8 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         @Override
         public void save() throws IOException {
             logger.info("--starting InfoSaver.save()");
-            String fn = globalInfo.getWorkingDir()+File.separator+GlobalInfo.propsFN;
-            globalInfo.writeProperties(fn);
+            String fn = romsGI.getWorkingDir()+File.separator+GlobalInfo.propsFN;
+            romsGI.writeProperties(fn);
             logger.info("--finished InfoSaver.save()");
         }
     }
@@ -763,7 +857,7 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         @Override
         public void reset() {
             logger.info("--starting Resetter.reset()");
-            globalInfo.reset();
+            romsGI.reset();
             componentOpened();
             logger.info("--finished Resetter.reset()");
         }        

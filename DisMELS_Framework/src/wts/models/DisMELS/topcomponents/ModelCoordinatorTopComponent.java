@@ -514,7 +514,7 @@ public final class ModelCoordinatorTopComponent extends TopComponent
             File f = jfc.getSelectedFile();
             String wd = f.getPath()+File.separator;//close path
             GlobalInfo.getInstance().setWorkingDir(wd);
-            logger.info("Working Directory set to "+wd);
+            logger.info("Working Directory set to "+wd+"\n---------------------------------\n\n");
             jchkSetWorkingDir.setSelected(true);
             jtfWorkingDir.setText(wd);
             jtfWorkingDir.setToolTipText(wd);

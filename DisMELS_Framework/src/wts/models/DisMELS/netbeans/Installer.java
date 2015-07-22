@@ -5,9 +5,7 @@
 package wts.models.DisMELS.netbeans;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.Vector;
@@ -55,7 +53,7 @@ public class Installer extends ModuleInstall {
         logger.info("Using '"+userdir+"' as user directory");
         propsPath = userdir+File.separator+propsFN;
         logger.info("Reading DisMELS properties from '"+propsPath+"'");
-        JOptionPane.showMessageDialog(null, propsPath, "Reading properties from",JOptionPane.INFORMATION_MESSAGE);
+//        JOptionPane.showMessageDialog(null, propsPath, "Reading properties from",JOptionPane.INFORMATION_MESSAGE);
         GlobalInfo g = GlobalInfo.getInstance();
         try {            
             g.readProperties(propsPath);//losd DisMELS global properties

@@ -134,6 +134,11 @@ public class ModelGrid2D {
         return mdMap.keySet();
     }
     
+    /**
+     * Tests if the file identified by fn is a ROMS grid file.
+     * @param fn - path/filename to test
+     * @return 
+     */
     public static boolean isGrid(String fn) {
         boolean b = false;
         try {
@@ -145,12 +150,24 @@ public class ModelGrid2D {
         return b;
     }
     
+    /**
+     * Tests if the input NetCDF dataset is a ROMS grid.
+     * @param nds - path/filename to test
+     * @return 
+     */
     public static boolean isGrid(ucar.nc2.dataset.NetcdfDataset nds) {
         if (nds==null) return false;
         boolean b = (nds.findVariable(GlobalInfo.getInstance().getCriticalGrid2DVariablesInfo().getNameInROMSDataset("h"))!=null);
         return b;
     }
     
+    /**
+     * Reads the (double) value of the scalar identified by 'name'.
+     * 
+     * @param name
+     * @return
+     * @throws IOException 
+     */
     private double readScalarDouble(String name) throws IOException {
         double x = 0;
         Variable v = nr.findVariable(name);
@@ -158,6 +175,13 @@ public class ModelGrid2D {
         return x;
     }
     
+    /**
+     * Extracts all required variables from the ROMS grid file associated with
+     * the NetCdF reader instance, as determined by the ROMS GlobalInfo's 
+     * CriticalGrid2DVariablesInfo instance.
+     * 
+     * @throws IOException 
+     */
     private void extractVariables() throws IOException {
         CriticalGrid2DVariablesInfo cvis = GlobalInfo.getInstance().getCriticalGrid2DVariablesInfo();
         Variable sph = nr.findVariable(cvis.getNameInROMSDataset("spherical"));
@@ -219,6 +243,7 @@ public class ModelGrid2D {
     
     /**
      * Set the ROMS grid using a file name.
+     * 
      * @param fn 
      */
     public void setDataset(String fn) {
@@ -238,6 +263,7 @@ public class ModelGrid2D {
     
     /**
      * Set the ROMS grid using a netcdf dataset object. 
+     * 
      * @param nds 
      */
     public void setDataset(ucar.nc2.dataset.NetcdfDataset nds) {

@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.openide.util.Exceptions;
 import wts.roms.gis.CSCreator;
 
@@ -86,10 +87,10 @@ public class GlobalInfo implements PropertyChangeListener {
     
     /** ROMS grid filename */
     private String gridFile = PROP_NotSet;
-    /** ROMS 2D grid critical variable info */
-    private final CriticalGrid2DVariablesInfo cviGrid2D;
     /** ROMS model canonical filename */
     private String canonicalModelFile = PROP_NotSet;
+    /** ROMS 2D grid critical variable info */
+    private final CriticalGrid2DVariablesInfo cviGrid2D;
     /** ROMS model critical variables info */
     private final CriticalModelVariablesInfo cviModel;
     /** ROMS model optional variables info */
@@ -221,17 +222,18 @@ public class GlobalInfo implements PropertyChangeListener {
      */
     public void setGridFile(String file){
         if (!gridFile.equals(file)){
-            logger.info("ROMS grid file set");
+            logger.info("--setting ROMS grid file to '"+file+"'");
             String oldval = gridFile;
             gridFile = file;
             doEvents = false;//turn off PropertyChangeEvent processing
-            cviGrid2D.reset();
+            cviGrid2D.reset();//throws PROP_RESET
             grid3d = null;
             i2d = null;
             doEvents = true;//turn on PropertyChangeEvent processing
             setCanonicalFile(PROP_NotSet);
             propertySupport.firePropertyChange(PROP_GridFile,oldval,gridFile);
-            propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET, null, cviGrid2D);
+//            propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET, null, cviGrid2D);
+            logger.info("--ROMS grid file set to '"+file+"'");
         }
     }
     
@@ -251,16 +253,18 @@ public class GlobalInfo implements PropertyChangeListener {
      */
     public void setCanonicalFile(String file){
         if (!canonicalModelFile.equals(file)){
-            logger.info("ROMS canonical file set");
+            logger.info("---setting ROMS canonical file to '"+file+"'");
             String oldval = canonicalModelFile;
+            if (grid3d!=null) grid3d.resetVerticalGridInfo();
             canonicalModelFile = file;
             doEvents = false;//turn off PropertyChangeEvent processing
-            cviModel.reset();
-            oviModel.reset();
+            cviModel.reset();//throws PROP_RESET
+            oviModel.reset();//throws PROP_RESET
             doEvents = true;//turn on PropertyChangeEvent processing
             propertySupport.firePropertyChange(PROP_CanonicalFile,oldval,canonicalModelFile);
-            propertySupport.firePropertyChange(PROP_ModelCVI_RESET, null, cviModel);
-            propertySupport.firePropertyChange(PROP_ModelOVI_RESET, null, oviModel);
+//            propertySupport.firePropertyChange(PROP_ModelCVI_RESET, null, cviModel);
+//            propertySupport.firePropertyChange(PROP_ModelOVI_RESET, null, oviModel);
+            logger.info("---ROMS canonical file set to '"+file+"'");
         }
     }
     
@@ -317,6 +321,7 @@ public class GlobalInfo implements PropertyChangeListener {
      * @param region - the new map region
      */
     public void setMapRegion(String region){
+        logger.info("setMapRegion(region)");
         if (CSCreator.isValidRegion(region)){
             logger.info("Map region '"+region+"' is valid!");
             String oldval = mapRegion;
@@ -329,10 +334,10 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Returns the name of the internal mask field associated with the 
-     * internal (field) name, or null if no mask field is associated with the name.
+     * Returns the name of the internal (DisMELS) mask field associated with the 
+     * internal (DisMELS) field name, or null if no mask field is associated with the name.
      * 
-     * @param field
+     * @param field - DisMELS (not ROMS file) field name
      * @return 
      */
     public String getMaskForField(String field){
@@ -355,7 +360,7 @@ public class GlobalInfo implements PropertyChangeListener {
     /**
      * Gets the working directory
      * 
-     * @return
+     * @return - the working directory
      */
     public String getWorkingDir(){
         return workingDirFN;
@@ -364,13 +369,13 @@ public class GlobalInfo implements PropertyChangeListener {
     /**
      * Sets the working directory (WD).
      *  Reads ROMS.properties file in new WD, if the file exists, otherwise
-     *  it uses the current ROMS properties and writes a new ROMS.properties file in the new WD.
+     *  use the current ROMS properties.
      * 
      * @param dir - path to new working directory directory
      */
     public void setWorkingDir(String dir){
+        logger.info("---setWorkingDirectory("+dir+")");
         if (!workingDirFN.equals(dir)){
-            String oldVal = workingDirFN;
             workingDirFN = dir;
             try {
                 String romsPropsPath = workingDirFN+File.separator+propsFN;
@@ -378,15 +383,22 @@ public class GlobalInfo implements PropertyChangeListener {
                 if (f.exists()){
                     readProperties(f);
                 } else {
-                    //create ROMS.properties file and write current properties to it
-                    writeProperties(f);
+                    JOptionPane.showMessageDialog(null, 
+                                                  new String("ROMS.properties file not found.\nUsing previously-defined or default ROMS info.\nPlease define ROMS info and save file."), 
+                                                  "File not found.", JOptionPane.INFORMATION_MESSAGE);
                 }
             } catch (FileNotFoundException ex) {
-                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, 
+                                              new String("ROMS.properties file not found.\nPlease define ROMS Info and save file."), 
+                                              "File not found.", JOptionPane.INFORMATION_MESSAGE);
+                logger.info(ex.toString());
             } catch (IOException | SecurityException ex) {
-                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, 
+                                              new String("Problem reading ROMS.properties file.\nPlease define ROMS Info and save file."), 
+                                              "Problem reading file.", JOptionPane.WARNING_MESSAGE);
+                logger.info(ex.toString());
             }
-            logger.info("Changed working directory to "+workingDirFN);
+            logger.info("---Changed working directory to "+workingDirFN);
         }
     }
 
@@ -445,10 +457,10 @@ public class GlobalInfo implements PropertyChangeListener {
      * @param fn - the Properties file name
      */
     public void readProperties(String fn) throws IOException{
-        logger.info("reading properties from "+fn);
+        logger.info("\nreading properties from "+fn);
         File f = new File(fn);
         readProperties(f);
-        logger.info("done reading properties from "+fn);
+        logger.info("done reading properties from "+fn+"\n");
     }
     
     /**
@@ -479,15 +491,22 @@ public class GlobalInfo implements PropertyChangeListener {
         if (version.equals("1.0")) {
             setRefDateString(p.getProperty(PROP_RefDate, refDateString));
             setMapRegion(p.getProperty(PROP_MapRegion, mapRegion));
+            logger.info("reading grid file property");
             setGridFile(p.getProperty(PROP_GridFile, gridFile));
+            logger.info("done reading grid file property");
+            logger.info("reading canonical file property");
             setCanonicalFile(p.getProperty(PROP_CanonicalFile, canonicalModelFile));
+            logger.info("done reading caonical file property");
         }
+        logger.info("reading cviGrid2D properties");
         cviGrid2D.readProperties(p);
-        propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET, null, cviGrid2D);
+//        propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET, null, cviGrid2D);
+        logger.info("reading cviModel properties");
         cviModel.readProperties(p);
-        propertySupport.firePropertyChange(PROP_ModelCVI_RESET, null, cviModel);
+//        propertySupport.firePropertyChange(PROP_ModelCVI_RESET, null, cviModel);
+        logger.info("reading oviModel properties");
         oviModel.readProperties(p);
-        propertySupport.firePropertyChange(PROP_ModelOVI_RESET, null, oviModel);
+//        propertySupport.firePropertyChange(PROP_ModelOVI_RESET, null, oviModel);
         logger.info("done reading properties");
     }
     
@@ -518,30 +537,27 @@ public class GlobalInfo implements PropertyChangeListener {
      */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        String pn = evt.getPropertyName();
-        logger.info("--starting propertyChange(): "+pn);
-        if (doEvents) {
-            logger.info("----doing events");
-            if (pn.equals(CriticalGrid2DVariablesInfo.PROP_RESET)){
-                propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET,null,cviGrid2D);
-            } else 
-            if (pn.equals(CriticalModelVariablesInfo.PROP_RESET)){            
-                propertySupport.firePropertyChange(PROP_ModelCVI_RESET,null,cviModel);
-            } else 
-            if (pn.equals(OptionalModelVariablesInfo.PROP_RESET)){
-                propertySupport.firePropertyChange(PROP_ModelOVI_RESET,null,oviModel);
-            } else 
-            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_ADDED)){
-                propertySupport.firePropertyChange(PROP_ModelOVI_ADDED,null,evt.getNewValue());
-            } else 
-            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_REMOVED)){
-                propertySupport.firePropertyChange(PROP_ModelOVI_REMOVED,evt.getOldValue(),null);
-            } else 
-            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_RENAMED)){
-                propertySupport.firePropertyChange(PROP_ModelOVI_RENAMED,evt.getOldValue(),evt.getNewValue());
-            } else 
-            propertySupport.firePropertyChange(evt);//propagate event up the chain
-        }
-        logger.info("--finished propertyChange(): "+pn);
+//        String pn = evt.getPropertyName();
+//        logger.info("--starting propertyChange(): "+evt.toString());
+//        if (doEvents) {
+//            logger.info("----doing events");
+//            if (pn.equals(CriticalGrid2DVariablesInfo.PROP_RESET)){
+//                propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET,null,cviGrid2D);
+//            } else 
+//            if (pn.equals(CriticalModelVariablesInfo.PROP_RESET)){            
+//                propertySupport.firePropertyChange(PROP_ModelCVI_RESET,null,cviModel);
+//            } else 
+//            if (pn.equals(OptionalModelVariablesInfo.PROP_RESET)){
+//                propertySupport.firePropertyChange(PROP_ModelOVI_RESET,null,oviModel);
+//            } else 
+//            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_ADDED)){
+//                propertySupport.firePropertyChange(PROP_ModelOVI_ADDED,null,evt.getNewValue());
+//            } else 
+//            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_REMOVED)){
+//                propertySupport.firePropertyChange(PROP_ModelOVI_REMOVED,evt.getOldValue(),null);
+//            } else 
+//            propertySupport.firePropertyChange(evt);//propagate event up the chain
+//        }
+//        logger.info("--finished propertyChange(): "+pn);
     }
 }
