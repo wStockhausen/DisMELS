@@ -192,6 +192,8 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     
     /** the singleton instance of the MapViewerTopComponent */
     private MapViewerTopComponent tcMapViewer = null;
+    /** the singleton instance of the ROMS info */
+    private wts.roms.model.GlobalInfo romsGI = null;
     
     /** instance of the private class for saving the initial attributes to csv */
     private CSVSaver csvSaver;
@@ -361,6 +363,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         doOnOpen = true;
         globalInfo = GlobalInfo.getInstance();
         globalInfo.addPropertyChangeListener(this);
+        romsGI = wts.roms.model.GlobalInfo.getInstance();
         LHS_Factory.addPropertyChangeListener(this);
         String wdFN = globalInfo.getWorkingDir();
         File wdF = new File(wdFN);
@@ -810,9 +813,9 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
 //        if (debug) logger.info("Adding point");
         FeatureCollection fc = FeatureCollections.newCollection();
         double[] latlon = AlbersNAD83.transformPtoG(new double[]{pt.getX(),pt.getY()});
-        double[] IJ = tcMapViewer.getModelGrid().computeIJfromLL(latlon[1],latlon[0]);
+        double[] IJ = romsGI.getGrid().computeIJfromLL(latlon[1],latlon[0]);
         //do not create points on land!
-        if (tcMapViewer.getModelGrid().isOnLand(IJ)) return fc;
+        if (romsGI.getGrid().isOnLand(IJ)) return fc;
         
         try {
             ftLHS.setGeometryFromMap(pt.getX(),pt.getY());
@@ -830,7 +833,8 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             double bd = 0;
             if (rpa.getCreateVerticalGrid()) {
                 dz = rpa.getDeltaZ();
-                bd = tcMapViewer.interpolateBathymetricDepth(pt.getX(),pt.getY());
+                bd = romsGI.getInterpolator().interpolateBathymetricDepth(IJ);
+//                bd = tcMapViewer.interpolateBathymetricDepth(pt.getX(),pt.getY());
                 nz = (int)(bd/dz)+1;
                 aLHSt.setValue(LifeStageAttributesInterface.PROP_vertType,Types.VERT_H);
             }

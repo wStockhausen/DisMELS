@@ -193,12 +193,17 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         
         String gf = romsGI.getGridFile();
         addGridFile(gf);
-        jcbGridFiles.setSelectedItem(gf);
+        if (gf!=null) {
+            jcbGridFiles.setSelectedItem(gf);
+            jcbCanonicalFiles.setEnabled(!gf.equals(GlobalInfo.PROP_NotSet));
+        }
         
         
         String cf = romsGI.getCanonicalFile();
-        addCanonicalFile(cf);
-        jcbCanonicalFiles.setSelectedItem(cf);
+        if (cf!=null){
+            addCanonicalFile(cf);
+            if (cf!=null) jcbCanonicalFiles.setSelectedItem(cf);
+        }
         
         jcbMapRegions.setSelectedItem(romsGI.getMapRegion());
         
@@ -551,12 +556,17 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     private void jcbGridFilesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbGridFilesActionPerformed
         String grdFN = (String) jcbGridFiles.getSelectedItem();
         logger.info("++++starting jcbGridFilesActionPerformed(): \n\tROMS grid file set to "+grdFN+"\n");
+        if (grdFN==null){
+            jcbCanonicalFiles.setEnabled(false);
+            jbSelCanonicalFile.setEnabled(false);
+        } else {
+            jcbCanonicalFiles.setEnabled(!grdFN.equals(GlobalInfo.PROP_NotSet));
+            jbSelCanonicalFile.setEnabled(!grdFN.equals(GlobalInfo.PROP_NotSet));
+        }
         if (!initializing){
             jcbGridFiles.setToolTipText(grdFN);
             romsGI.setGridFile(grdFN);
-            grdLM.addElement(grdFN);
-            jcbCanonicalFiles.setEnabled(!grdFN.equals(GlobalInfo.PROP_NotSet));
-            jbSelCanonicalFile.setEnabled(!grdFN.equals(GlobalInfo.PROP_NotSet));
+            addGridFile(grdFN);
             logger.info("++++ending jcbGridFilesActionPerformed(): \n\tROMS grid file set to "+grdFN+"\n");
             validate();
             repaint();
@@ -571,7 +581,7 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         if (!initializing){
             jcbCanonicalFiles.setToolTipText(canFN);
             romsGI.setCanonicalFile(canFN);
-            canLM.addElement(canFN);
+            addCanonicalFile(canFN);
             validate();
             repaint();
             logger.info("++++ending jcbCanonicalFilesActionPerformed(): \n\tROMS canonical file set to "+canFN+"\n");
@@ -621,27 +631,33 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         logger.info("--REACTING TO propertyChange(): "+evt.toString());
+        String nv = (String)evt.getNewValue();
         switch (evt.getPropertyName()) {
             case GlobalInfo.PROP_CanonicalFile:
                 initializing = true;
-                jcbGridFiles.removeItem((String)evt.getNewValue());//in case it's already on list
-                jcbCanonicalFiles.addItem((String)evt.getNewValue());
-                jcbCanonicalFiles.setSelectedItem((String)evt.getNewValue());
+                addCanonicalFile(nv);
+                jcbCanonicalFiles.setSelectedItem(nv);
                 initializing = false;
                 enableSaveAction(true);
                 break;
             case GlobalInfo.PROP_GridFile:
                 initializing = true;
-                jcbGridFiles.removeItem((String)evt.getNewValue());
-                jcbGridFiles.addItem((String)evt.getNewValue());
-                jcbGridFiles.setSelectedItem((String)evt.getNewValue());
+                addGridFile(nv);
+                jcbGridFiles.setSelectedItem(nv);
+                jcbCanonicalFiles.setEnabled(!nv.equals(GlobalInfo.PROP_NotSet));
                 initializing = false;
                 enableSaveAction(true);
                 break;
             case GlobalInfo.PROP_MapRegion:
+                initializing = true;
+                jcbMapRegions.setSelectedItem(nv);
+                initializing = false;
                 enableSaveAction(true);
                 break;
             case GlobalInfo.PROP_RefDate:
+                initializing = true;
+                jtfROMSRefDate.setText(nv);
+                initializing = false;
                 enableSaveAction(true);
                 break;
             case GlobalInfo.PROP_Grid2DCVI_RESET:
@@ -672,12 +688,16 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
      * @param cf 
      */
     private void addCanonicalFile(String cf){
-        boolean check = false;
-        if (canLM.getData().lastIndexOf(cf)<0) canLM.addElement(cf);
-        for (int i=0;i<jcbCanonicalFiles.getItemCount();i++){
-            if (jcbCanonicalFiles.getItemAt(i).equals(cf)) check = true;
+        if ((cf!=null)&&!cf.equals("")){
+            logger.info("Starting addCanonicalFile for '"+cf+"'");
+            boolean check = false;
+            if (canLM.getData().lastIndexOf(cf)<0) canLM.addElement(cf);
+            for (int i=0;i<jcbCanonicalFiles.getItemCount();i++){
+                if (jcbCanonicalFiles.getItemAt(i).equals(cf)) check = true;
+            }
+            if (!check) jcbCanonicalFiles.addItem(cf);
+            logger.info("Finished addCanonicalFile for '"+cf+"'");
         }
-        if (!check) jcbCanonicalFiles.addItem(cf);
     }
     
     /**
@@ -686,12 +706,16 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
      * @param gf 
      */
     private void addGridFile(String gf){
-        boolean check = false;
-        if (grdLM.getData().lastIndexOf(gf)<0) grdLM.addElement(gf);
-        for (int i=0;i<jcbGridFiles.getItemCount();i++){
-            if (jcbGridFiles.getItemAt(i).equals(gf)) check = true;
+        if ((gf!=null)&&!gf.equals("")){
+            logger.info("Starting addGridFile for '"+gf+"'");
+            boolean check = false;
+            if (grdLM.getData().lastIndexOf(gf)<0) grdLM.addElement(gf);
+            for (int i=0;i<jcbGridFiles.getItemCount();i++){
+                if (jcbGridFiles.getItemAt(i).equals(gf)) check = true;
+            }
+            if (!check) jcbGridFiles.addItem(gf);
+            logger.info("Finished addGridFile for '"+gf+"'");
         }
-        if (!check) jcbGridFiles.addItem(gf);
     }
     
     /**

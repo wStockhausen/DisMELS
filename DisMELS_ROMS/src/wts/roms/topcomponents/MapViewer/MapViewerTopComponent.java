@@ -105,7 +105,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     }
     
     /** GlobalInfo singleton */
-    private GlobalInfo globalInfo;
+    private GlobalInfo romsGI;
     
     /** file chooser for GIS layers */
     private JFileChooser jfcLayer = new JFileChooser();
@@ -215,11 +215,15 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     /**
      * Method called when this TopComponent's window is opened in the application.
      * This could happen multiple times before the application is closed.
+     * 
+     * Calls loadGridFile() if doOnOpen is true.
      */
     @Override
     public void componentOpened() {
-        logger.info("starting MapViewer.compnonentOpened()");
-        if (doOnOpen) loadGridFile();
+        logger.info("Starting componentOpened()");
+//        if (doOnOpen) loadGridFile();
+        if (doOnOpen) mapGUI.setGrid();
+        logger.info("Finished componentOpened()");
     }
 
     /**
@@ -228,8 +232,8 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      */
     @Override
     public void componentClosed() {
-        logger.info("starting MapViewer.compnonentClosed()");
-        logger.info("finished MapViewer.compnonentClosed()");
+        logger.info("Starting compnonentClosed()");
+        logger.info("Finished compnonentClosed()");
     }
     
     /**
@@ -245,51 +249,59 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @return 
      */
     public ModelGrid2D getModelGrid(){
-        return GlobalInfo.getInstance().getGrid();
+        return romsGI.getGrid();
     }
 
     /**
-     * Load the grid file.
+     * Loads the current ROMS grid file and creates the grid and mask layers on the map using
+     * a Runnable object.
+     * 
+     * The process clears all other GIS layers from the map, as well.
+     * 
+     *  1. calls setGrid() on mapGUI
+     *  2. if the file is not a valid grid file, a message box is shown
      */
-    private void loadGridFile() {
-        Runnable r = new Runnable(){
-            @Override
-            public void run() {
-                String grdFN = globalInfo.getGridFile();
-                Cursor c = getCursor();
-                try {
-                    if ((!grdFN.equals("<not set>"))&&(wts.roms.model.ModelGrid2D.isGrid(grdFN))) {
-                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        mapGUI.setGrid();
-                        mapGUI.validate();
-                        mapGUI.repaint();
-                    } else {
-                        javax.swing.JOptionPane.showMessageDialog(
-                                null,
-                                grdFN,
-                                "Error loading ROMS grid file: this is not a grid file:",
-                                javax.swing.JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (java.lang.Exception ex) {
-                    javax.swing.JOptionPane.showMessageDialog(
-                            null,
-                            grdFN,
-                            "Error loading grid file",
-                            javax.swing.JOptionPane.ERROR_MESSAGE);
-                    Exceptions.printStackTrace(ex);
-                }
-                setCursor(c);
-                doOnOpen = false;
-            }
-        };
-        ProgressUtils.showProgressDialogAndRun(r, "Reading ROMS grid info...");
-    }
+//    private void loadGridFile() {
+//        logger.info("Starting loadGridFile()");
+////        Runnable r = new Runnable(){
+////            @Override
+////            public void run() {
+//                String grdFN = romsGI.getGridFile();
+//                Cursor c = getCursor();
+//                try {
+//                    if ((!grdFN.equals("--not set--"))&&(wts.roms.model.ModelGrid2D.isGrid(grdFN))) {
+//                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+//                        mapGUI.setGrid();
+//                        mapGUI.validate();
+//                        mapGUI.repaint();
+//                    } else {
+//                        javax.swing.JOptionPane.showMessageDialog(
+//                                null,
+//                                grdFN,
+//                                "Error loading ROMS grid file:\n'"+grdFN+"'\nis not a grid file:",
+//                                javax.swing.JOptionPane.ERROR_MESSAGE);
+//                    }
+//                } catch (java.lang.Exception ex) {
+//                    javax.swing.JOptionPane.showMessageDialog(
+//                            null,
+//                            grdFN,
+//                            "Error loading grid file\n'"+grdFN+"'",
+//                            javax.swing.JOptionPane.ERROR_MESSAGE);
+//                    Exceptions.printStackTrace(ex);
+//                }
+//                setCursor(c);
+//                doOnOpen = false;
+////            }
+////        };
+////        ProgressUtils.showProgressDialogAndRun(r, "Reading ROMS grid info...");
+//        logger.info("Finished loadGridFile()");
+//    }
 
     private void initComponents1() {
         doOnOpen = true;//flag to load grid in componentOpened
-        globalInfo = GlobalInfo.getInstance();
-        globalInfo.addPropertyChangeListener(this);
-        String wdFN = globalInfo.getGridFile();
+        romsGI = GlobalInfo.getInstance();
+        romsGI.addPropertyChangeListener(this);
+        String wdFN = romsGI.getGridFile();
         File wdF = new File(wdFN);
 
         FileFilter fileFilter = new FileFilterImpl("shp","Shape files");
@@ -347,14 +359,46 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     public void removeGeoMouseListener(MouseListener listener){
         mapGUI.removeMouseListener(listener);
     }
+    
+    /**
+     * Calls refreshMap() method on the MapGUI_JPanel object (mapGUI) to refresh
+     * the map to the current context. This re-creates the MapPane and Legend objects
+     * in MapGUI_JPanel, and adds the current grid layers to the context.
+     */
+    public void refreshMap(){
+        logger.info("Starting refreshMap()");
+        mapGUI.refreshMap();
+        logger.info("Finished refreshMap()");
+    }
+    
+    /**
+     * Calls resetMap() method on the MapGUI_JPanel object (mapGUI) to reset
+     * the map to the current context. This re-creates the MapPane and Legend objects
+     * in MapGUI_JPanel.
+     */
+    public void resetMap(){
+        logger.info("Starting resetMap()");
+//        mapGUI.resetMap();
+        remove(jpMap);
+        initComponents();
+        mapGUI.setGrid();
+        logger.info("Finished resetMap()");
+    }
 
+    /**
+     * Sets the menu item allowing removal of manual removal of
+     * GIS layers from the map.
+     * 
+     * @param jmu - the JMenu object to set (assign as jmuGISLayers)
+     */
     public void setRemoveGISLayersMenu(JMenu jmu){
         logger.info("Setting RemoveGISLayersMenu");
         jmuGISLayers = jmu;
+        logger.info("Done setting RemoveGISLayersMenu");
     }
     
     /** 
-     * Adds a GIS layer based on a shapefile the user is prompted for.
+     * Adds a GIS layer to the map, based on a shapefile the user is prompted for.
      */
     public void addGISLayer(){
         int res = jfcLayer.showOpenDialog(this);
@@ -382,6 +426,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     public void addGISLayerAtBase(MapLayer layer){
         mapLayers.put(layer.getTitle(),layer);
         mapGUI.addLayerAtBottom(layer);
+        mapGUI.repaint();
     }
     
     /**
@@ -499,25 +544,23 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         // TODO read your settings according to their version
     }
     
-    //TODO: need to be able to load grid after changes to grid file name
-
+    /**
+     * Reacts to the following PropertyChangeEvents:
+     *  1. GlobalInfo.PROP_GridFIle
+     *      a. if the component is opened, calls loadGridFile() to show the new grid on the map
+     *      b. otherwise, sets a flag to call loadGridFile() when it does open
+     *  Note: this removes all GIS layers from the map and ONLY adds the new grid and mask layers
+     * 
+     * @param evt 
+     */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals(GlobalInfo.PROP_GridFile)){
-            logger.info("PropertyChange--grid file");
-            if (isOpened()) loadGridFile(); else doOnOpen = true;
+            logger.info("PropertyChange--grid file is : '"+romsGI.getGridFile()+"'");
+            //load the grid file (if component is opened) or flag it to load on opening
+            if (isOpened()) resetMap(); else doOnOpen = true;
+//            if (!isOpened()) doOnOpen = true;
         }
-    }
-    
-    /**
-     * Returns the bathymetric depth corresponding to the given location.
-     * @param pt - location (in lon/lat) as Point
-     * @return - the interpolated bathymetric depth (m)
-     */
-    public double interpolateBathymetricDepth(double lon, double lat){
-        double[] trPt = AlbersNAD83.transformPtoG(new double[]{lon,lat});
-        double bd = Math.abs(mapGUI.interpolateBathymetricDepth(trPt[0],trPt[1]));
-        return bd;
     }
     
     /**

@@ -38,6 +38,7 @@ import org.geotools.renderer.j2d.GeoMouseEvent;
 import org.geotools.renderer.j2d.RenderedLayer;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleBuilder;
+import org.netbeans.api.progress.ProgressUtils;
 import org.opengis.referencing.operation.TransformException;
 import org.openide.util.Exceptions;
 import wts.models.utilities.DateTime;
@@ -51,7 +52,7 @@ import wts.roms.model.ModelGrid2D;
  */
 public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeListener {
     
-    private GlobalInfo globalInfo;
+    private final GlobalInfo romsGI;
     
     private ModelGrid2DMapData gridMapData;
 
@@ -72,13 +73,12 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
     
 //    private JPanel_OceanTime oceanTimeJP;
     
-    /** Creates new form MapTester */
+    /** Constructor for class */
     public MapGUI_JPanel() {
-        globalInfo = GlobalInfo.getInstance();
+        romsGI = GlobalInfo.getInstance();
         initComponents();
         initComponents1();
-        setGrid();
-        globalInfo.addPropertyChangeListener(this);
+//        romsGI.addPropertyChangeListener(this);
     }
     
     /** This method is called from within the constructor to
@@ -173,21 +173,30 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
 
     }// </editor-fold>//GEN-END:initComponents
     
-    private void initComponents1() {
+    /**
+     * Re-creates the map pane (mapPane):. 
+     * Removes all components from the map panel, then 
+     * 1. recreates mapPane
+     * 2. adds it to the map panel as a scroll pane
+     * 3. hooks up mouse motion listeners
+     * 4. sets drag to zoom
+     * 5. disables input methods on mapPane (methods enabled when grid is set)
+     * 
+     * Does not create a legend nor set the context.
+     */
+    private void resetMapPane(){
         //Create map coordinate system
         PrimeMeridian.setPrimeMeridian(PrimeMeridian.PM_GREENWICH);
         try {
-            csMapView = 
-                    AlbersNAD83.getAlbers();
-//            csCoordDisplay =
-//                    AlbersNAD83.getNAD83();
+            csMapView = AlbersNAD83.getAlbers();
+//            csCoordDisplay = AlbersNAD83.getNAD83();
             mtMapToDisplay = AlbersNAD83.getPtoGtransform();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         
-        //Create map context to hold map layers
-        context = new DefaultMapContext();
+        //remove all existing components from panel
+        jpMapPanel.removeAll();
         //Create a StyledMapPane and add it to the JPanel with a scroll pane
         mapPane = new EditingMapPane(csMapView);
         jpMapPanel.add(mapPane.createScrollPane());
@@ -202,7 +211,31 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
         setMouseDragZooms(true);
         //disable input methods until grid file is set
         mapPane.enableInputMethods(false);
-        
+    }
+    
+    /**
+     * Re-creates the Legend object used in the lefthand split pane of the mapPane.
+     * Adds the context to the legend on creation.
+     */
+    private void resetLegend(){
+////        java.awt.Component c = splitPane.getLeftComponent();
+////        if (c!=null) splitPane.remove(c);
+//        legend = new Legend(context,"Layers");
+////        splitPane.setLeftComponent(legend);
+//        jpLegend.removeAll();
+//        jpLegend.add(legend);
+    }
+    
+    /**
+     * Creates:
+     *  1. the map view coordinate system
+     *  2. the Physical-to-Geographic math transformation from map to display (Albers to LatLon)
+     *  3. the minimum pixel size
+     *  4. the map context
+     *  5. the map pane (using resetMapPane)
+     *  6. the map legend (using resetLegend)
+     */
+    private void initComponents1() {
         //make sure Legend has icons it needs
         Icon open = UIManager.getIcon("Tree.openIcon");
         if (open==null) {
@@ -210,13 +243,6 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
             UIManager.put("Tree.openIcon", icon);
         }
         
-        legend = new Legend(context,"Layers");
-        splitPane.setLeftComponent(legend);
-        
-//        jpMapPanel.setBackground(null);
-//        jpMapGraphics.setBackground(null);
-//        jpMapGraphics.set
-//        jpMapGraphics.setOpaque(false);
         dim = new Dimension2D(){
             private double w = 1.0e-5;//old value 1.0e-5
             private double h = 1.0e-5;
@@ -230,23 +256,16 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
             public void setSize(double width, double height) {
                 w = width; h = height;
             }
-
         };
+                
+        //Create map context to hold map layers
+        context = new DefaultMapContext();
+        //create the mapPane to hold the map
+        resetMapPane();
+        //create the legend 
+        resetLegend();
     }
-    
-    private void setContext(){
-        try {
-            mapPane.reset();
-            mapPane.setMapContext(context);
-            RenderedLayer[] rls = mapPane.getRenderer().getLayers();
-            for (RenderedLayer rl: rls){
-                rl.setPreferredPixelSize(dim);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-    
+   
     /**
      * Adds layer to "top" of existing layers so that it is painted AFTER all
      * other layers.
@@ -273,6 +292,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
         context.addLayer(idx,layer);
         if (mapPane.getMapContext()!=null) return;//only set context if not already set
         setContext();
+        setCursor(c);
     }
 
     /**
@@ -281,15 +301,16 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayerAtBottom(MapLayer layer) {
+        logger.info("Adding layer at bottom");
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(0, layer);//add as 1st element in context, as this gets painted first
         MapLayer[] mls = context.getLayers();
         for (int i=0;i<mls.length;i++) {
-            System.out.println("layer "+i+" is '"+mls[i].getTitle()+"'");
+            logger.info("layer "+i+" is '"+mls[i].getTitle()+"'");
         }
-        if (mapPane.getMapContext()!=null) return;//only set context if not already set
-        setContext();
+        if (mapPane.getMapContext()==null) setContext();
+        setCursor(c);
     }
 
     @Override
@@ -315,6 +336,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
         Graphics grImg = img.getGraphics();
         jpDrawing.paintComponents(grImg);
 //        jpDrawing.paintAll(grImg);
+        setCursor(c);
         return img;
     }
     
@@ -326,7 +348,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
         BufferedImage bi = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
         Graphics2D grBI = bi.createGraphics();
         jpDrawing.paintComponents(grBI);
-//        jpDrawing.paintAll(grImg);
+        setCursor(c);
         return bi;
     }
     
@@ -344,22 +366,6 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
         ImageIO.write(bi,ext,f);
     }
     
-    /**
-     * Interpolates the bathymetric depth grid to the input
-     * lat, lon coordinates.
-     *
-     *@param lon - GIS longitude (deg) with PM Greenwich, -180 to 180
-     *@param lat - GIS latitude (deg), -90 to 90
-     *@return - bathymetric depth (d > 0)
-     *TODO - longitude is currently expected to be relative to the IDL, not
-     *       Greenwich.  Want to change this when we get coordinate systems
-     *       figured out.
-     */
-    public double interpolateBathymetricDepth(double x,double y) {
-        double z = gridMapData.interpolateBathymetricDepth(x,y);
-        return z;
-    }
-    
     private void geoMouseMoved(java.awt.event.MouseEvent evt) {
         if ((gridLayer!=null)&&(evt instanceof GeoMouseEvent)) {
             GeoMouseEvent gme = null;
@@ -367,12 +373,6 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
             Point2D dest = gme.getMapCoordinate(null);
             try {
                 //transform from map coordinates to display coordinates
-//                jtfLat.setText(String.valueOf(dest.getY()));
-//                double x = dest.getX()+180*MathFunctions.isTrue(PrimeMeridian.getPrimeMeridian()==PrimeMeridian.PM_IDL);
-//                if (x>180) x=x-360;
-//                jtfLon.setText(String.valueOf(x));
-//                double z = gridMapData.interpolateBathymetricDepth(PrimeMeridian.adjustToROMSlon(dest.getX()),
-//                                                                   dest.getY());
                 double[] srcPt = new double[]{dest.getX(),dest.getY()};
                 double[] dstPt = new double[2];
                 mtMapToDisplay.transform(srcPt,0,dstPt,0,1);
@@ -385,66 +385,153 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
                 //do nothing
             } catch (org.opengis.referencing.operation.TransformException ex) {
                 ex.printStackTrace();
+            } catch (java.lang.NullPointerException exc){
+                //invalid mouse coordinates
             }
         }
-    }
-
-    public MapContext getContext() {
-        return context;
     }
     
-    public EditingMapPane getMapPane() {
-        return mapPane;
-    }
-
     /**
-     * Maps the GlobalInfo grid
+     * Sets the current MapContext object (context) on the MapPane (mapPane).
      */
-    public void setGrid() {
+    private void setContext(){
+        logger.info("Starting setContext()");
+        try {
+            mapPane.setMapContext(context);
+            RenderedLayer[] rls = mapPane.getRenderer().getLayers();
+            for (RenderedLayer rl: rls){
+                rl.setPreferredPixelSize(dim);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        logger.info("Finished setContext()");
+    }
+    
+    /**
+     * Calls resetMapPane() and resetLegend() to recreate MapPane and the Legend objects, 
+     * then calls setContext() to set the MapContect (context) on the MapPane and Legend.
+     * 
+     * Adds existing gridLayer and maskLayer to the context.
+     */
+    public void refreshMap(){
+        logger.info("Starting refreshMap()");
+//        context.clearLayerList();
+        Runnable r = new Runnable(){
+            @Override
+            public void run() {
+                //re-create mapPane 
+                resetMapPane();
+                MapLayer[] layers = context.getLayers();
+                for (MapLayer layer: layers) logger.info(layer.getTitle()+": "+layer.toString());
+                //Create map context to hold map layers
+                context = new DefaultMapContext();
+                //set context on mapPane
+                setContext();
+                //re-create legend, hooking it up to context 
+                resetLegend();
+                //add grid and mask layers
+                if (gridLayer!=null) context.addLayer(gridLayer);
+                if (maskLayer!=null) context.addLayer(maskLayer);
+                validate();
+                repaint();
+            }
+        };
+        ProgressUtils.showProgressDialogAndRun(r, "Refreshing map...");
+        logger.info("Finished refreshMap()");
+    }
+    
+    /**
+     * Calls resetMapPane() and resetLegend() to recreate MapPane and the Legend objects, 
+     * then calls setContext() to set the empty MapContect (context) on the MapPane and Legend.
+     * 
+     * Does NOT add existing gridLayer and maskLayer to the context 
+     */
+    public void resetMap(){
+        logger.info("Starting resetMap()");
+//        context.clearLayerList();
+        Runnable r = new Runnable(){
+            @Override
+            public void run() {
+                //re-create mapPane 
+                resetMapPane();
+                //Create map context to hold map layers
+                context = new DefaultMapContext();
+                //set context on mapPane
+                setContext();
+                //re-create legend, hooking it up to context 
+                resetLegend();
+                //add grid and mask layers
+                validate();
+                repaint();
+            }
+        };
+        ProgressUtils.showProgressDialogAndRun(r, "Resetting map...");
+        logger.info("Finished resetMap()");
+    }
+ 
+    /**
+     * Maps the current GlobalInfo grid
+     *  1. clears the MapContext (context) of all layers
+     *  2. creates the gridLayer and maskLayer layers
+     *  3. adds the layers to context
+     *  4. sets the context (via setContext()) on the MapPane
+     *  5. enables input methods on the MapPane
+     */
+    final public void setGrid() {
+        logger.info("Starting setGrid()");
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        if (gridLayer!=null) context.clearLayerList();
-        ModelGrid2D mg = globalInfo.getGrid();
-        if (mg!=null){
-            try {
-                //create the grid and mask MapLayers
-                FeatureCollection fc;
-                Style style;
-                StyleBuilder sb = new StyleBuilder();
+        Runnable r = new Runnable(){
+            @Override
+            public void run() {
+                resetMap();
+                ModelGrid2D mg = romsGI.getGrid();
+                if (mg!=null){
+                    try {
+                        //create the grid and mask MapLayers
+                        FeatureCollection fc;
+                        Style style;
+                        StyleBuilder sb = new StyleBuilder();
 
-                //Make the grid fc
-                gridMapData = new ModelGrid2DMapData();
-                fc = gridMapData.getGridLines(5);
-                System.out.println("line bounds: "+fc.getBounds().toString());
-    //            System.out.println("grid coordinate system: "+
-    //                    fc.getFeatureType().getDefaultGeometry().getCoordinateSystem().getName());
-                style = sb.createStyle(sb.createLineSymbolizer(Color.RED,1.0));
-                gridLayer = new DefaultMapLayer(fc,style,"model grid");
-                context.addLayer(gridLayer);
+                        //Make the grid fc
+                        gridMapData = new ModelGrid2DMapData();
+                        fc = gridMapData.getGridLines(5);
+                        logger.info("line bounds: "+fc.getBounds().toString());
+            //            System.out.println("grid coordinate system: "+
+            //                    fc.getFeatureType().getDefaultGeometry().getCoordinateSystem().getName());
+                        style = sb.createStyle(sb.createLineSymbolizer(Color.RED,1.0));
+                        gridLayer = new DefaultMapLayer(fc,style,"model grid");
+                        context.addLayer(gridLayer);
 
-                //and the mask fc
-                fc = gridMapData.getMask();
-                System.out.println("polygon bounds: "+fc.getBounds().toString());
-                style = sb.createStyle(sb.createPolygonSymbolizer(Color.GRAY));
-                maskLayer = new DefaultMapLayer(fc,style,"land mask");
-                context.addLayer(maskLayer);
+                        //and the mask fc
+                        fc = gridMapData.getMask();
+                        logger.info("polygon bounds: "+fc.getBounds().toString());
+                        style = sb.createStyle(sb.createPolygonSymbolizer(Color.GRAY));
+                        maskLayer = new DefaultMapLayer(fc,style,"land mask");
+                        context.addLayer(maskLayer);
 
-                setContext();
-                validate();
-                //enable input methods on mapPane
-                mapPane.enableInputMethods(true);
-            } catch (IllegalAttributeException ex) {
-                Exceptions.printStackTrace(ex);
-            } catch (SchemaException ex) {
-                Exceptions.printStackTrace(ex);
-            } catch (Exception ex) {
-                Exceptions.printStackTrace(ex);
+                        setContext();
+                        validate();
+                        repaint();
+                        //enable input methods on mapPane
+                        mapPane.enableInputMethods(true);
+                    } catch (IllegalAttributeException ex) {
+                        Exceptions.printStackTrace(ex);
+                    } catch (SchemaException ex) {
+                        Exceptions.printStackTrace(ex);
+                    } catch (Exception ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                } else {
+                    //enable input methods on mapPane
+                    mapPane.enableInputMethods(false);
+                }
             }
-        } else {
-            //enable input methods on mapPane
-            mapPane.enableInputMethods(false);
-        }
+        };
+        ProgressUtils.showProgressDialogAndRun(r, "Setting ROMS grid layers...");
         setCursor(c);
+        logger.info("Finished setGrid()");
     }
     
     public boolean getMouseDragZooms() {
@@ -511,9 +598,9 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
     @Override
     public void propertyChange(PropertyChangeEvent pce) {
         logger.info("PropertyChange: "+pce.toString());
-        if (pce.getSource().equals(globalInfo)){
+        if (pce.getSource().equals(romsGI)){
             if (pce.getPropertyName().equals(GlobalInfo.PROP_GridFile)){
-                setGrid();
+//                setGrid(); <-want this to come through MapViewerTopComponent
             }
         }
     }

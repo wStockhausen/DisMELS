@@ -40,7 +40,7 @@ import wts.roms.model.ModelGrid2D;
  */
 public class ModelGrid2DMapData {
     
-    private GlobalInfo globalInfo;
+    private GlobalInfo romsGI;
     
     private FeatureType ftLines;
     private FeatureType ftMask;
@@ -53,7 +53,7 @@ public class ModelGrid2DMapData {
      * Creates a new instance of ModelGrid2DMapData
      */
     public ModelGrid2DMapData() throws Exception {        
-        globalInfo = GlobalInfo.getInstance();
+        romsGI = GlobalInfo.getInstance();
         
         //Create the coordinate transformer--Geotools 2.0/2.1
         GeographicCoordinateSystem nad83 = 
@@ -151,7 +151,7 @@ public class ModelGrid2DMapData {
         //Now create the features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
         
-        ModelGrid2D grid2D = globalInfo.getGrid();
+        ModelGrid2D grid2D = romsGI.getGrid();
         int L = grid2D.getL();
         int M = grid2D.getM();
         double lon,lat;
@@ -211,7 +211,7 @@ public class ModelGrid2DMapData {
         //Create the mask features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
 
-        ModelGrid2D grid2D = globalInfo.getGrid();
+        ModelGrid2D grid2D = romsGI.getGrid();
         int Lm = grid2D.getLm();
         int Mm = grid2D.getMm();
         double lon,lat;
@@ -266,7 +266,7 @@ public class ModelGrid2DMapData {
         //Create the mask features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
 
-        ModelGrid2D grid2D = globalInfo.getGrid();
+        ModelGrid2D grid2D = romsGI.getGrid();
         int Lm = grid2D.getLm();
         int Mm = grid2D.getMm();
         double lon,lat;
@@ -318,8 +318,8 @@ public class ModelGrid2DMapData {
     public double interpolateBathymetricDepth(double lon, double lat) {
 //        lon = PrimeMeridian.adjustToROMSlon(lon);
         //now compute location in grid coordinates
-        double[] posIJ = globalInfo.getGrid().computeIJfromLL(lat,lon);
-        return globalInfo.getInterpolator().interpolateBathymetricDepth(posIJ);
+        double[] posIJ = romsGI.getGrid().computeIJfromLL(lat,lon);
+        return romsGI.getInterpolator().interpolateBathymetricDepth(posIJ);
     }
     
     /**
@@ -330,7 +330,7 @@ public class ModelGrid2DMapData {
      *@return - bathymetric depth (d > 0)
      */
     public double interpolateBathymetricDepth(double[] posIJ) {
-        return globalInfo.getInterpolator().interpolateBathymetricDepth(posIJ);
+        return romsGI.getInterpolator().interpolateBathymetricDepth(posIJ);
     }
     
     /**
@@ -339,6 +339,6 @@ public class ModelGrid2DMapData {
      * @return 
      */
     public boolean isOnLand(double[] pos){
-        return globalInfo.getGrid().isOnLand(pos);
+        return romsGI.getGrid().isOnLand(pos);
     }
 }
