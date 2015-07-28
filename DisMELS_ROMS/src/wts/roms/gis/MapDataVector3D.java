@@ -214,7 +214,7 @@ public class MapDataVector3D implements MapDataInterfaceVector3D {
             throws SchemaException, IllegalAttributeException, TransformException {
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -280,7 +280,7 @@ public class MapDataVector3D implements MapDataInterfaceVector3D {
             throws SchemaException, IllegalAttributeException, TransformException {
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -374,7 +374,7 @@ public class MapDataVector3D implements MapDataInterfaceVector3D {
         //Create the mask features and add them to the feature collection
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -458,7 +458,7 @@ public class MapDataVector3D implements MapDataInterfaceVector3D {
 
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -539,7 +539,7 @@ public class MapDataVector3D implements MapDataInterfaceVector3D {
 
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;

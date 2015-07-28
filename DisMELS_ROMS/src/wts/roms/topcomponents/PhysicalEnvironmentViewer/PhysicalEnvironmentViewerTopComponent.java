@@ -13,9 +13,11 @@ import java.text.NumberFormat;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.SpinnerNumberModel;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureType;
+import org.geotools.filter.IllegalFilterException;
 import org.geotools.map.DefaultMapLayer;
 import org.geotools.map.MapLayer;
 import org.netbeans.api.progress.ProgressHandle;
@@ -107,6 +109,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     }
     
 
+    /** indicates whether to pay attention to events */
     private boolean doEvents = true;//flag indicates whether to pay attention to events
 
     /** singleton instance of GlobalInfo */
@@ -117,13 +120,33 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private PhysicalEnvironment pe    = null;
     private Interpolator3D i3d        = null;
 
+    /** name of scalar field to map */
+    private String scalarFld = null;
+    /** feature collection for the scalar map layer */
+    private FeatureCollection scalarFC = null;
+    /**style for the scalar map layer */
     private ColorBarStyle scalarStyle = null;
-    private MapLayer scalarLayer      = null;
+    /** the scalar map layer */
+    private MapLayer scalarLayer = null;
 
+    /** name of vector field x component to map */
+    private String vectorFldX = null;
+    /** name of vector field y component to map */
+    private String vectorFldY = null;
+    /** feature collection for the scalar map layer */
+    private FeatureCollection vectorFC = null;
+    /**style for the scalar map layer */
     private VectorStyle vectorStyle = null;
+    /** the vector map layer */
     private MapLayer vectorLayer    = null;
 
+    /** name of scalar field to map */
+    private String horizGradFld = null;
+    /** feature collection for the scalar map layer */
+    private FeatureCollection horizGradFC = null;
+    /**style for the horizontal gradient map layer */
     private VectorStyle     horizGradStyle = null;
+    /** the horizontal gradient map layer */
     private MapLayer        horizGradLayer = null;
     
     /** the singleton instance of the MapViewerTopComponent */
@@ -138,6 +161,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private boolean doOnOpen = true;
     
     public PhysicalEnvironmentViewerTopComponent() {
+        logger.info("Start INSTANTIATING PhysEnvViewerTopComponent");
         initComponents();
         initComponents1();
         setName(Bundle.CTL_PhysicalEnvironmentViewerTopComponent());
@@ -146,22 +170,23 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         //add the actionMap, the instance content (wrapped in an AbstractLookup) and 'this' to the global lookup
         content = new InstanceContent();//will reflect csvSaver, csvLoader capabilities
         associateLookup(new ProxyLookup(Lookups.fixed(getActionMap(),this),new AbstractLookup(content)));
+        logger.info("Finished INSTANTIATING PhysEnvViewerTopComponent");
     }
 
     private void initComponents1() {
-        doOnOpen = true;
+        logger.info("Starting initCompnents1");
         romsGI = GlobalInfo.getInstance();
-        romsGI.addPropertyChangeListener(this);
         
         jfbDataset.addFileFilter("nc", "netCDF file");
         sfCustomizer.setVisible(false);//set invisible, initially
-        vsCustomizer.setVisible(false);
+        vfCustomizer.setVisible(false);
         hgCustomizer.setVisible(false);
         
         jfbDataset.setEnabled(false);
         jbUpdate.setEnabled(false);
         jbPrev.setEnabled(false);
         jbNext.setEnabled(false);
+        logger.info("Finished initCompnents1");
     }
     
     /**
@@ -218,7 +243,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         jcbVectorY = new javax.swing.JComboBox();
         jbEditVectorScaling = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
-        vsCustomizer = new wts.GIS.styling.VectorStyleCustomizer();
+        vfCustomizer = new wts.GIS.styling.VectorStyleCustomizer();
         jpHGrad = new javax.swing.JPanel();
         jpHGradDepthSelector = new javax.swing.JPanel();
         jrbHGradK = new javax.swing.JRadioButton();
@@ -685,7 +710,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(vsCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(vfCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(0, 0, Short.MAX_VALUE)))
         );
         jPanel2Layout.setVerticalGroup(
@@ -694,7 +719,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(vsCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(vfCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(0, 0, Short.MAX_VALUE)))
         );
 
@@ -1053,14 +1078,15 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
      * Loads the ROMS model dataset specified by jfbDatset.getFilename().
      */
     private void loadDataset(){
-        logger.info("loading dataset");
+        logger.info("started loadDataset()");
         ProgressRunnable<Integer> r = new ProgressRunnable<Integer>(){
             @Override
             public Integer run(ProgressHandle handle) {
+                logger.info("loadDataset(): starting run()");
                 try {
                     //read dataset from netcdf file
                     netcdfReader = new NetcdfReader(jfbDataset.getFilename());
-                    pe = new PhysicalEnvironment(0, netcdfReader, romsGI.getGrid());
+                    pe = new PhysicalEnvironment(0, netcdfReader, romsGI.getGrid3D());
                     i3d = new Interpolator3D(pe);
                     setOceanTime(0);
                     setVariables();
@@ -1068,15 +1094,22 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     jbPrev.setEnabled(true);
                     jbNext.setEnabled(true);
                     repaint();
+                    logger.info("loadDataset(): finished try successfully");
                 } catch (IOException ex) {
+                    logger.info("loadDataset(): finished try UNsuccessfully with IOException");
                     logger.severe(ex.getMessage());
+                } catch (Exception ex){
+                    logger.info("loadDataset(): finished try UNsuccessfully with Exception");
+                    logger.severe(ex.toString());
                 }
+                logger.info("loadDataset(): finished run()");
                 return 0;
             }
 
         };
         ProgressHandle h = ProgressHandleFactory.createHandle("Reading ROMS model dataset...");
         ProgressUtils.showProgressDialogAndRunLater(r, h, false);
+        logger.info("finished loadDataset()");
     }
     
     /**
@@ -1087,13 +1120,16 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
      * @param evt 
      */
     private void jspTimeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jspTimeStateChanged
-        //update the oceantime shown in the text fields 
-        //use update() to update map to this time
-        int i = ((Integer) jspTime.getValue()) - 1;
-        double ot = netcdfReader.getOceanTime(i);
-        calendar.setTimeOffset((long) ot);
-        jtfTime.setText(calendar.getDate().getDateTimeString());
-        jtfTime1.setText(""+(new Double(ot).longValue()));
+        if (doEvents){
+            //update the oceantime shown in the text fields 
+            //use update() to update map to this time
+            int i = ((Integer) jspTime.getValue()) - 1;
+            double ot = netcdfReader.getOceanTime(i);
+            if (calendar==null) calendar = romsGI.getCalendar();
+            calendar.setTimeOffset((long) ot);
+            jtfTime.setText(calendar.getDate().getDateTimeString());
+            jtfTime1.setText(""+(new Double(ot).longValue()));
+        }
     }//GEN-LAST:event_jspTimeStateChanged
 
     private void jcbScalarVarItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbScalarVarItemStateChanged
@@ -1102,8 +1138,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void jcbScalarVarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbScalarVarActionPerformed
         if (doEvents) {
+            ModelGrid3D grid3D = romsGI.getGrid3D();
+            if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
-                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbScalarVar.getSelectedItem();
                 if (obj instanceof String) {
@@ -1120,14 +1157,14 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     if (hasK) {
                         int vertType = md.getVertPosType();
                         SpinnerNumberModel nm = (SpinnerNumberModel) jspScalarK.getModel();
-                        nm.setStepSize(Integer.valueOf(1));
-                        nm.setMaximum(Integer.valueOf(grid3D.getN()));//max index of cells or layers
+                        nm.setStepSize(1);
+                        nm.setMaximum(grid3D.getN());//max index of cells or layers
                         if (vertType == ModelTypes.VERT_POSTYPE_W) {
-                            nm.setMinimum(Integer.valueOf(0));//layers start at 0
-                            nm.setValue(Integer.valueOf(0));
+                            nm.setMinimum(0);//layers start at 0
+                            nm.setValue(0);
                         } else {
-                            nm.setMinimum(Integer.valueOf(1));//layers start at 0
-                            nm.setValue(Integer.valueOf(1));
+                            nm.setMinimum(1);//layers start at 0
+                            nm.setValue(1);
                         }
                     }
                 }
@@ -1170,10 +1207,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         if (evt.getActionCommand().equals("Edit color scale")&&(scalarLayer!=null)) {
             logger.info(scalarStyle.toString());
             scalarStyle = (ColorBarStyle) scalarLayer.getStyle();
-            logger.info(scalarStyle.toString());
             sfCustomizer.setObject(scalarStyle);
             sfCustomizer.setVisible(true);
-            logger.info(scalarStyle.toString());
             jbScalarColorScale.setActionCommand("Hide color scale");
             jbScalarColorScale.setText("Hide color scale");
             validate();
@@ -1181,7 +1216,16 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             jbScalarColorScale.setActionCommand("Edit color scale");
             jbScalarColorScale.setText("Edit color scale");
             sfCustomizer.setVisible(false);
-            validate();
+        }
+        if ((scalarStyle!=null)&&scalarStyle.mustUpdateStyle()) {
+            try {
+                logger.info("updating scalar style for user changes");
+                scalarStyle.updateStyle();
+                tcMapViewer.repaint();
+                logger.info("updating scalar style for user changes");
+            } catch (IllegalFilterException ex) {
+                Exceptions.printStackTrace(ex);
+            }
         }
     }//GEN-LAST:event_jbScalarColorScaleActionPerformed
 
@@ -1191,12 +1235,15 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void jcbVectorXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVectorXActionPerformed
         if (doEvents) {
+            logger.info("starting jcbVectorXActionPerformed(): "+evt.toString() );
+            ModelGrid3D grid3D = romsGI.getGrid3D();
+            if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
-                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbVectorX.getSelectedItem();
                 if (obj instanceof String) {
                     String strFld = (String) obj;//name of selected model field
+                    logger.info("jcbVectorXActionPerformed() for "+strFld);
                     ModelData md = pe.getField(strFld);
                     if (md!=null){
                         hasK = md.getVertPosType()!=ModelTypes.VERT_POSTYPE_NONE;
@@ -1209,49 +1256,18 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     if (hasK) {
                         int vertType = md.getVertPosType();
                         SpinnerNumberModel nm = (SpinnerNumberModel) jspVectorK.getModel();
-                        nm.setStepSize(Integer.valueOf(1));
-                        nm.setMaximum(Integer.valueOf(grid3D.getN()));//max index of cells or layers
+                        nm.setStepSize(1);
+                        nm.setMaximum(grid3D.getN());//max index of cells or layers
                         if (vertType == ModelTypes.VERT_POSTYPE_W) {
-                            nm.setMinimum(Integer.valueOf(0));//layers start at 0
-                            nm.setValue(Integer.valueOf(0));
+                            nm.setMinimum(0);//layers start at 0
+                            nm.setValue(0);
                         } else {
-                            nm.setMinimum(Integer.valueOf(1));//layers start at 0
-                            nm.setValue(Integer.valueOf(1));
+                            nm.setMinimum(1);//layers start at 0
+                            nm.setValue(1);
                         }
                     }
                 }
-//                if (obj instanceof String) {
-//                    String strFld = (String) obj;//name of selected model field
-//                    Variable v = netcdfReader.findVariable(strFld);
-//                    List dims = v.getDimensionsAll();
-//                    ListIterator it = dims.listIterator();
-//                    logger.info("Vector X field name: " + strFld);
-//                    Dimension vertDim = null;
-//                    while (it.hasNext()) {
-//                        Dimension d = (Dimension) it.next();
-//                        String str = d.getName();
-//                        logger.info("\tDimension name: " + str);
-//                        if (str.startsWith("s")) {
-//                            hasK = true;
-//                            vertDim = d;
-//                        }
-//                    }
-//                    this.jpVectorDepthSelector.setEnabled(hasK);
-//                    this.jpVectorDepthSelector.setVisible(hasK);
-//                    if (hasK) {
-//                        int vertType = ModelTypes.getInstance().getVertPosType(vertDim.getName());
-//                        SpinnerNumberModel nm = (SpinnerNumberModel) jspVectorK.getModel();
-//                        nm.setStepSize(Integer.valueOf(1));
-//                        nm.setMaximum(Integer.valueOf(grid3D.getN()));//max index of cells or layers
-//                        if (vertType == ModelTypes.VERT_POSTYPE_W) {
-//                            nm.setMinimum(Integer.valueOf(0));//layers start at 0
-//                            nm.setValue(Integer.valueOf(0));
-//                        } else {
-//                            nm.setMinimum(Integer.valueOf(1));//layers start at 0
-//                            nm.setValue(Integer.valueOf(1));
-//                        }
-//                    }
-//                }
+                logger.info("jcbVectorXActionPerformed(): finished try");
             } catch (Exception ex) {
                 logger.severe(ex.getMessage());
             }
@@ -1264,12 +1280,15 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void jcbVectorYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVectorYActionPerformed
         if (doEvents) {
+            logger.info("starting jcbVectorYActionPerformed(): "+evt.toString() );
+            ModelGrid3D grid3D = romsGI.getGrid3D();
+            if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
-                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbVectorY.getSelectedItem();
                 if (obj instanceof String) {
                     String strFld = (String) obj;//name of selected model field
+                    logger.info("jcbVectorYActionPerformed() for "+strFld);
                     ModelData md = pe.getField(strFld);
                     if (md!=null){
                         hasK = md.getVertPosType()!=ModelTypes.VERT_POSTYPE_NONE;
@@ -1293,38 +1312,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                         }
                     }
                 }
-//                if (obj instanceof String) {
-//                    String strFld = (String) obj;//name of selected model field
-//                    Variable v = netcdfReader.findVariable(strFld);
-//                    List dims = v.getDimensionsAll();
-//                    ListIterator it = dims.listIterator();
-//                    logger.info("Vector Y field name: " + strFld);
-//                    Dimension vertDim = null;
-//                    while (it.hasNext()) {
-//                        Dimension d = (Dimension) it.next();
-//                        String str = d.getName();
-//                        logger.info("\tDimension name: " + str);
-//                        if (str.startsWith("s")) {
-//                            hasK = true;
-//                            vertDim = d;
-//                        }
-//                    }
-//                    this.jpVectorDepthSelector.setEnabled(hasK);
-//                    this.jpVectorDepthSelector.setVisible(hasK);
-//                    if (hasK) {
-//                        int vertType = ModelTypes.getInstance().getVertPosType(vertDim.getName());
-//                        SpinnerNumberModel nm = (SpinnerNumberModel) jspVectorK.getModel();
-//                        nm.setStepSize(Integer.valueOf(1));
-//                        nm.setMaximum(Integer.valueOf(grid3D.getN()));//max index of cells or layers
-//                        if (vertType == ModelTypes.VERT_POSTYPE_W) {
-//                            nm.setMinimum(Integer.valueOf(0));//layers start at 0
-//                            nm.setValue(Integer.valueOf(0));
-//                        } else {
-//                            nm.setMinimum(Integer.valueOf(1));//layers start at 0
-//                            nm.setValue(Integer.valueOf(1));
-//                        }
-//                    }
-//                }
+                logger.info("jcbVectorYActionPerformed(): finished try");
             } catch (Exception ex) {
                 logger.severe(ex.getMessage());
             }
@@ -1332,11 +1320,13 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     }//GEN-LAST:event_jcbVectorYActionPerformed
 
     private void jbEditVectorScalingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbEditVectorScalingActionPerformed
+        logger.info("strting jbEditVectorScalingActionPerformed(): "+evt.toString());
         if (evt.getActionCommand().equals("Edit vector scaling")&&(vectorLayer!=null)) {
+            logger.info("Editing vector scaling");
             vectorStyle = (VectorStyle) vectorLayer.getStyle();
             logger.info(vectorStyle.toString());
-            vsCustomizer.setObject(vectorStyle);
-            vsCustomizer.setVisible(true);
+            vfCustomizer.setObject(vectorStyle);
+            vfCustomizer.setVisible(true);
             logger.info(vectorStyle.toString());
             jbEditVectorScaling.setActionCommand("Hide vector scaling");
             jbEditVectorScaling.setText("Hide vector scaling");
@@ -1344,9 +1334,10 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             return;
         }
         if (evt.getActionCommand().equals("Hide vector scaling")||(vectorLayer==null)) {
+            logger.info("revealing vector scaling");
             jbEditVectorScaling.setActionCommand("Edit vector scaling");
             jbEditVectorScaling.setText("Edit vector scaling");
-            vsCustomizer.setVisible(false);
+            vfCustomizer.setVisible(false);
             validate();
         }
     }//GEN-LAST:event_jbEditVectorScalingActionPerformed
@@ -1357,8 +1348,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void jcbHGradFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbHGradFieldActionPerformed
         if (doEvents) {
+            ModelGrid3D grid3D = romsGI.getGrid3D();
+            if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
-                ModelGrid3D grid3D = romsGI.getGrid();
                 boolean hasK = false;//assume no vertical dimension for selected field
                 Object obj = jcbHGradField.getSelectedItem();
                 if (obj instanceof String) {
@@ -1422,14 +1414,18 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
      * @param j 
      */
     private void setOceanTime(int j) {
+        logger.info("starting setOceanTime("+j+")");
         int mx = netcdfReader.getNumTimeSteps();
+        logger.info("starting setOceanTime("+j+"): mx = "+mx);
         double oceantime = netcdfReader.getOceanTime(j);
+        if (calendar==null) calendar = romsGI.getCalendar();
         calendar.setTimeOffset((long)oceantime);
         SpinnerNumberModel snm = new SpinnerNumberModel(j+1,1,mx,1);
         jspTime.setModel(snm);
         jtfTime.setText(calendar.getDate().getDateTimeString());
         jtfTime1.setText(""+(new Double(oceantime)).longValue());
         if (pe!=null) tcMapViewer.setOceanTime(pe.getOceanTime());
+        logger.info("finished setOceanTime("+j+")");
     }
     
     /**
@@ -1438,51 +1434,53 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
      * fields from the netcdf file.
      */
     private void setVariables() {
+        logger.info("starting setVariables()");
         doEvents = false;
-        String selScl = (String) jcbScalarVar.getSelectedItem();
-        String selX   = (String) jcbVectorX.getSelectedItem();
-        String selY   = (String) jcbVectorY.getSelectedItem();
-        String selHG  = (String) jcbHGradField.getSelectedItem();
-        logger.info("setVariables(): previously selected variables = '"+selScl+"', '"+selX+"', '"+selY+"', '"+selHG+"'.");
-        TreeSet<String> fields = new TreeSet<>(pe.getFieldNames());
+        logger.info("setVariables(): previously selected variables = '"+scalarFld+"', '"+vectorFldX+"', '"+vectorFldY+"', '"+horizGradFld+"'.");
         jcbScalarVar.removeAllItems();
         jcbVectorX.removeAllItems();
         jcbVectorY.removeAllItems();
         jcbHGradField.removeAllItems();
-        Iterator<String> vars = fields.iterator();
-        while (vars.hasNext()) {
-            String str = vars.next();
-            jcbScalarVar.addItem(str);
-            jcbVectorX.addItem(str);
-            jcbVectorY.addItem(str);
-            jcbHGradField.addItem(str);
-        }
-        fields = new TreeSet<>(pe.getGrid().getFieldNames());
-        vars = fields.iterator();
-        while (vars.hasNext()) {
-            String str = vars.next();
-            jcbScalarVar.addItem(str);
-            jcbVectorX.addItem(str);
-            jcbVectorY.addItem(str);
-            jcbHGradField.addItem(str);
-        }
         jcbScalarVar.setSelectedIndex(-1);//set to "no item"
         jcbVectorX.setSelectedIndex(-1);//set to "no item"
         jcbVectorY.setSelectedIndex(-1);//set to "no item"
         jcbHGradField.setSelectedIndex(-1);//set to "no item"
-        doEvents = true;
-        if ((selScl!=null)&&(!selScl.equals(""))){
-            jcbScalarVar.setSelectedItem(selScl);
+        if (pe==null){
+            logger.info("setVariables(): pe is NULL");
+            scalarFld = null;
+            vectorFldX = null;
+            vectorFldY = null;
+            horizGradFld = null;
+            jbUpdate.setEnabled(false);
+            jbPrev.setEnabled(false);
+            jbNext.setEnabled(false);
+        } else {
+            logger.info("setVariables(): reading fields from pe");
+            TreeSet<String> fields = new TreeSet<>(pe.getFieldNames());
+            Iterator<String> vars = fields.iterator();
+            while (vars.hasNext()) {
+                String str = vars.next();
+                logger.info("setVariables(): adding var "+str);
+                jcbScalarVar.addItem(str);
+                jcbVectorX.addItem(str);
+                jcbVectorY.addItem(str);
+                jcbHGradField.addItem(str);
+            }
+            doEvents = true;
+            if ((scalarFld!=null)&&(!scalarFld.equals(""))){
+                jcbScalarVar.setSelectedItem(scalarFld);
+            }
+            if ((vectorFldX!=null)&&(!vectorFldX.equals(""))){
+                jcbVectorX.setSelectedItem(vectorFldX);
+            }
+            if ((vectorFldY!=null)&&(!vectorFldY.equals(""))){
+                jcbVectorY.setSelectedItem(vectorFldY);
+            }
+            if ((horizGradFld!=null)&&(!horizGradFld.equals(""))){
+                jcbHGradField.setSelectedItem(horizGradFld);
+            }
         }
-        if ((selX!=null)&&(!selX.equals(""))){
-            jcbVectorX.setSelectedItem(selX);
-        }
-        if ((selY!=null)&&(!selY.equals(""))){
-            jcbVectorY.setSelectedItem(selY);
-        }
-        if ((selHG!=null)&&(!selHG.equals(""))){
-            jcbHGradField.setSelectedItem(selHG);
-        }
+        logger.info("finished setVariables()");
     }
 
     private void next() throws IOException{
@@ -1537,7 +1535,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         file_ROMSDataset = String.valueOf(dfnc);
         logger.info("Switching to new netCDF file: "+file_ROMSDataset);
         netcdfReader.setNetcdfDataset(file_ROMSDataset);
-        pe = new PhysicalEnvironment(0,netcdfReader,romsGI.getGrid());
+        pe = new PhysicalEnvironment(0,netcdfReader,romsGI.getGrid3D());
         i3d.setPhysicalEnvironment(pe);
         doEvents = false;
         jfbDataset.setFilename(file_ROMSDataset);
@@ -1600,7 +1598,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         logger.info("Switching to new netCDF file: "+file_ROMSDataset);
         netcdfReader.setNetcdfDataset(file_ROMSDataset);
         int nt = netcdfReader.getNumTimeSteps();
-        pe = new PhysicalEnvironment(nt-1,netcdfReader,romsGI.getGrid());
+        pe = new PhysicalEnvironment(nt-1,netcdfReader,romsGI.getGrid3D());
         i3d.setPhysicalEnvironment(pe);
         doEvents = false;
         jfbDataset.setFilename(file_ROMSDataset);
@@ -1707,9 +1705,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void updateVectorMapLayer() {
         try {
-            logger.info("Updating vector layer");
             String strX = (String)jcbVectorX.getSelectedItem();
             String strY = (String)jcbVectorY.getSelectedItem();
+            logger.info("starting updateVectorMapLayer() for ["+strX+", "+strY+"]");
             CalendarIF cal = netcdfReader.getCalendar();
             cal.setTimeOffset((long)pe.getOceanTime());
             NumberFormat frmt = NumberFormat.getNumberInstance();
@@ -1731,8 +1729,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     logger.info("Creating a new vector style");
                     FeatureType ft = vmd.getFeatureType();
                     vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
-                    vsCustomizer.setObject(vectorStyle);
-                    vsCustomizer.repaint();
+                    vfCustomizer.setObject(vectorStyle);
+                    vfCustomizer.repaint();
                     wasNull = true;
                 } else {
                     if (vectorStyle.mustUpdateStyle()){
@@ -1751,6 +1749,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     logger.info("creating vector feature collection for depth "+d);
                     fc = ((MapDataVector3D)vmd).createFeatureCollection(-d);
                 }
+                if (fc==null) logger.severe("updateVectorMapLayer(): Could not create feature collection from MapDataVector3D");
             } else {
                 //ModelData is 2D
                 vmd = new MapDataVector2D(strX,strY,cal.getDate());
@@ -1759,8 +1758,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     logger.info("Creating a new vector style");
                     FeatureType ft = vmd.getFeatureType();
                     vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
-                    vsCustomizer.setObject(vectorStyle);
-                    vsCustomizer.repaint();
+                    vfCustomizer.setObject(vectorStyle);
+                    vfCustomizer.repaint();
                     wasNull = true;
                 } else {
                     if (vectorStyle.mustUpdateStyle()){
@@ -1772,6 +1771,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 logger.info("set style on vmd");
                 logger.info("creating 2D vector feature collection");
                 fc = ((MapDataVector2D)vmd).createFeatureCollection();
+                if (fc==null) logger.severe("updateVectorMapLayer(): Could not create feature collection from MapDataVector2D");
             }
             jtfMinVel.setText(frmt.format(vmd.getMin()));
             jtfMaxVel.setText(frmt.format(vmd.getMax()));
@@ -1785,13 +1785,14 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             if (vectorLayer!=null) {
                 tcMapViewer.addGISLayer(vectorLayer);//paint on top
             } else {
-                logger.severe("Could not create vectorLayer");
+                logger.severe("updateVectorMapLayer(): vectorLayer = null");
             }
         } catch (IOException ex) {
+            logger.severe("updateVectorMapLayer(): Error updating vector layer: could not read file!");
             logger.severe(ex.getMessage());
         } catch (Exception ex) {
-            logger.severe("Error updating vector layer");
-            logger.severe(ex.getMessage());
+            logger.severe("updateVectorMapLayer(): Error updating vector layer: unspecified");
+            logger.severe(ex.toString());
         }
     }
 
@@ -1930,7 +1931,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private javax.swing.JTextField jtfTime1;
     private javax.swing.JTextField jtfVectorDepth;
     private wts.GIS.styling.ColorBarStyleCustomizer sfCustomizer;
-    private wts.GIS.styling.VectorStyleCustomizer vsCustomizer;
+    private wts.GIS.styling.VectorStyleCustomizer vfCustomizer;
     // End of variables declaration//GEN-END:variables
 
     /**
@@ -1957,29 +1958,41 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         });
         
         if (doOnOpen){
-            File cdF;
-            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
-                cdF = new File(romsGI.getCanonicalFile());
-                setCurrentDirectory(cdF);
-            } else if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
-                cdF = new File(romsGI.getGridFile());
-                setCurrentDirectory(cdF);
-            }
+            WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
+                @Override
+                public void run() {
+                    jbUpdate.setEnabled(false);
+                    jbPrev.setEnabled(false);
+                    jbNext.setEnabled(false);
+                    File cdF;
+                    if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+                        cdF = new File(romsGI.getCanonicalFile());
+                        setCurrentDirectory(cdF);
+                    } else if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
+                        cdF = new File(romsGI.getGridFile());
+                        setCurrentDirectory(cdF);
+                    }
 
-            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
-                String f = jfbDataset.getFilename();
-                if ((f!=null)&&(!f.isEmpty())) {
-                    loadDataset();
-                    cdF = new File(jfbDataset.getFilename());
-                    setCurrentDirectory(cdF);
-                    jbUpdate.setEnabled(true);
-                    jbPrev.setEnabled(true);
-                    jbNext.setEnabled(true);
+                    if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+                        String f = jfbDataset.getFilename();
+                        if ((f!=null)&&(!f.isEmpty())) {
+                            loadDataset();
+                            cdF = new File(jfbDataset.getFilename());
+                            setCurrentDirectory(cdF);
+                            jbUpdate.setEnabled(true);
+                            jbPrev.setEnabled(true);
+                            jbNext.setEnabled(true);
+                        }
+                    }
                 }
-            }
+            });
         }
         doOnOpen = false;
         
+        romsGI.addPropertyChangeListener(this);
+        sfCustomizer.addPropertyChangeListener(this);
+        vfCustomizer.addPropertyChangeListener(this);
+        hgCustomizer.addPropertyChangeListener(this);
         doEvents = true;
         logger.info("done componentOpened");
     }
@@ -1991,6 +2004,10 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     @Override
     public void componentClosed() {
         logger.info("starting componentClosed()");
+        sfCustomizer.removePropertyChangeListener(this);
+        vfCustomizer.removePropertyChangeListener(this);
+        hgCustomizer.removePropertyChangeListener(this);
+        romsGI.removePropertyChangeListener(this);
         if (scalarLayer!=null) tcMapViewer.removeGISLayer(scalarLayer);
         if (vectorLayer!=null) tcMapViewer.removeGISLayer(vectorLayer);
         if (horizGradLayer!=null) tcMapViewer.removeGISLayer(horizGradLayer);
@@ -2005,6 +2022,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         logger.info("Writing properties");
         String str;
         p.setProperty("version", "1.0");
+        str = romsGI.getGridFile();
+        if (str!=null) p.setProperty("ROMS_GridFile", str);
         str = jfbDataset.getFilename();
         if (str!=null) p.setProperty("ROMS_Dataset", str);
         str = jspTime.getValue().toString();
@@ -2024,12 +2043,15 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         String version = p.getProperty("version");
         String val;
         doEvents = false;
-        val = p.getProperty("ROMS_Dataset");     if (val!=null) jfbDataset.setFilename(val);
-        val = p.getProperty("ocean_time_index"); if (val!=null) otIndex = Integer.parseInt(val);
-        val = p.getProperty("ScalarFieldName");  if (val!=null) {jcbScalarVar.addItem(val); jcbScalarVar.setSelectedItem(val);}
-        val = p.getProperty("VectorXFieldName"); if (val!=null) {jcbVectorX.addItem(val); jcbVectorX.setSelectedItem(val);}
-        val = p.getProperty("VectorYFieldName"); if (val!=null) {jcbVectorY.addItem(val); jcbVectorY.setSelectedItem(val);}
-        val = p.getProperty("HorizGradFieldName"); if (val!=null) {jcbHGradField.addItem(val); jcbHGradField.setSelectedItem(val);}
+        val = p.getProperty("ROMS_GridFile");    
+        if ((val!=null)&&!val.equals(GlobalInfo.PROP_NotSet)) {
+            val = p.getProperty("ROMS_Dataset");       if (val!=null) jfbDataset.setFilename(val);
+            val = p.getProperty("ocean_time_index");   if (val!=null) otIndex = Integer.parseInt(val);
+            val = p.getProperty("ScalarFieldName");    if (val!=null) {jcbScalarVar.addItem(val);  jcbScalarVar.setSelectedItem(val); scalarFld   =val;}
+            val = p.getProperty("VectorXFieldName");   if (val!=null) {jcbVectorX.addItem(val);    jcbVectorX.setSelectedItem(val);   vectorFldX  =val;}
+            val = p.getProperty("VectorYFieldName");   if (val!=null) {jcbVectorY.addItem(val);    jcbVectorY.setSelectedItem(val);   vectorFldY  =val;}
+            val = p.getProperty("HorizGradFieldName"); if (val!=null) {jcbHGradField.addItem(val); jcbHGradField.setSelectedItem(val);horizGradFld=val;}
+        }
         doEvents = true;
         logger.info("Done reading properties");
     }
@@ -2052,29 +2074,18 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             jbUpdate.setEnabled(false);
             jbPrev.setEnabled(false);
             jbNext.setEnabled(false);
-            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            if (romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            } else {
                 if (isOpened()){
                     logger.info("ROMS Canonical file changed--loading 3D info");
-                    File f = new File(romsGI.getCanonicalFile());
-                    setCurrentDirectory(f);
-                    jfbDataset.setEnabled(true);
-                } else {
-                    doOnOpen = true;
-                }
-            }
-        } else if (evt.getPropertyName().equals(GlobalInfo.PROP_GridFile)){
-            jfbDataset.setEnabled(false);
-            jbUpdate.setEnabled(false);
-            jbPrev.setEnabled(false);
-            jbNext.setEnabled(false);
-            if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
-                if (!isOpened()) doOnOpen = true;//don't change directory
-            } else if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
-                if (isOpened()){
-                    File f = new File(romsGI.getGridFile());
-                    setCurrentDirectory(f);
-                } else {
-                    doOnOpen = true;
+                    ModelGrid3D mg = romsGI.getGrid3D();
+                    if (!mg.hasVerticalGridInfo()) {
+                        doOnOpen = true;
+                    } else {
+                        File f = new File(romsGI.getCanonicalFile());
+                        setCurrentDirectory(f);
+                        jfbDataset.setEnabled(true);
+                    }
                 }
             }
         }

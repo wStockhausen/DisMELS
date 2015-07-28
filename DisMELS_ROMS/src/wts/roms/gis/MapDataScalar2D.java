@@ -69,7 +69,7 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
         super();
         this.date = null;
         this.field = md;
-        this.mask  = romsGI.getGrid().getGridMask(md.getName());
+        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -86,7 +86,7 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
         super();
         this.date = date;
         this.field = md;
-        this.mask  = romsGI.getGrid().getGridMask(md.getName());
+        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -136,7 +136,7 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
     @Override
     public FeatureCollection createFeatureCollection()
             throws SchemaException, IllegalAttributeException, TransformException {
-        ModelGrid2D grid = romsGI.getGrid();
+        ModelGrid2D grid = romsGI.getGrid2D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -182,7 +182,7 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
      */
     private FeatureCollection createFeatureCollection1()
             throws SchemaException, IllegalAttributeException, TransformException {
-        ModelGrid2D grid = romsGI.getGrid();
+        ModelGrid2D grid = romsGI.getGrid2D();
         int nf = 0;
         String sDate = date.getDateTimeString();
         logger.info("Creating export FeatureCollection for date = "+sDate);

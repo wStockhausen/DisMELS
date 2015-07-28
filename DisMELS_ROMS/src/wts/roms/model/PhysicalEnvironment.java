@@ -12,6 +12,8 @@ package wts.roms.model;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import ucar.ma2.Index;
 
 /**
@@ -35,9 +37,14 @@ public class PhysicalEnvironment {
     /** map of all ModelData fields */
     protected final HashMap<String,ModelData> mdMap = new HashMap<>(20);
     
+    /** Class logger */
+    private static final Logger logger = Logger.getLogger(PhysicalEnvironment.class.getName());
+    
     /** Creates a new instance of PhysicalEnvironment */
     public PhysicalEnvironment() {
+        logger.info("starting PhysicalEnvironment()");
         createFieldMap();
+        logger.info("finished PhysicalEnvironment()");
     }
     
     /**
@@ -49,11 +56,13 @@ public class PhysicalEnvironment {
      */
     public PhysicalEnvironment(NetcdfReader nR, ModelGrid3D modGrid3D) 
                                throws java.io.IOException{
+        logger.info("starting PhysicalEnvironment(nR,modGrid3D)");
         createFieldMap();
         this.iTime = 0;
         this.nR = nR;
         grid3D = modGrid3D;
         readTimeDependentFields();
+        logger.info("finished PhysicalEnvironment(nR,modGrid3D)");
     }
     
     /**
@@ -68,11 +77,13 @@ public class PhysicalEnvironment {
     public PhysicalEnvironment(int iTime, NetcdfReader nR, ModelGrid3D modGrid3D) 
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                        java.io.IOException {
+        logger.info("starting PhysicalEnvironment(iTime,nR,modGrid3D)");
         createFieldMap();
         this.iTime = iTime;
         this.nR = nR;
         grid3D = modGrid3D;
         readTimeDependentFields();
+        logger.info("finished PhysicalEnvironment(iTime,nR,modGrid3D)");
     }
     
     /**
@@ -114,6 +125,7 @@ public class PhysicalEnvironment {
      *Compute vertical cell sizes at all horizontal rho points
      */
     public void computeHz() {
+        logger.info("starting computeHz()");
         double[] zw;
         int N,M,L;
         N = grid3D.getN();
@@ -137,6 +149,7 @@ public class PhysicalEnvironment {
         ModelData Hz = new ModelData(ocean_time,Hza,"Hz");
         Hz.setDimIndices(-1,0,1,2);
         mdMap.put("Hz",Hz);
+        logger.info("finished computeHz()");
     }
     
     /**
@@ -155,6 +168,7 @@ public class PhysicalEnvironment {
      * Computes the vertical velocity field W by scaling the omega field.
      */
     public void computeW() {
+        logger.info("starting computeW()");
         int L,M,N;
         L = grid3D.getL();
         M = grid3D.getM();
@@ -179,6 +193,7 @@ public class PhysicalEnvironment {
         ModelData w = new ModelData(ocean_time,Wa,"w");
         w.setDimIndices(-1,0,1,2);
         mdMap.put("w",w);
+        logger.info("finished computeW()");
     }
     
     /**
@@ -244,15 +259,6 @@ public class PhysicalEnvironment {
         pe.readTimeDependentFields();
         return pe;
     }
-
-    /**
-     * Gets the 3D model grid associated with the PhysicalEnvironment instance.
-     * 
-     * @return 
-     */
-    public ModelGrid3D getGrid() {
-        return grid3D;
-    }
     
     /**
      * Gets the ocean_time associated with this PhysicalEnvironment instance.
@@ -269,6 +275,11 @@ public class PhysicalEnvironment {
      * and thus the next() method cannot be used on it.
      * Note: if updateHzLikeROMS is true, then the SSH field (zeta) is copied
      * from pe0, not interpolated using both pe's.
+     * @param t
+     * @param pe0
+     * @param pe1
+     * 
+     * @return 
      */
     public static PhysicalEnvironment interpolate(double t,
                                                   PhysicalEnvironment pe0, 
@@ -320,6 +331,7 @@ public class PhysicalEnvironment {
     private void readTimeDependentFields() 
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                       java.io.IOException {
+        logger.info("Starting readTimeDependentFields()");
         ocean_time = nR.getOceanTime(iTime);
         Iterator<String> it = mdMap.keySet().iterator();
         GlobalInfo gi = GlobalInfo.getInstance();
@@ -328,19 +340,27 @@ public class PhysicalEnvironment {
         while (it.hasNext()){
             String fld = it.next();
             if (!(fld.equals("w")||fld.equals("Hz"))){
-                System.out.println("PE.readTimeDependentFields: updating "+fld);
+                logger.info("readTimeDependentFields: updating "+fld);
                 String var = cvi.getNameInROMSDataset(fld);
                 if (var!=null) {
                     mdMap.put(fld, nR.getModelData(iTime, var,fld));
                 } else {
                     var = ovi.getNameInROMSDataset(fld);
-                    if (var!=null) mdMap.put(fld, nR.getModelData(iTime, var,fld));
-                }
+                    if (var!=null) {
+                        mdMap.put(fld, nR.getModelData(iTime, var,fld));
+                    } else {
+                        JOptionPane.showMessageDialog(null, 
+                                                      "Problem in PhysicalEnvironment.readTimeDependentFields().", 
+                                                      "Could not read ROMS variable "+var+" for DisMELS field "+fld, 
+                                                      JOptionPane.ERROR_MESSAGE);
+                    }
+                } 
             }
         }
         computeHz();
         computeW();//computes w field from omega.  DO NOT READ IN w from ROMS as it is NOT equivalent!!!! 
         System.gc();//call garbage collection
+        logger.info("Finished readTimeDependentFields()");
     }
     
     /**

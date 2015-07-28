@@ -34,7 +34,7 @@ public class ColorBarStyleCustomizer extends javax.swing.JPanel
                                      implements Customizer {
 
     /**property indicating bean settings have been modified in some form */
-    public static final String PROP_StyleChanged = "wts.GIS.styling. ColorBarStyleCustomizer: StyleChanged";
+    public static final String PROP_StyleChanged = "wts.GIS.styling.ColorBarStyleCustomizer: StyleChanged";
             
     /** the bean instance to be customized */
     private ColorBarStyle obj;

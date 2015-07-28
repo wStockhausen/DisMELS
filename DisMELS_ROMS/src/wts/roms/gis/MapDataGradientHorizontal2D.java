@@ -62,7 +62,7 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         super();
         this.date  = null;
         this.field = md;
-        this.mask  = romsGI.getGrid().getGridMask(md.getName());
+        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -79,7 +79,7 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         super();
         this.date  = date;
         this.field = md;
-        this.mask  = romsGI.getGrid().getGridMask(md.getName());
+        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -191,7 +191,7 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         //@TODO: implement horizontal grdaient calculations
         gf = new GeometryFactory();
 
-        ModelGrid2D grid = romsGI.getGrid();
+        ModelGrid2D grid = romsGI.getGrid2D();
         Interpolator2D i2d = romsGI.getInterpolator();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
@@ -270,7 +270,7 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         //Create the mask features and add them to the feature collection
         gf = new GeometryFactory();
 
-        ModelGrid2D grid = romsGI.getGrid();
+        ModelGrid2D grid = romsGI.getGrid2D();
         Interpolator2D i2d = romsGI.getInterpolator();
         int Lm = grid.getLm();
         int Mm = grid.getMm();

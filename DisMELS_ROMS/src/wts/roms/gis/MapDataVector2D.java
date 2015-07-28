@@ -210,7 +210,7 @@ public class MapDataVector2D implements MapDataInterfaceVector2D {
             throws SchemaException, IllegalAttributeException, TransformException {
         if (gf==null) gf = new GeometryFactory();
 
-        ModelGrid2D grid = romsGI.getGrid();
+        ModelGrid2D grid = romsGI.getGrid2D();
         Interpolator2D i2d = romsGI.getInterpolator();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
@@ -295,7 +295,7 @@ public class MapDataVector2D implements MapDataInterfaceVector2D {
         //Create the mask features and add them to the feature collection
         if (gf==null) gf = new GeometryFactory();
 
-        ModelGrid2D grid = romsGI.getGrid();
+        ModelGrid2D grid = romsGI.getGrid2D();
         Interpolator2D i2d = romsGI.getInterpolator();
         int Lm = grid.getLm();
         int Mm = grid.getMm();

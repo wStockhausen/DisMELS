@@ -486,7 +486,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
             @Override
             public void run() {
                 resetMap();
-                ModelGrid2D mg = romsGI.getGrid();
+                ModelGrid2D mg = romsGI.getGrid2D();
                 if (mg!=null){
                     try {
                         //create the grid and mask MapLayers

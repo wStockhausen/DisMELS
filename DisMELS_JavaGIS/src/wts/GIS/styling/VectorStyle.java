@@ -35,7 +35,10 @@ import org.geotools.styling.Symbolizer;
  */
 public class VectorStyle implements Style, Cloneable, Serializable {
 
-    public static String PROP_STYLE = "style";
+    /** property thrown when updateStyle() is called */
+    public static String PROP_STYLE   = "wts.GIS.styling.VectorStyle:Style";
+    /** property thrown when an element of the style changes and updateStyle SHOULD be called */
+    public static String PROP_ELEMENT = "wts.GIS.styling.VectorStyle:Element";
 
     /** Initially an instance of a vanilla default style */
     private Style style;
@@ -289,7 +292,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (val!=arrowAngle){
             arrowAngle = val;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -301,7 +304,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (val!=arrowScale){
             arrowScale = val;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -317,7 +320,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (!cbStyle.getColorRamp().equalsIgnoreCase(rampName)){
             cbStyle.setColorRamp(rampName);
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -329,7 +332,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (!fixedColor.equals(clr)) {
             fixedColor = clr;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -341,7 +344,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (cbStyle.getMin()!=val){
             cbStyle.setMin(val);
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -353,7 +356,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (cbStyle.getMax()!=val){
             cbStyle.setMax(val);
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -365,7 +368,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (cbStyle.getNumberOfColors()!=val){
             cbStyle.setNumberOfColors(val);
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -377,7 +380,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (showLTMin!=b){
             showLTMin = b;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -389,7 +392,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (showGTMax!=b){
             showGTMax = b;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -411,7 +414,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (mapLength != val) {
             mapLength = val;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -423,7 +426,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (stdWidth != wid) {
             stdWidth = wid;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -435,7 +438,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (stride != val) {
             stride = val;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -447,7 +450,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (useFixedColor!=b) {
             useFixedColor = b;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -459,7 +462,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (useFixedArrowheadSize!=b){
             useFixedArrowheadSize = b;//does not impact style
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -471,7 +474,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (useFixedLength!=b) {
             useFixedLength = b;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -483,7 +486,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (useFixedWidth!=b) {
             useFixedWidth = b;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -512,7 +515,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (expScale != scale){
             expScale = scale;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
 
@@ -524,7 +527,7 @@ public class VectorStyle implements Style, Cloneable, Serializable {
         if (stdScale != scale){
             stdScale = scale;
             mustUpdateStyle = true;
-            propertySupport.firePropertyChange(PROP_STYLE, null,null);
+            propertySupport.firePropertyChange(PROP_ELEMENT, null,null);
         }
     }
     

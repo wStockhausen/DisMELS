@@ -75,7 +75,7 @@ public class CSCreator {
     
     public static GeographicCoordinateSystem createWGS_84() {
         GeographicCoordinateSystem cs = GeographicCoordinateSystem.WGS84;
-        logger.info(WGS_84+": \n"+cs.toWKT());
+        logger.info(WGS_84+": "+cs.toWKT());
         return cs;
     }
     
@@ -111,7 +111,7 @@ public class CSCreator {
                 AxisInfo.LONGITUDE,
                 AxisInfo.LATITUDE);
          
-        logger.info(NAD_83+": \n"+cs.toWKT());
+        logger.info(NAD_83+": "+cs.toWKT());
          
         return cs;
     }
@@ -135,7 +135,7 @@ public class CSCreator {
         for (int i=1;i<pns.length;i++) {
             str = str+"\n\t"+pns[i];
         }
-        logger.info("Parameter list:"+"\n"+str);
+        logger.info("CSCreator: Parameter list:"+"\n"+str);
         Ellipsoid ellipse = gcs.getHorizontalDatum().getEllipsoid();
         params.setParameter("semi_major",ellipse.getSemiMajorAxis());
         params.setParameter("semi_minor",ellipse.getSemiMinorAxis());
@@ -163,7 +163,7 @@ public class CSCreator {
                 AxisInfo.X,
                 AxisInfo.Y);
         
-        logger.info("prjCS:\n"+prjCS.toWKT());
+        logger.info("prjCS: "+prjCS.toWKT());
         return prjCS;
     }
     

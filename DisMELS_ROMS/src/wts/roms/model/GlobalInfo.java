@@ -21,6 +21,7 @@ import java.util.TimeZone;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.openide.util.Exceptions;
+import wts.models.utilities.CalendarIF;
 import wts.roms.gis.CSCreator;
 
 /**
@@ -59,7 +60,7 @@ public class GlobalInfo implements PropertyChangeListener {
     public static final DateFormat dateFormat01 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     /** date format for use is 'MM/dd/yyyy HH:mm' (Excel format) */
     public static final DateFormat dateFormat02 = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-    /** */
+    /** Class logger */
     private static final Logger logger = Logger.getLogger(GlobalInfo.class.getName());
     
     /** singleton instance*/
@@ -103,6 +104,8 @@ public class GlobalInfo implements PropertyChangeListener {
     private ModelGrid3D grid3d = null;
     /** global ROMS 2d interpolator object */
     private Interpolator2D i2d = null;
+    /** global calendar object */
+    private CalendarIF calendar = null;
     
     /** 
      * Map projection region (must match a region from CSCreator).
@@ -137,11 +140,40 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Get the ROMS model grid object.
+     * Gets the ROMS global calendar.
+     * 
+     * If the calendar object has not been created previously, then
+     * the canonical model file is read.If the canonical model file
+     * is invalid, then setCanonicalFile(PROP_NotSet) is called.
+     * 
+     * Note: the calendar cannot be created unless the 
+     * canonicalModelFile points to a valid ROMS dataset.
      * 
      * @return 
      */
-    public ModelGrid3D getGrid(){
+    public CalendarIF getCalendar(){
+        if (calendar==null){
+            try {
+                NetcdfReader nr = new NetcdfReader(canonicalModelFile);
+                calendar = nr.getCalendar();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Error", 
+                                              "Calendar information not available."+
+                                                "\nROMS canonical file not set or invalid."+
+                                                "\nMust set ROMS canonical file using the ROMS Info Editor.", 
+                                              JOptionPane.ERROR_MESSAGE);
+                setCanonicalFile(PROP_NotSet);
+            }
+        }
+        return calendar;
+    }
+    
+    /**
+     * Get the ROMS model 2D grid object.
+     * 
+     * @return 
+     */
+    public ModelGrid2D getGrid2D(){
         if (grid3d==null){
             if (!gridFile.equalsIgnoreCase(PROP_NotSet)){
                 grid3d = new ModelGrid3D(gridFile);
@@ -151,7 +183,40 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Get the ROMS model interpolator.
+     * Get the ROMS model 3D grid object. If the canonicalModelFile has been
+     * set, then the vertical grid information is read from this file if it hasn't
+     * been done previously.
+     * 
+     * Make sure to check that the vertical grid
+     * information has been read from the canonical model file (i.e., call 
+     * hasVerticalGridInfo() after obtaining the ModelGrid3D object).
+     * 
+     * Side effects:
+     *  calendar (see getCalendar()) is created if the canonical file is read. 
+     * 
+     * @return 
+     */
+    public ModelGrid3D getGrid3D(){
+        if (grid3d==null) getGrid2D();
+        if ((grid3d!=null)&&!grid3d.hasVerticalGridInfo()){
+            try {
+                NetcdfReader nr = new NetcdfReader(canonicalModelFile);
+                grid3d.readConstantFields(nr);
+                calendar = nr.getCalendar();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Error", 
+                                              "Vertical grid information not available."+
+                                                "\nROMS canonical file not set or invalid."+
+                                                "\nMust set ROMS canconical file using the ROMS Info Editor.", 
+                                              JOptionPane.ERROR_MESSAGE);
+                setCanonicalFile(PROP_NotSet);
+            }
+        }
+        return grid3d;
+    }
+    
+    /**
+     * Get the ROMS model 2D interpolator.
      * 
      * @return 
      */
@@ -199,6 +264,7 @@ public class GlobalInfo implements PropertyChangeListener {
     
     /**
      * Gets the reference date.
+     * 
      * @return
      */
     public Date getRefDate(){
@@ -215,8 +281,17 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Sets the ROMS grid file name tot he new name. In doing so,
-     *  setCanonicalFile(PROP_NotSet) is called.
+     * Sets (but does not read) the ROMS grid file to the new name. 
+     * 
+     * Effects include: 
+     *  1. the ModelGrid3D (grid3d) object is set to null
+     *  2. the Interpolator2D (i2d) object is set to null
+     *  3. the CriticalGrid2DVariablesInfo (cviGrid2D) is reset
+     *  4. setCanonicalFile(PROP_NotSet) is called (generating further side effects)
+     *  5. a PropertyChangeEvent with property PROP_GridFile is fired
+     * 
+     * Note that the grid object (ModelGrid3D) is not actually created
+     * until it is accessed via getGrid2D() or getGrid3D().
      * 
      * @param file - the new filename
      */
@@ -247,7 +322,12 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Sets the ROMS model canonical file name.
+     * Sets (but does not read) the ROMS model canonical file to the new name.
+     * 
+     * Effects include:
+     *  1. the vertical grid info is reset on the ModelGrid3D (grid3d) object
+     *  2. the CriticalModelVariablesInfo and OptionalModelVariablesInfo objects are reset
+     *  3. a PropertyChangeEvent with property PROP_CanonicalFile is fired
      * 
      * @param file - the new filename
      */
@@ -256,6 +336,7 @@ public class GlobalInfo implements PropertyChangeListener {
             logger.info("---setting ROMS canonical file to '"+file+"'");
             String oldval = canonicalModelFile;
             if (grid3d!=null) grid3d.resetVerticalGridInfo();
+            calendar = null;
             canonicalModelFile = file;
             doEvents = false;//turn off PropertyChangeEvent processing
             cviModel.reset();//throws PROP_RESET
@@ -407,6 +488,7 @@ public class GlobalInfo implements PropertyChangeListener {
      * is closed to save current property values.
      * 
      * @param fn - the file name
+     * @throws java.io.IOException
      */
     public void writeProperties(String fn) throws IOException{
         logger.info("Writing properties to "+fn);
@@ -420,6 +502,7 @@ public class GlobalInfo implements PropertyChangeListener {
      * is closed to save current property values.
      * 
      * @param f - the file name
+     * @throws java.io.IOException
      */
     public void writeProperties(File f) throws IOException{
         logger.info("Writing properties to "+f.getPath());
@@ -468,6 +551,7 @@ public class GlobalInfo implements PropertyChangeListener {
      * to read in previously-saved property values.
      * 
      * @param f - the File object
+     * @throws java.io.IOException
      */
     public void readProperties(java.io.File f) throws IOException{
         logger.info("reading properties from "+f.getAbsolutePath());
@@ -531,33 +615,14 @@ public class GlobalInfo implements PropertyChangeListener {
 
     /**
      * Called when an object the GlobalInfo instance listens to fires a PropertyChange.
-     * For most sources of PropertyChanges, the event is passed on to PropertyChangeListeners
-     * registered on the GlobalInfo singleton.
+     * 
+     * Currently, this does NOTHING (i.e., doesn't respond to any property changes. This
+     * is probably how it should stay. Objects should listen for and react to property changes 
+     * fired BY the GlobalInfo object, not the other way round.
+     * 
      * @param evt 
      */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-//        String pn = evt.getPropertyName();
-//        logger.info("--starting propertyChange(): "+evt.toString());
-//        if (doEvents) {
-//            logger.info("----doing events");
-//            if (pn.equals(CriticalGrid2DVariablesInfo.PROP_RESET)){
-//                propertySupport.firePropertyChange(PROP_Grid2DCVI_RESET,null,cviGrid2D);
-//            } else 
-//            if (pn.equals(CriticalModelVariablesInfo.PROP_RESET)){            
-//                propertySupport.firePropertyChange(PROP_ModelCVI_RESET,null,cviModel);
-//            } else 
-//            if (pn.equals(OptionalModelVariablesInfo.PROP_RESET)){
-//                propertySupport.firePropertyChange(PROP_ModelOVI_RESET,null,oviModel);
-//            } else 
-//            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_ADDED)){
-//                propertySupport.firePropertyChange(PROP_ModelOVI_ADDED,null,evt.getNewValue());
-//            } else 
-//            if (pn.equals(OptionalModelVariablesInfo.PROP_VARIABLE_REMOVED)){
-//                propertySupport.firePropertyChange(PROP_ModelOVI_REMOVED,evt.getOldValue(),null);
-//            } else 
-//            propertySupport.firePropertyChange(evt);//propagate event up the chain
-//        }
-//        logger.info("--finished propertyChange(): "+pn);
     }
 }

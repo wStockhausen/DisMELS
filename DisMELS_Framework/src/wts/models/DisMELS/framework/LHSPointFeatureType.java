@@ -115,7 +115,7 @@ public class LHSPointFeatureType
      * updates the associated LHSAttributesIF instance.  The input coordinates
      * should be AlbersNAD83 (Greenwich Prime Meridian, [-180,180]).
      *
-     *@param - Point in coordinates as returned from a MapGUI_JPanel
+     * @param pt - Point in coordinates as returned from a MapGUI_JPanel
      * 
      */
     public void setGeometryFromMap(Point pt) {
@@ -125,10 +125,12 @@ public class LHSPointFeatureType
     
     /**
      * Sets the next feature geometry to the input (xp,yp) and
-     * updates the associated LHSAttributesIF instance.  The input coordinates
-     * should be AlbersNAD83.
+     * updates the associated LHSAttributesIF instance.  
+     * 
+     * The input coordinates should be AlbersNAD83.
      *
-     *@param - Point in coordinates as returned from a MapGUI_JPanel
+     * @param xp
+     * @param yp
      * 
      */
     public void setGeometryFromMap(double xp, double yp) {

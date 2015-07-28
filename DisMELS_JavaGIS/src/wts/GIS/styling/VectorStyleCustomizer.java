@@ -6,6 +6,7 @@ package wts.GIS.styling;
 
 import java.awt.Color;
 import java.beans.Customizer;
+import java.util.logging.Logger;
 import javax.swing.JColorChooser;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
@@ -15,10 +16,18 @@ import org.openide.NotifyDescriptor;
  * @author William.Stockhausen
  */
 public class VectorStyleCustomizer extends javax.swing.JPanel implements Customizer {
-    
-    private VectorStyle obj;
-    private boolean enableEvents;
 
+    /**property indicating bean settings have been modified in some form */
+    public static final String PROP_StyleChanged = "wts.GIS.styling. VectorStyleCustomizer: StyleChanged";
+    
+    /** the bean instance to be customized */
+    private VectorStyle obj;
+    /** flag to enable "input" event processing */
+    private boolean enableEvents;
+    
+    /** class logger */
+    private static final Logger logger = Logger.getLogger(VectorStyleCustomizer.class.getName());
+    
     /**
      * Creates new form VectorStyleCustomizer
      */
@@ -340,46 +349,77 @@ public class VectorStyleCustomizer extends javax.swing.JPanel implements Customi
     }// </editor-fold>//GEN-END:initComponents
 
     private void jtfStdScaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfStdScaleActionPerformed
-        obj.setStandardScale(Double.parseDouble(jtfStdScale.getText()));
+        if (enableEvents) {
+            double val = Double.parseDouble(jtfStdScale.getText());
+            obj.setStandardScale(val);
+            firePropertyChange(PROP_StyleChanged, null, val);
+        }
     }//GEN-LAST:event_jtfStdScaleActionPerformed
 
     private void jtfExpSclActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfExpSclActionPerformed
-        obj.setExponentScale(Double.parseDouble(jtfExpScl.getText()));
+        if (enableEvents) {
+            obj.setExponentScale(Double.parseDouble(jtfExpScl.getText()));
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jtfExpSclActionPerformed
 
     private void jtfMapLengthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfMapLengthActionPerformed
-        obj.setMapLength(Double.parseDouble(jtfMapLength.getText()));
+        if (enableEvents) {
+            obj.setMapLength(Double.parseDouble(jtfMapLength.getText()));
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jtfMapLengthActionPerformed
 
     private void jtfStdWidthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfStdWidthActionPerformed
-        obj.setStandardWidth(Double.parseDouble(jtfStdWidth.getText()));
+        if (enableEvents) {
+            obj.setStandardWidth(Double.parseDouble(jtfStdWidth.getText()));
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jtfStdWidthActionPerformed
 
     private void jchkFixedLengthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkFixedLengthActionPerformed
-        obj.setUseFixedLength(jchkFixedLength.isSelected());
+        if (enableEvents) {
+            obj.setUseFixedLength(jchkFixedLength.isSelected());
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jchkFixedLengthActionPerformed
 
     private void jchkFixedWidthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkFixedWidthActionPerformed
-        obj.setUseFixedWidth(jchkFixedWidth.isSelected());
+        if (enableEvents) {
+            obj.setUseFixedWidth(jchkFixedWidth.isSelected());
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jchkFixedWidthActionPerformed
 
     private void jtfHeadSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfHeadSizeActionPerformed
-        obj.setArrowScale(Double.parseDouble(jtfHeadSize.getText()));
+        if (enableEvents) {
+            obj.setArrowScale(Double.parseDouble(jtfHeadSize.getText()));
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jtfHeadSizeActionPerformed
 
     private void jchkFixedHeadSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkFixedHeadSizeActionPerformed
-        obj.setUseFixedHeadSize(jchkFixedHeadSize.isSelected());
+        if (enableEvents) {
+            obj.setUseFixedHeadSize(jchkFixedHeadSize.isSelected());
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jchkFixedHeadSizeActionPerformed
 
     private void jtfHeadAngleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfHeadAngleActionPerformed
-        obj.setArrowAngle(Double.parseDouble(jtfHeadAngle.getText()));
+        if (enableEvents) {
+            obj.setArrowAngle(Double.parseDouble(jtfHeadAngle.getText()));
+            firePropertyChange(PROP_StyleChanged, null, null);
+        }
     }//GEN-LAST:event_jtfHeadAngleActionPerformed
 
     private void jpFixedColorMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jpFixedColorMousePressed
-        Color clr = JColorChooser.showDialog(this, "Choose vector color", jpFixedColor.getBackground());
-        if (clr != null) {
-            jpFixedColor.setBackground(clr);
-            obj.setFixedColor(clr);
+        if (enableEvents) {
+            Color clr = JColorChooser.showDialog(this, "Choose vector color", jpFixedColor.getBackground());
+            if (clr != null) {
+                jpFixedColor.setBackground(clr);
+                obj.setFixedColor(clr);
+            }
+            firePropertyChange(PROP_StyleChanged, null, null);
         }
     }//GEN-LAST:event_jpFixedColorMousePressed
 
@@ -388,6 +428,7 @@ public class VectorStyleCustomizer extends javax.swing.JPanel implements Customi
             jpFixedColor.setVisible(jchkFixedColor.isSelected());
             cbsCustomizer.setVisible(!jchkFixedColor.isSelected());
             obj.setUseFixedColor(jchkFixedColor.isSelected());
+            firePropertyChange(PROP_StyleChanged, null, null);
         }
     }//GEN-LAST:event_jchkFixedColorActionPerformed
 
@@ -401,6 +442,7 @@ public class VectorStyleCustomizer extends javax.swing.JPanel implements Customi
                 DialogDisplayer.getDefault().notify(nd);
                 jtfStride.setText(Double.toString(obj.getStride()));
             }
+            firePropertyChange(PROP_StyleChanged, null, null);
         }
     }//GEN-LAST:event_jtfStrideActionPerformed
 
@@ -433,6 +475,7 @@ public class VectorStyleCustomizer extends javax.swing.JPanel implements Customi
     @Override
     public void setObject(Object bean) {
         if (bean instanceof VectorStyle){
+            logger.info("Starting setObject(): "+bean.toString());
             obj = (VectorStyle) bean;
             enableEvents = false;
             //set values
@@ -455,6 +498,7 @@ public class VectorStyleCustomizer extends javax.swing.JPanel implements Customi
             jtfStride.setText(Double.toString(obj.getStride()));
             repaint();
             enableEvents = true;
+            logger.info("Finished setObject(): "+bean.toString());
         }
     }
 }

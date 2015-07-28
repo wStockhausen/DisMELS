@@ -104,7 +104,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
     private boolean doEvents = true;
 
     /** name of scalar field to map */
-    private String sclrFld = null;
+    private String scalarFld = null;
     /** feature collection for the scalar map layer */
     private FeatureCollection scalarFC = null;
     /**style for the scalar map layer */
@@ -149,25 +149,23 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
     }
     
     /**
-     * Sets the potential fields lists for the scalar and 
-     * the x- and y-components of th vector field based on the
-     * fields from the netcdf file.
+     * Sets the potential fields list from the ROMS grid object.
      */
     private void setVariables() {
         logger.info("setVariables()");
         doEvents = false;
-        logger.info("setVariables(): previously selected variable = '"+sclrFld+"'.");
+        logger.info("setVariables(): previously selected variable = '"+scalarFld+"'.");
         jcbScalarVar.removeAllItems();
         jcbScalarVar.setSelectedIndex(-1);//set to "no item"
-        if (romsGI.getGrid()!=null){
-            TreeSet<String> fields = new TreeSet<>(romsGI.getGrid().getFieldNames());
+        if (romsGI.getGrid2D()!=null){
+            TreeSet<String> fields = new TreeSet<>(romsGI.getGrid2D().getFieldNames());
             Iterator<String> vars = fields.iterator();
             while (vars.hasNext()) {
                 String str = vars.next();
                 jcbScalarVar.addItem(str);
             }
             jcbScalarVar.setSelectedIndex(-1);
-            sclrFld = null;
+            scalarFld = null;
 //            doEvents = true;
 //            if ((sclrFld!=null)&&(!sclrFld.equalsIgnoreCase(""))){
 //                jcbScalarVar.setSelectedItem(sclrFld);
@@ -202,7 +200,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
             //remove scalar layer from map
             if (scalarLayer!=null){
                  tcMapViewer.removeGISLayer(scalarLayer);
-                 sclrFld = null;
+                 scalarFld = null;
                  scalarFC = null;
                  scalarLayer = null;
             }
@@ -418,8 +416,8 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
                 Object obj = jcbScalarVar.getSelectedItem();
                 if (obj instanceof String) {
                     String strFldNew = (String) obj;//name of selected model field
-                    if (!strFldNew.equals(sclrFld)) {
-                        sclrFld = strFldNew;
+                    if (!strFldNew.equals(scalarFld)) {
+                        scalarFld = strFldNew;
                         createScalarMapLayer();
                     }
                 }
@@ -461,7 +459,8 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
             try {
                 logger.info("updating scalar style for user changes "+scalarStyle.toString());
                 scalarStyle.updateStyle();
-                tcMapViewer.repaint();
+                scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,scalarFld);
+                tcMapViewer.addGISLayerAtBase(scalarLayer);
             } catch (IllegalFilterException ex) {
                 Exceptions.printStackTrace(ex);
             }
@@ -476,7 +475,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         if (scalarLayer!=null) {
             try {
                 scalarStyle.updateStyle();
-                scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,sclrFld);
+                scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,scalarFld);
                 tcMapViewer.addGISLayerAtBase(scalarLayer);
             } catch (IllegalFilterException ex) {
                 Exceptions.printStackTrace(ex);
@@ -527,37 +526,22 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
             updateGridInfo();
             doEvents = true;
         } else
-        if (pce.getPropertyName().equals(ColorBarStyle.PROP_ELEMENT)){
-            logger.info("ColorBarStyler PropertyCChange: layer style!!");
+        if (pce.getPropertyName().equals(ColorBarStyle.PROP_ELEMENT)||
+                pce.getPropertyName().equals(ColorBarStyleCustomizer.PROP_StyleChanged)){
+            logger.info(pce.getPropertyName()+": layer style!!");
             try {
                 scalarStyle.updateStyle();
             } catch (IllegalFilterException ex) {
                 Exceptions.printStackTrace(ex);
             }
-            tcMapViewer.resetMap();
-            if (scalarFC!=null) scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,sclrFld);
-            if (scalarLayer!=null) {
+            tcMapViewer.refreshMap();
+            if (scalarFC!=null) {
+                scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,scalarFld);
                 tcMapViewer.addGISLayerAtBase(scalarLayer);
             } else {
                 logger.severe("Could not create scalarLayer.");
             }
             logger.info("Changed layer style?!");
-        } else 
-        if (pce.getPropertyName().equals(ColorBarStyleCustomizer.PROP_StyleChanged)){
-            logger.info("sfCustomizer PropertyCChange: layer style!!");
-            try {
-                if (scalarStyle.mustUpdateStyle()) scalarStyle.updateStyle();
-            } catch (IllegalFilterException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-            tcMapViewer.resetMap();
-            if (scalarFC!=null) scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,sclrFld);
-            if (scalarLayer!=null) {
-                tcMapViewer.addGISLayerAtBase(scalarLayer);
-            } else {
-                logger.severe("Could not create scalarLayer.");
-            }
-           logger.info("Changed layer style?!");
         }    
     }
 
@@ -578,7 +562,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
                         scalarFC    = null;
                         scalarLayer = null;
                     }
-                    ModelData md = romsGI.getGrid().getGridField(sclrFld);
+                    ModelData md = romsGI.getGrid2D().getGridField(scalarFld);
                     MapDataScalar2D smd = new MapDataScalar2D(md);
                     NumberFormat frmt = NumberFormat.getNumberInstance();
                     frmt.setMinimumFractionDigits(0);
@@ -604,7 +588,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
                         logger.info("new scalarStyle = "+scalarStyle.toString());
                         if (sfCustomizer!=null) sfCustomizer.setObject(scalarStyle);//update the colorbar scale editors
 
-                    scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,sclrFld);
+                    scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,scalarFld);
                     if (scalarLayer!=null) {
                         tcMapViewer.addGISLayerAtBase(scalarLayer);
                     } else {

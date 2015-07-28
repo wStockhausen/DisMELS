@@ -72,7 +72,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
     public FeatureCollection createFeatureCollection(int k)
             throws SchemaException, IllegalAttributeException, TransformException {       
         
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -126,7 +126,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
     @Override
     public FeatureCollection createFeatureCollection(double z)
             throws SchemaException, IllegalAttributeException, TransformException {
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -213,7 +213,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,field.getName());
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -289,7 +289,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,field.getName());
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;

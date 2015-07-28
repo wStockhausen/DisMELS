@@ -151,7 +151,7 @@ public class ModelGrid2DMapData {
         //Now create the features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
         
-        ModelGrid2D grid2D = romsGI.getGrid();
+        ModelGrid2D grid2D = romsGI.getGrid2D();
         int L = grid2D.getL();
         int M = grid2D.getM();
         double lon,lat;
@@ -211,7 +211,7 @@ public class ModelGrid2DMapData {
         //Create the mask features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
 
-        ModelGrid2D grid2D = romsGI.getGrid();
+        ModelGrid2D grid2D = romsGI.getGrid2D();
         int Lm = grid2D.getLm();
         int Mm = grid2D.getMm();
         double lon,lat;
@@ -266,7 +266,7 @@ public class ModelGrid2DMapData {
         //Create the mask features and add them to the feature collection
         FeatureCollection fc = FeatureCollections.newCollection();
 
-        ModelGrid2D grid2D = romsGI.getGrid();
+        ModelGrid2D grid2D = romsGI.getGrid2D();
         int Lm = grid2D.getLm();
         int Mm = grid2D.getMm();
         double lon,lat;
@@ -318,7 +318,7 @@ public class ModelGrid2DMapData {
     public double interpolateBathymetricDepth(double lon, double lat) {
 //        lon = PrimeMeridian.adjustToROMSlon(lon);
         //now compute location in grid coordinates
-        double[] posIJ = romsGI.getGrid().computeIJfromLL(lat,lon);
+        double[] posIJ = romsGI.getGrid2D().computeIJfromLL(lat,lon);
         return romsGI.getInterpolator().interpolateBathymetricDepth(posIJ);
     }
     
@@ -339,6 +339,6 @@ public class ModelGrid2DMapData {
      * @return 
      */
     public boolean isOnLand(double[] pos){
-        return romsGI.getGrid().isOnLand(pos);
+        return romsGI.getGrid2D().isOnLand(pos);
     }
 }

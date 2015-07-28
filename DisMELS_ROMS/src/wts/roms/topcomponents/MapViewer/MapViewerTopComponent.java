@@ -7,7 +7,6 @@ package wts.roms.topcomponents.MapViewer;
 import com.vividsolutions.jts.geom.*;
 import com.wtstockhausen.utils.FileFilterImpl;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.beans.*;
@@ -28,18 +27,15 @@ import org.geotools.feature.SchemaException;
 import org.geotools.map.DefaultMapLayer;
 import org.geotools.map.MapLayer;
 import org.geotools.styling.*;
-import org.netbeans.api.progress.ProgressUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.opengis.referencing.operation.TransformException;
 import org.openide.awt.ActionID;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import wts.GIS.shapefile.ShapefileCreator;
-import wts.roms.gis.AlbersNAD83;
 import wts.roms.gis.ModelGrid2DMapData;
 import wts.roms.model.GlobalInfo;
 import wts.roms.model.ModelGrid2D;
@@ -249,7 +245,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @return 
      */
     public ModelGrid2D getModelGrid(){
-        return romsGI.getGrid();
+        return romsGI.getGrid2D();
     }
 
     /**
@@ -414,8 +410,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer 
      */
     public void addGISLayer(MapLayer layer){
+        logger.info("Adding GIS layer: "+layer.getTitle());
         mapLayers.put(layer.getTitle(),layer);
         mapGUI.addLayer(layer);
+        mapGUI.repaint();
+        logger.info("Added GIS layer: "+layer.getTitle());
     }
     
     /**
@@ -435,8 +434,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer - name of layer to remove
      */
     public void removeGISLayer(String layer){
+        logger.info("Removing GIS layer: "+layer);
         MapLayer mapLayer = mapLayers.remove(layer);
         mapGUI.removeLayer(mapLayer);
+        mapGUI.repaint();
+        logger.info("Removed GIS layer: "+layer);
     }
     
     /**

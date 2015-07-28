@@ -65,7 +65,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
         this.date = date;
         this.field = md;
         this.i3d   = i3d;
-        this.mask  = romsGI.getGrid().getGridMask(md.getName());
+        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -174,7 +174,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
     public FeatureCollection createFeatureCollection(int k)
             throws SchemaException, IllegalAttributeException, TransformException {       
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -233,7 +233,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
     public FeatureCollection createFeatureCollection(double z)
             throws SchemaException, IllegalAttributeException, TransformException {
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -314,7 +314,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,"uv");
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -391,7 +391,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
 
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -470,7 +470,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
 
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid();
+        ModelGrid3D grid = romsGI.getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
