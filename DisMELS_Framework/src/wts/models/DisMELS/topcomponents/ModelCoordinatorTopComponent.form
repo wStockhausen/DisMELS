@@ -144,21 +144,21 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jchkSetWorkingDir" min="-2" max="-2" attributes="0"/>
+                  <Component id="jchkSetProjectDir" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
                   <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jbtnSetWorkingDir" min="-2" max="-2" attributes="0"/>
+                  <Component id="jbtnSetProjectDir" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="jchkSetWorkingDir" alignment="1" min="-2" max="-2" attributes="0"/>
+              <Component id="jchkSetProjectDir" alignment="1" min="-2" max="-2" attributes="0"/>
               <Group type="103" alignment="0" groupAlignment="3" attributes="0">
                   <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jbtnSetWorkingDir" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jbtnSetProjectDir" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -171,10 +171,13 @@
             </Property>
           </Properties>
         </Component>
-        <Component class="javax.swing.JButton" name="jbtnSetWorkingDir">
+        <Component class="javax.swing.JButton" name="jbtnSetProjectDir">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jbtnSetWorkingDir.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+              <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jbtnSetProjectDir.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+            </Property>
+            <Property name="actionCommand" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jbtnSetProjectDir.actionCommand" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
             </Property>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[243, 25]"/>
@@ -187,13 +190,13 @@
             </Property>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbtnSetWorkingDirActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbtnSetProjectDirActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JCheckBox" name="jchkSetWorkingDir">
+        <Component class="javax.swing.JCheckBox" name="jchkSetProjectDir">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jchkSetWorkingDir.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+              <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jchkSetProjectDir.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
             </Property>
             <Property name="enabled" type="boolean" value="false"/>
             <Property name="focusable" type="boolean" value="false"/>
@@ -678,7 +681,7 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder title="Working directory">
+                <TitledBorder title="Project directory">
                   <ResourceString PropertyName="titleX" bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jPanel12.border.title" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
                 </TitledBorder>
               </Border>
@@ -688,24 +691,24 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jtfWorkingDir" alignment="0" pref="307" max="32767" attributes="0"/>
+                  <Component id="jtfProjectDir" alignment="0" pref="307" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jtfWorkingDir" alignment="0" min="-2" max="-2" attributes="0"/>
+                  <Component id="jtfProjectDir" alignment="0" min="-2" max="-2" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
           <SubComponents>
-            <Component class="javax.swing.JTextField" name="jtfWorkingDir">
+            <Component class="javax.swing.JTextField" name="jtfProjectDir">
               <Properties>
                 <Property name="editable" type="boolean" value="false"/>
                 <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                  <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jtfWorkingDir.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+                  <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jtfProjectDir.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
                 </Property>
                 <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                  <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jtfWorkingDir.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+                  <ResourceString bundle="wts/models/DisMELS/topcomponents/Bundle.properties" key="ModelCoordinatorTopComponent.jtfProjectDir.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
                 </Property>
               </Properties>
             </Component>

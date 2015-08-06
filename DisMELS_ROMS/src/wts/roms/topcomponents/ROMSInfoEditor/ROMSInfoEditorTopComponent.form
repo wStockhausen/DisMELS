@@ -21,7 +21,7 @@
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="jTabbedPane1" max="32767" attributes="0"/>
+          <Component id="jTabbedPane1" pref="249" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
   </Layout>
@@ -68,21 +68,22 @@
                               <Component id="jPanel12" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace pref="172" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
-                      <Component id="jPanel13" min="-2" max="-2" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jPanel2" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jPanel11" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jPanel13" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="jPanel12" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="48" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -319,12 +320,12 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="grid2DCVIsCustomizer" alignment="0" pref="660" max="32767" attributes="0"/>
+                  <Component id="grid2DCVIsCustomizer" alignment="0" pref="498" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="grid2DCVIsCustomizer" alignment="0" pref="247" max="32767" attributes="0"/>
+                  <Component id="grid2DCVIsCustomizer" alignment="0" pref="221" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
@@ -347,12 +348,12 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="criticalMVsCustomizer" alignment="0" pref="660" max="32767" attributes="0"/>
+                  <Component id="criticalMVsCustomizer" alignment="0" pref="498" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="criticalMVsCustomizer" pref="247" max="32767" attributes="0"/>
+                  <Component id="criticalMVsCustomizer" pref="221" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
@@ -380,12 +381,12 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="oviCustomizer" alignment="0" max="32767" attributes="0"/>
+                  <Component id="oviCustomizer" alignment="0" pref="498" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="oviCustomizer" alignment="0" pref="247" max="32767" attributes="0"/>
+                  <Component id="oviCustomizer" alignment="0" pref="221" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
