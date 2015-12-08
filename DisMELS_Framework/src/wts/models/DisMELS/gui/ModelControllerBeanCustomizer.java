@@ -9,17 +9,13 @@ package wts.models.DisMELS.gui;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.IOException;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
-import org.openide.util.Exceptions;
 import wts.models.DisMELS.framework.GlobalInfo;
 import wts.models.DisMELS.framework.ModelControllerBean;
-import wts.models.utilities.CalendarIF;
 import wts.models.utilities.ModelCalendar;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.LagrangianParticleTracker;
-import wts.roms.model.NetcdfReader;
 import wts.roms.model.PhysicalEnvironment;
 
 /**
@@ -616,9 +612,10 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                 System.out.println("Setting start time "+jtfStartTime.getText());
                 double n = Double.parseDouble(jtfStartTime.getText());
                 mcb.setStartTime(n);
-                ModelCalendar.getCalendar().setTimeOffset((long) n);
+                wts.roms.model.GlobalInfo giROMS = wts.roms.model.GlobalInfo.getInstance();
+                giROMS.getCalendar().setTimeOffset((long) n);
                 doActions = false;
-                jtfStartDate.setText(ModelCalendar.getCalendar().getDateTimeString());
+                jtfStartDate.setText(giROMS.getCalendar().getDateTimeString());
                 doActions = true;
             }
             if (fireChanges) propertySupport.firePropertyChange(PROP_CHANGE,null,null);
@@ -744,15 +741,15 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
         if (bean instanceof ModelControllerBean) {
             mcb = (ModelControllerBean) bean;
             fireChanges = false;
-            if (ModelCalendar.getCalendar()==null){
-                try {
-                    NetcdfReader netcdfReader = new NetcdfReader(GlobalInfo.getInstance().getCanonicalFile());
-                    CalendarIF cal = netcdfReader.getCalendar();
-                    ModelCalendar.setCalendar(cal);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
+//            if (ModelCalendar.getCalendar()==null){
+//                try {
+//                    NetcdfReader netcdfReader = new NetcdfReader(GlobalInfo.getInstance().getCanonicalFile());
+//                    CalendarIF cal = netcdfReader.getCalendar();
+//                    ModelCalendar.setCalendar(cal);
+//                } catch (IOException ex) {
+//                    Exceptions.printStackTrace(ex);
+//                }
+//            }
             if (mcb.getFile_ROMSDataset()!=null)
                 jfbDataset.setFilename(mcb.getFile_ROMSDataset());
             if (mcb.getFile_InitialAttributes()!=null)

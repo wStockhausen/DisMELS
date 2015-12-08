@@ -44,8 +44,8 @@ public class ModelControllerBeanEditor extends PropertyEditorSupport
     @Override
     public String getJavaInitializationString() {
         String str = nl+
-                        tb+qt+newObj.getFile_ROMSGrid()+qt+cc+nl+
-                        tb+qt+newObj.getFile_ROMSCanonicalDataset()+qt+cc+nl+
+//                        tb+qt+newObj.getFile_ROMSGrid()+qt+cc+nl+
+//                        tb+qt+newObj.getFile_ROMSCanonicalDataset()+qt+cc+nl+
                         tb+qt+newObj.getFile_ROMSDataset()+qt+cc+nl+
                         tb+qt+newObj.getFile_InitialAttributes()+qt+cc+nl+
                         tb+qt+newObj.getFile_Results()+qt+cc+nl+

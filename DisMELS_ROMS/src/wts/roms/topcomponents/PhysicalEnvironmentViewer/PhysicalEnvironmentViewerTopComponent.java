@@ -1086,7 +1086,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 try {
                     //read dataset from netcdf file
                     netcdfReader = new NetcdfReader(jfbDataset.getFilename());
-                    pe = new PhysicalEnvironment(0, netcdfReader, romsGI.getGrid3D());
+                    pe = new PhysicalEnvironment(0, netcdfReader);
                     i3d = new Interpolator3D(pe);
                     setOceanTime(0);
                     setVariables();
@@ -1535,7 +1535,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         file_ROMSDataset = String.valueOf(dfnc);
         logger.info("Switching to new netCDF file: "+file_ROMSDataset);
         netcdfReader.setNetcdfDataset(file_ROMSDataset);
-        pe = new PhysicalEnvironment(0,netcdfReader,romsGI.getGrid3D());
+        pe = new PhysicalEnvironment(0,netcdfReader);
         i3d.setPhysicalEnvironment(pe);
         doEvents = false;
         jfbDataset.setFilename(file_ROMSDataset);
@@ -1598,7 +1598,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         logger.info("Switching to new netCDF file: "+file_ROMSDataset);
         netcdfReader.setNetcdfDataset(file_ROMSDataset);
         int nt = netcdfReader.getNumTimeSteps();
-        pe = new PhysicalEnvironment(nt-1,netcdfReader,romsGI.getGrid3D());
+        pe = new PhysicalEnvironment(nt-1,netcdfReader);
         i3d.setPhysicalEnvironment(pe);
         doEvents = false;
         jfbDataset.setFilename(file_ROMSDataset);

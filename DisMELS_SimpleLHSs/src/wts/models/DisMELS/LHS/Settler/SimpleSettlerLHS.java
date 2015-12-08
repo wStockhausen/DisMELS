@@ -20,7 +20,6 @@ import wts.models.DisMELS.LHS.PelagicStages.SimplePelagicLHSAttributes;
 import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHS;
 import wts.models.DisMELS.framework.*;
 import wts.models.utilities.DateTimeFunctions;
-import wts.models.utilities.ModelCalendar;
 import wts.roms.model.LagrangianParticle;
 
 /**
@@ -540,7 +539,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     public void step(double dt) throws ArrayIndexOutOfBoundsException {
         double[] pos = null;
         //determine daytime/nighttime for vertical migration & calc indiv. W
-        isDaytime = DateTimeFunctions.isDaylight(lon,lat,ModelCalendar.getCalendar().getYearDay());
+        isDaytime = DateTimeFunctions.isDaylight(lon,lat,globalInfo.getCalendar().getYearDay());
         if (isDaytime&&willAttachDay&&(depth>(totalDepth-1))) {
             //set indiv on bottom and don't let it move
             attached = true;

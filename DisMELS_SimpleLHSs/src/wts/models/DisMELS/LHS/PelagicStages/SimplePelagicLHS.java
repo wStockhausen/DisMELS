@@ -553,7 +553,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
     public void step(double dt) throws ArrayIndexOutOfBoundsException {
         double[] pos;
         //determine daytime/nighttime for vertical migration & calc indiv. W
-        isDaytime = DateTimeFunctions.isDaylight(lon,lat,ModelCalendar.getCalendar().getYearDay());
+        isDaytime = DateTimeFunctions.isDaylight(lon,lat,globalInfo.getCalendar().getYearDay());
         if (isDaytime&&willAttachDay&&(depth>(totalDepth-1))) {
             //set indiv on bottom and don't let it move
             attached = true;

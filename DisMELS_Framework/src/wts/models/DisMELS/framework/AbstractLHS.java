@@ -33,6 +33,8 @@ public abstract class AbstractLHS implements LifeStageInterface {
     
     protected static final String cc = ",";
     protected static final DecimalFormat decFormat = new DecimalFormat("#.#####");
+    
+    protected static final GlobalInfo globalInfo = GlobalInfo.getInstance();
 
     /**flag to write track info to output file */
     protected static boolean writeTracksFlag = false;

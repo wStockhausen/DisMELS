@@ -115,6 +115,14 @@ public class GlobalInfo implements LookupListener {
     }
     
     /**
+     * Returns the current Calendar instance.
+     * @return 
+     */
+    public wts.models.utilities.CalendarIF getCalendar(){
+        return romsGI.getCalendar();
+    }
+    
+    /**
      * Returns the current Interpolator3D instance.
      * @return 
      */
@@ -167,7 +175,7 @@ public class GlobalInfo implements LookupListener {
      * @return
      */
     public String getWorkingDir(){
-        return workingDirFN;
+        return romsGI.getWorkingDir();
     }
     
     /**
@@ -266,12 +274,12 @@ public class GlobalInfo implements LookupListener {
     }
     
     /**
-     * Sets the ROMS grid file name.
+     * Gets the current ModelGrid3D object.
      * 
-     * @param file - the new filename
+     * @return - the ModelGrid3D object
      */
-    public void setGridFile(String file){
-        romsGI.setGridFile(file);
+    public wts.roms.model.ModelGrid3D getGrid3D(){
+        return romsGI.getGrid3D();
     }
     
     /**
@@ -281,33 +289,6 @@ public class GlobalInfo implements LookupListener {
      */
     public String getCanonicalFile(){
         return romsGI.getCanonicalFile();
-    }
-    
-    /**
-     * Sets the ROMS model canonical file name.
-     * 
-     * @param file - the new filename
-     */
-    public void setCanonicalFile(String file){
-        romsGI.setCanonicalFile(file);
-    }
-    
-    /**
-     * Gets the ROMS grid file name.
-     * 
-     * @return - the filename 
-     */
-    public String getMapRegion(){
-        return romsGI.getMapRegion();
-    }
-    
-    /**
-     * Sets the ROMS mapValues region.
-     * 
-     * @param region - the new mapValues region
-     */
-    public void setMapRegion(String region){
-        romsGI.setMapRegion(region);
     }
     
     /**

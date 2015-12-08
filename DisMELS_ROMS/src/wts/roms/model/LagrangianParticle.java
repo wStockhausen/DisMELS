@@ -84,7 +84,6 @@ public class LagrangianParticle implements Cloneable {
     /**
      * Calculates the corrector step in the 4th-order Milne predictor-corrector
      * integration scheme.
-     * @param dt --time step for integration
      */
     public void doCorrectorStep() throws ArrayIndexOutOfBoundsException {
         lpt.doCorrectorStep(this);
@@ -114,7 +113,6 @@ public class LagrangianParticle implements Cloneable {
     /**
      * Calculates the predictor step in the 4th-order Milne predictor-corrector
      * integration scheme.
-     * @param dt --time step for integration.
      */
     public void doPredictorStep() throws ArrayIndexOutOfBoundsException {
         lpt.doPredictorStep(this);
@@ -178,7 +176,6 @@ public class LagrangianParticle implements Cloneable {
      * Performs the predictor-corrector integration. (The integration can also be
      * performed by calling doPredictorStep() followed by a call to doCorrectorStep()
      * with the appropriate parameter values).
-     * @param dt --integration time step.
      */
     public void step() throws ArrayIndexOutOfBoundsException {
         doPredictorStep();

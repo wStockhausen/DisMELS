@@ -28,7 +28,6 @@ public class PhysicalEnvironment {
     public static boolean updateLayerDepthsLikeROMS = false;
     
     NetcdfReader nR;
-    ModelGrid3D grid3D;
     
     int iTime = -1;
     double ocean_time;
@@ -51,16 +50,14 @@ public class PhysicalEnvironment {
      * Instantiates a PhysicalEnvironment object.
      * 
      * @param nR
-     * @param modGrid3D
      * @throws java.io.IOException 
      */
-    public PhysicalEnvironment(NetcdfReader nR, ModelGrid3D modGrid3D) 
+    public PhysicalEnvironment(NetcdfReader nR) 
                                throws java.io.IOException{
         logger.info("starting PhysicalEnvironment(nR,modGrid3D)");
         createFieldMap();
         this.iTime = 0;
         this.nR = nR;
-        grid3D = modGrid3D;
         readTimeDependentFields();
         logger.info("finished PhysicalEnvironment(nR,modGrid3D)");
     }
@@ -74,14 +71,13 @@ public class PhysicalEnvironment {
      * @throws java.lang.ArrayIndexOutOfBoundsException
      * @throws java.io.IOException 
      */
-    public PhysicalEnvironment(int iTime, NetcdfReader nR, ModelGrid3D modGrid3D) 
+    public PhysicalEnvironment(int iTime, NetcdfReader nR) 
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                        java.io.IOException {
         logger.info("starting PhysicalEnvironment(iTime,nR,modGrid3D)");
         createFieldMap();
         this.iTime = iTime;
         this.nR = nR;
-        grid3D = modGrid3D;
         readTimeDependentFields();
         logger.info("finished PhysicalEnvironment(iTime,nR,modGrid3D)");
     }
@@ -128,6 +124,7 @@ public class PhysicalEnvironment {
         logger.info("starting computeHz()");
         double[] zw;
         int N,M,L;
+        ModelGrid3D grid3D = GlobalInfo.getInstance().getGrid3D();
         N = grid3D.getN();
         M = grid3D.getM();
         L = grid3D.getL();
@@ -161,6 +158,7 @@ public class PhysicalEnvironment {
      *@param zeta--sea surface height (m)
      */
     public double[] computeLayerZs(double bd, double zeta) {
+        ModelGrid3D grid3D = GlobalInfo.getInstance().getGrid3D();
         return grid3D.computeLayerZs(bd,zeta);
     }
     
@@ -170,6 +168,7 @@ public class PhysicalEnvironment {
     public void computeW() {
         logger.info("starting computeW()");
         int L,M,N;
+        ModelGrid3D grid3D = GlobalInfo.getInstance().getGrid3D();
         L = grid3D.getL();
         M = grid3D.getM();
         N = grid3D.getN();
@@ -223,7 +222,6 @@ public class PhysicalEnvironment {
         PhysicalEnvironment pe = new PhysicalEnvironment();
         pe.iTime = iTime+1;
         pe.nR    = nR;
-        pe.grid3D = grid3D;
         pe.readTimeDependentFields();
         return pe;
     }
@@ -255,7 +253,6 @@ public class PhysicalEnvironment {
         PhysicalEnvironment pe = new PhysicalEnvironment();
         pe.iTime = iTime-1;
         pe.nR    = nR;
-        pe.grid3D = grid3D;
         pe.readTimeDependentFields();
         return pe;
     }
@@ -296,7 +293,6 @@ public class PhysicalEnvironment {
             ipe = new PhysicalEnvironment();
             ipe.iTime = -1;
             ipe.nR    = null;
-            ipe.grid3D = pe1.grid3D;
 
             ipe.ocean_time = t;
 
@@ -380,7 +376,7 @@ public class PhysicalEnvironment {
      */
     public ModelData getField(String fld) {
         ModelData md = mdMap.get(fld);//check model fields
-        if (md==null) md = grid3D.getGridField(fld);//check grid fields
+        if (md==null) md = GlobalInfo.getInstance().getGrid3D().getGridField(fld);//check grid fields
         return md;
     }
     

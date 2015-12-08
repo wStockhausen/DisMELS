@@ -43,7 +43,7 @@ preferredID = "ModelTimeTopComponent")
 public final class ModelTimeTopComponent extends TopComponent implements PropertyChangeListener {
     
     /** GlobalInfo singleton */
-    private GlobalInfo globalInfo = null;
+//    private GlobalInfo globalInfo = null;
     
     /** flag to do actions associated with changing values */
     private boolean doActions = true;
@@ -53,21 +53,21 @@ public final class ModelTimeTopComponent extends TopComponent implements Propert
         initComponents();
         setName(Bundle.CTL_ModelTimeTopComponent());
         setToolTipText(Bundle.HINT_ModelTimeTopComponent());
-        initComponents1();
+//        initComponents1();
     }
     
-    private void initComponents1(){
-        globalInfo = GlobalInfo.getInstance();
-        if (ModelCalendar.getCalendar()==null){
-            try {
-                NetcdfReader netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
-                CalendarIF cal = netcdfReader.getCalendar();
-                ModelCalendar.setCalendar(cal);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }
-    }
+//    private void initComponents1(){
+//        globalInfo = GlobalInfo.getInstance();
+//        if (ModelCalendar.getCalendar()==null){
+//            try {
+//                NetcdfReader netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
+//                CalendarIF cal = netcdfReader.getCalendar();
+//                ModelCalendar.setCalendar(cal);
+//            } catch (IOException ex) {
+//                Exceptions.printStackTrace(ex);
+//            }
+//        }
+//    }
 
     /**
      * This method is called from within the constructor to initialize the form.

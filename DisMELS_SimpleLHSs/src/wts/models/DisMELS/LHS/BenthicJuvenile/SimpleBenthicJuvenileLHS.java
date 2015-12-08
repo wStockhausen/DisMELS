@@ -18,8 +18,6 @@ import org.openide.util.lookup.ServiceProvider;
 import wts.models.DisMELS.LHS.Settler.SimpleSettlerLHSAttributes;
 import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHS;
 import wts.models.DisMELS.framework.*;
-import wts.models.utilities.DateTimeFunctions;
-import wts.models.utilities.ModelCalendar;
 import wts.roms.model.LagrangianParticle;
 
 /**

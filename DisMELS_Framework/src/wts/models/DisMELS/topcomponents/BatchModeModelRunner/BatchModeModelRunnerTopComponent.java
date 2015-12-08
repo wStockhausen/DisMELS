@@ -327,7 +327,6 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
      */
     private void initializeModel(){
         logger.info("Initializing model");
-        logger.info(mcb.getFile_ROMSGrid());
         logger.info(mcb.getFile_ROMSDataset());
         logger.info(mcb.getFile_Params());
         logger.info(mcb.getFile_InitialAttributes());

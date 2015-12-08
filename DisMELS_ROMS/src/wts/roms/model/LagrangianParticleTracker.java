@@ -32,6 +32,8 @@ public class LagrangianParticleTracker {
     /** u,v,w = zero if true so passive, non-diffusive particle doesn't move */
     public static boolean noAdvection = false;
     
+    private GlobalInfo globalInfo = GlobalInfo.getInstance();
+    
     //get instance of pe from i3d whenever the former is updated
     private Interpolator3D i3d;
     
@@ -58,8 +60,7 @@ public class LagrangianParticleTracker {
      */
     public LagrangianParticleTracker(Interpolator3D i3dp) {
         i3d = i3dp;
-        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
-        
+       
         cff1p = 8.0/3.0;
         cff2p = 4.0/3.0;
         cff1c = 9.0/8.0;
@@ -67,15 +68,18 @@ public class LagrangianParticleTracker {
         cff3c = 3.0/8.0;
         cff4c = 6.0/8.0;
            
+        ModelGrid3D grid = globalInfo.getGrid3D();
         L = grid.getL();
         M = grid.getM();
         N = grid.getN();
+        
         ixgrd = LagrangianParticle.IXGRD;
         iygrd = LagrangianParticle.IYGRD;
         izgrd = LagrangianParticle.IZGRD;
         ixrhs = LagrangianParticle.IXRHS;
         iyrhs = LagrangianParticle.IYRHS;
         izrhs = LagrangianParticle.IZRHS;
+        
         iu = LagrangianParticle.IU;
         iv = LagrangianParticle.IV;
         iw = LagrangianParticle.IW;
@@ -129,12 +133,13 @@ public class LagrangianParticleTracker {
     }
     
     public void doPredictorStep(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid3D = globalInfo.getGrid3D();
         if (maskLikeROMS) {
-            umask = i3d.pe.grid3D.mask_rho;
-            vmask = i3d.pe.grid3D.mask_rho;
+            umask = grid3D.mask_rho;
+            vmask = grid3D.mask_rho;
         } else {
-            umask = i3d.pe.grid3D.mask_u;
-            vmask = i3d.pe.grid3D.mask_v;
+            umask = grid3D.mask_u;
+            vmask = grid3D.mask_v;
         }
         np1 = lp.np1;
         n   = lp.n;
@@ -198,7 +203,7 @@ public class LagrangianParticleTracker {
                 if (Interpolator3D.debug) logger.info("\tW interpolation:");
                 track[izrhs][np1] = i3d.interpolateValue3D(pos,
                                                         i3d.pe.getField("w"),
-                                                        i3d.pe.grid3D.mask_rho,
+                                                        globalInfo.getGrid3D().mask_rho,
                                                         Interpolator3D.INTERP_SLOPE);
             }
         }
@@ -255,7 +260,7 @@ public class LagrangianParticleTracker {
 
         //Interpolate "slopes" at corrected locations
         for (int i=0;i<3;i++) pos[i] = track[ixgrd+i][np1];
-        if (GlobalInfo.getInstance().getGrid2D().isOnLand(pos)){
+        if (globalInfo.getGrid2D().isOnLand(pos)){
             //set position to edge of previous ocean cell
             double dx = track[ixgrd][np1]-track[ixgrd][n];
             if ((dx>0) && (Math.round(track[ixgrd][n])<Math.round(track[ixgrd][np1]))){
@@ -295,7 +300,7 @@ public class LagrangianParticleTracker {
                 if (Interpolator3D.debug) logger.info("\tW interpolation:");
                 track[izrhs][np1] = i3d.interpolateValue3D(pos,
                                                         i3d.pe.getField("w"),
-                                                        i3d.pe.grid3D.mask_rho,
+                                                        globalInfo.getGrid3D().mask_rho,
                                                         Interpolator3D.INTERP_SLOPE);
             }
         }
@@ -335,7 +340,7 @@ public class LagrangianParticleTracker {
                 if (Interpolator3D.debug) logger.info("\tW interpolation:");
                 track[izrhs][n] = i3d.interpolateValue3D(pos,
                                                         i3d.pe.getField("w"),
-                                                        i3d.pe.grid3D.mask_rho,
+                                                        globalInfo.getGrid3D().mask_rho,
                                                         Interpolator3D.INTERP_SLOPE);
             } else track[izrhs][n] = 0.0;
         }

@@ -25,8 +25,6 @@ import org.geotools.feature.FeatureCollections;
 import org.openide.util.Exceptions;
 import wts.models.DisMELS.events.AnimationEventListener;
 import wts.models.DisMELS.events.AnimationEventSupport;
-import wts.models.utilities.ModelCalendar;
-import wts.models.utilities.CalendarIF;
 import wts.roms.model.*;
 
 /**
@@ -176,7 +174,7 @@ public class ModelControllerBean extends Object
     /** flag to update life stage transitions */
     private transient boolean updateStageTrans = false;
     
-    private transient AnimationEventSupport animEventSupport;
+    private transient final AnimationEventSupport animEventSupport;
 
     /**
      * Creates a new instance of ModelControllerBean
@@ -287,6 +285,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setStartPointsFC(FeatureCollection newFC) {
+        if (fcStartPoints!=null) fcStartPoints.clear();
         fcStartPoints = newFC;
     }
 
@@ -295,6 +294,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setEndPointsFC(FeatureCollection newFC) {
+        if (fcEndPoints!=null) fcEndPoints.clear();
         fcEndPoints = newFC;
     }
 
@@ -303,6 +303,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setDeadPointsFC(FeatureCollection newFC) {
+        if (fcDeadPoints!=null) fcDeadPoints.clear();
         fcDeadPoints = newFC;
     }
 
@@ -311,6 +312,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setDeadTracksFC(FeatureCollection newFC) {
+        if (fcDeadTracks!=null) fcDeadTracks.clear();
         fcDeadTracks = newFC;
     }
 
@@ -319,6 +321,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setTracksFC(FeatureCollection newFC) {
+        if (fcTracks!=null) fcTracks.clear();
         fcTracks = newFC;
     }
     
@@ -372,14 +375,14 @@ public class ModelControllerBean extends Object
         includeTracksInOutput = b;
         propertySupport.firePropertyChange(PROP_includeTracksInOutput, oldValue, includeTracksInOutput);
     }
-    
-    public String getFile_ROMSGrid() {
-        return globalInfo.getGridFile();
-    }
-    
-    public String getFile_ROMSCanonicalDataset() {
-        return globalInfo.getCanonicalFile();
-    }
+//    
+//    public String getFile_ROMSGrid() {
+//        return globalInfo.getGridFile();
+//    }
+//    
+//    public String getFile_ROMSCanonicalDataset() {
+//        return globalInfo.getCanonicalFile();
+//    }
     
     public String getFile_ROMSDataset() {
         return file_ROMSDataset;
@@ -522,6 +525,10 @@ public class ModelControllerBean extends Object
         propertySupport.removePropertyChangeListener(listener);
     }
     
+    /**
+     * Method to clean up biggest memory hogs(?) prior to initializing/running a
+     * new model.
+     */
     public void cleanup(){
             if (fcStartPoints!=null) fcStartPoints.clear();
             if (fcEndPoints!=null)   fcEndPoints.clear();
@@ -534,17 +541,21 @@ public class ModelControllerBean extends Object
             tmpStrtPts.clear();
             tmpTrks.clear();
             
+            it = null;
+            if (indivs!=null) indivs.clear();
             indivs = null;
             
-            netcdfReader = null;
+            LagrangianParticle.setTracker(null);
             
-            grid3D = null;
+            globalInfo.setInterpolator3D(null);//set global instance to null (seems like really bad idea, but need to to clean up memory)
+            AbstractLHS.i3d = null;//set to null to clean up memory
+            i3dt   = null;
             pe1    = null;
             pe2    = null;
             pet    = null;
-            i3dt   = null;
-            globalInfo.setInterpolator3D(null);//set global instance to null (seems like really bad idea, but need to to clean up memory)
-            AbstractLHS.i3d = null;//set to null to clean up memory
+            grid3D = null;
+            
+            netcdfReader = null;
             
             System.gc();//call garbage control to clean up
     }
@@ -605,7 +616,7 @@ public class ModelControllerBean extends Object
         statTime = 0;                               //??
         time = startTime;//set model time
         if (guiMode){
-            //propertySupport.firePropertyChange(PROP_CURRDATE, null, ModelCalendar.getCalendar().getDate());
+            //propertySupport.firePropertyChange(PROP_CURRDATE, null, globalInfo.getCalendar().getDate());
             propertySupport.firePropertyChange(PROP_OCEANTIME, null, startTime);
             animEventSupport.fireAnimationEvent();
         }
@@ -631,20 +642,21 @@ public class ModelControllerBean extends Object
     protected void initializeEnvironment() throws IOException {
         //create ModelGrid3D instance
         if (ModelGrid3D.isGrid(globalInfo.getGridFile())) {
-            grid3D = new ModelGrid3D(globalInfo.getGridFile());
+//            grid3D = new ModelGrid3D(globalInfo.getGridFile());
         }  else {
             JOptionPane.showMessageDialog(null, "file "+globalInfo.getGridFile()+" is not a ROMS grid", 
                                          "Error message", JOptionPane.ERROR_MESSAGE);
             throw(new IOException("Error in ModelControllerBean.initializeEnvironemnt(): \nfile '"+globalInfo.getGridFile()+"' is not a ROMS grid!!"));
         }
-        //read canonical ROMS dataset for ModelGrid3D constant fields
-        netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
-        grid3D.readConstantFields(netcdfReader);
+//        //read canonical ROMS dataset for ModelGrid3D constant fields
+//        netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
+//        grid3D.readConstantFields(netcdfReader);
+        grid3D = globalInfo.getGrid3D();
         //set netcdfReader to read first ROMS dataset
         file_CurrROMSDataset = file_ROMSDataset;
         netcdfReader = new NetcdfReader(file_CurrROMSDataset);
-        CalendarIF cal = netcdfReader.getCalendar();
-        ModelCalendar.setCalendar(cal);
+//        CalendarIF cal = netcdfReader.getCalendar();
+//        ModelCalendar.setCalendar(cal);
         int nt = netcdfReader.getNumTimeSteps();
         //Identify PE1 & PE2 with which to start model
         if (runForward) {
@@ -676,8 +688,7 @@ public class ModelControllerBean extends Object
         }
         globalInfo.setInterpolator3D(i3dt);//need this so AbstractLHS can get it
         
-        ModelCalendar.getCalendar().setTimeOffset((long) startTime);
-        //propertySupport.firePropertyChange(PROP_CURRDATE, null, ModelCalendar.getCalendar().getDate());
+        globalInfo.getCalendar().setTimeOffset((long) startTime);
         propertySupport.firePropertyChange(PROP_OCEANTIME, null, startTime);
     }
 
@@ -698,7 +709,7 @@ public class ModelControllerBean extends Object
                 //the next dataset.
                 logger.info("initializeEnvironment it = "+(nt-1));
                 statMessage = "Reading environment 1 (as precaution) from "+file_CurrROMSDataset;
-                pe1 =  new PhysicalEnvironment(0,netcdfReader,grid3D);
+                pe1 =  new PhysicalEnvironment(0,netcdfReader);
                 //Switch to next dataset.
                 file_CurrROMSDataset = getNextFilename();
                 logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
@@ -708,7 +719,7 @@ public class ModelControllerBean extends Object
                     //Success bracketing startTime!  Assign pe2.
                     logger.info("startTime bracketed between datasets!");
                     statMessage = "Reading environment 2";
-                    pe2 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+                    pe2 = new PhysicalEnvironment(0,netcdfReader);
                     it = 0;//set to drop out of "while" condition
                 } else {
                     pe1 = null; //reset pe1
@@ -730,9 +741,9 @@ public class ModelControllerBean extends Object
                     logger.info("Success bracketing startTime!!");
                     logger.info("initializeEnvironment it = "+it);
                     statMessage = "Reading environment 1";
-                    pe1 = new PhysicalEnvironment(it,netcdfReader,grid3D);
+                    pe1 = new PhysicalEnvironment(it,netcdfReader);
                     statMessage = "Reading environment 2";
-                    pe2 = new PhysicalEnvironment(it+1,netcdfReader,grid3D);
+                    pe2 = new PhysicalEnvironment(it+1,netcdfReader);
                 } else {
                     //startTime not bracketed within the dataset.
                     logger.info("startTime not bracketed w/in dataset!");
@@ -742,7 +753,7 @@ public class ModelControllerBean extends Object
                     //the 1st time slice from the next dataset.
                     logger.info("initializeEnvironment it = "+(nt-1));
                     statMessage = "Reading environment 1 (as precaution)";
-                    pe1 =  new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+                    pe1 =  new PhysicalEnvironment(nt-1,netcdfReader);
                     //Switch to next dataset.
                     file_CurrROMSDataset = getNextFilename();
                     logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
@@ -753,7 +764,7 @@ public class ModelControllerBean extends Object
                         //Success bracketing startTime!  Assign pe2.
                         logger.info("startTime brackedted between datasets!");
                         statMessage = "Reading environment 2";
-                        pe2 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+                        pe2 = new PhysicalEnvironment(0,netcdfReader);
                         it = 0;//set to drop out of "while" condition
                     } else {
                         pe1 = null; //reset pe1
@@ -781,7 +792,7 @@ public class ModelControllerBean extends Object
                 //the next dataset.
                 logger.info("initializeEnvironment it = "+(nt-1)+"; time = "+lastT);
                 statMessage = "Reading environment 2 (as precaution) from "+file_CurrROMSDataset;
-                pe2 =  new PhysicalEnvironment(0,netcdfReader,grid3D);
+                pe2 =  new PhysicalEnvironment(0,netcdfReader);
                 //Switch to next dataset.
                 file_CurrROMSDataset = getPreviousFilename();
                 logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
@@ -792,7 +803,7 @@ public class ModelControllerBean extends Object
                     //Success bracketing startTime!  Assign pe1.
                     logger.info("startTime brackedted between datasets!");
                     statMessage = "Reading environment 1";
-                    pe1 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+                    pe1 = new PhysicalEnvironment(0,netcdfReader);
                     it = 0;//set to drop out of "while" condition
                 } else {
                     pe2 = null; //reset pe2
@@ -815,9 +826,9 @@ public class ModelControllerBean extends Object
             }
             logger.info("initializeEnvironment it = "+it);
             statMessage = "Reading environment 1";
-            pe1 = new PhysicalEnvironment(it-1,netcdfReader,grid3D);
+            pe1 = new PhysicalEnvironment(it-1,netcdfReader);
             statMessage = "Reading environment 2";
-            pe2 = new PhysicalEnvironment(it,netcdfReader,grid3D);
+            pe2 = new PhysicalEnvironment(it,netcdfReader);
             while (it<0) {
                 //search through current dataset for match
                 for (int i=(nt-1);i>0;i--) {
@@ -832,9 +843,9 @@ public class ModelControllerBean extends Object
                     logger.info("Success bracketing startTime!!");
                     logger.info("initializeEnvironment it = "+it);
                     statMessage = "Reading environment 1";
-                    pe1 = new PhysicalEnvironment(it,netcdfReader,grid3D);
+                    pe1 = new PhysicalEnvironment(it,netcdfReader);
                     statMessage = "Reading environment 2";
-                    pe2 = new PhysicalEnvironment(it+1,netcdfReader,grid3D);
+                    pe2 = new PhysicalEnvironment(it+1,netcdfReader);
                 } else {
                     //startTime not bracketed within the dataset.
                     logger.info("startTime not bracketed w/in dataset!");
@@ -844,7 +855,7 @@ public class ModelControllerBean extends Object
                     //the 1st time slice from the next dataset.
                     logger.info("initializeEnvironment it = "+0);
                     statMessage = "Reading environment 2 (as precaution)";
-                    pe2 =  new PhysicalEnvironment(0,netcdfReader,grid3D);
+                    pe2 =  new PhysicalEnvironment(0,netcdfReader);
                     //Switch to next dataset.
                     file_CurrROMSDataset = getPreviousFilename();
                     logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
@@ -855,7 +866,7 @@ public class ModelControllerBean extends Object
                         //Success bracketing startTime!  Assign pe1.
                         logger.info("startTime bracketed between datasets!");
                         statMessage = "Reading environment 1";
-                        pe1 = new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+                        pe1 = new PhysicalEnvironment(nt-1,netcdfReader);
                         it = 0;//set to drop out of "while" condition
                     } else {
                         pe2 = null; //reset pe2
@@ -918,7 +929,7 @@ public class ModelControllerBean extends Object
         file_CurrROMSDataset = getNextFilename();
         logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
         netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
-        pe2 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+        pe2 = new PhysicalEnvironment(0,netcdfReader);
     }
  
     /**
@@ -985,7 +996,7 @@ public class ModelControllerBean extends Object
         logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
         netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
         int nt = netcdfReader.getNumTimeSteps();
-        pe2 = new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+        pe2 = new PhysicalEnvironment(nt-1,netcdfReader);
     }
   
     protected void initializeBioModel() throws FileNotFoundException, IOException {
@@ -1061,7 +1072,7 @@ public class ModelControllerBean extends Object
      */
     protected void timestepBioModel(double dt) {
 //        logger.info("Time-stepping bio model! "+
-//                ModelCalendar.getCalendar().getDateTimeString());
+//                globalInfo.getCalendar().getDateTimeString());
         Iterator<LifeStageInterface> itOutput;
         List<LifeStageInterface> tmpOutput1;
         List<LifeStageInterface> deadIndivs = new ArrayList<>();
@@ -1243,7 +1254,7 @@ public class ModelControllerBean extends Object
                         tmpDeadTrks.clear();
                     }
                 }
-                //propertySupport.firePropertyChange(PROP_CURRDATE, null, ModelCalendar.getCalendar().getDate());
+                //propertySupport.firePropertyChange(PROP_CURRDATE, null, globalInfo.getCalendar().getDate());
                 propertySupport.firePropertyChange(PROP_OCEANTIME, null, time+dt);//note that 'time' has not yet been advanced for the timestep
                 animEventSupport.fireAnimationEvent();
             }
@@ -1326,19 +1337,19 @@ public class ModelControllerBean extends Object
 //                logger.info("animCtr = "+animCtr+" "+updateAnimation+" "+animationRate);
                 timestepBioModel(dtp);
                 time=time+dtp;
-                ModelCalendar.getCalendar().setTimeOffset((long) time);
+                globalInfo.getCalendar().setTimeOffset((long) time);
                 animCtr          = mod(animCtr+1,animationRate);
                 resCtr           = mod(resCtr+1,resultsRate);
                 lhsStageTransCtr = mod(lhsStageTransCtr+1,lhsStageTransRate);
                 statTime++;
                 statMessage = "Env. model step "+t;
-//                logger.info(" date is "+ModelCalendar.getCalendar().getDateTimeString());
-//                logger.info(" doy = "+ModelCalendar.getCalendar().getYearDay()+
-//                                   ". Is it daylight? "+DaylightFunctions.isDaylight(-163.0,55.0,ModelCalendar.getCalendar().getYearDay()));
+//                logger.info(" date is "+globalInfo.getCalendar().getDateTimeString());
+//                logger.info(" doy = "+globalInfo.getCalendar().getYearDay()+
+//                                   ". Is it daylight? "+DaylightFunctions.isDaylight(-163.0,55.0,globalInfo.getCalendar().getYearDay()));
             }
             if (!writeFast) writeToReportFile();
             logger.info("t = "+t+"; updated time is "+time+
-                               " date is "+ModelCalendar.getCalendar().getDateTimeString()+
+                               " date is "+globalInfo.getCalendar().getDateTimeString()+
                                " constantEnv = "+fixedEnvironment);
             logger.info("Current number of individuals: "+indivs.size());
             if (!fixedEnvironment) {
