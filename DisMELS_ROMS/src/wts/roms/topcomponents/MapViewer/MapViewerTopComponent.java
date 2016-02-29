@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -104,17 +105,17 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     private GlobalInfo romsGI;
     
     /** file chooser for GIS layers */
-    private JFileChooser jfcLayer = new JFileChooser();
+    private final JFileChooser jfcLayer = new JFileChooser();
     /** file chooser for output images */
-    private JFileChooser jfcImage = new JFileChooser();
+    private final JFileChooser jfcImage = new JFileChooser();
     /** file chooser for output shapefiles */
-    private JFileChooser jfcShape = new JFileChooser();
+    private final JFileChooser jfcShape = new JFileChooser();
     
     /** Geotools 2.0 style builder for shapefile layers */
-    private StyleBuilder sb = new StyleBuilder();
+    private final StyleBuilder sb = new StyleBuilder();
     
     /** map of layers by title */
-    private TreeMap<String,MapLayer> mapLayers = new TreeMap<>();
+    private final TreeMap<String,MapLayer> mapLayers = new TreeMap<>();
     
     /** JMenu for removable GIS layers */
     private JMenu jmuGISLayers = null;
@@ -248,51 +249,6 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         return romsGI.getGrid2D();
     }
 
-    /**
-     * Loads the current ROMS grid file and creates the grid and mask layers on the map using
-     * a Runnable object.
-     * 
-     * The process clears all other GIS layers from the map, as well.
-     * 
-     *  1. calls setGrid() on mapGUI
-     *  2. if the file is not a valid grid file, a message box is shown
-     */
-//    private void loadGridFile() {
-//        logger.info("Starting loadGridFile()");
-////        Runnable r = new Runnable(){
-////            @Override
-////            public void run() {
-//                String grdFN = romsGI.getGridFile();
-//                Cursor c = getCursor();
-//                try {
-//                    if ((!grdFN.equals("--not set--"))&&(wts.roms.model.ModelGrid2D.isGrid(grdFN))) {
-//                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//                        mapGUI.setGrid();
-//                        mapGUI.validate();
-//                        mapGUI.repaint();
-//                    } else {
-//                        javax.swing.JOptionPane.showMessageDialog(
-//                                null,
-//                                grdFN,
-//                                "Error loading ROMS grid file:\n'"+grdFN+"'\nis not a grid file:",
-//                                javax.swing.JOptionPane.ERROR_MESSAGE);
-//                    }
-//                } catch (java.lang.Exception ex) {
-//                    javax.swing.JOptionPane.showMessageDialog(
-//                            null,
-//                            grdFN,
-//                            "Error loading grid file\n'"+grdFN+"'",
-//                            javax.swing.JOptionPane.ERROR_MESSAGE);
-//                    Exceptions.printStackTrace(ex);
-//                }
-//                setCursor(c);
-//                doOnOpen = false;
-////            }
-////        };
-////        ProgressUtils.showProgressDialogAndRun(r, "Reading ROMS grid info...");
-//        logger.info("Finished loadGridFile()");
-//    }
-
     private void initComponents1() {
         doOnOpen = true;//flag to load grid in componentOpened
         romsGI = GlobalInfo.getInstance();
@@ -317,7 +273,6 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         jfcShape.setFileFilter(fileFilter1);
         jfcShape.setCurrentDirectory(wdF);
         jfcShape.setDialogTitle("Save as ESRI shapefile");
-
     }
     
     /**
@@ -410,11 +365,17 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer 
      */
     public void addGISLayer(MapLayer layer){
-        logger.info("Adding GIS layer: "+layer.getTitle());
+        logger.info("addGISLayer(MapLayer): Adding GIS layer: "+layer.getTitle());
+        Set<String> ks = mapLayers.keySet();
+        logger.info("--mapLayers before add:");
+        for (String k : ks) logger.info("----"+k);
         mapLayers.put(layer.getTitle(),layer);
-        mapGUI.addLayer(layer);
+        mapGUI.addLayerAtTop(layer);
         mapGUI.repaint();
-        logger.info("Added GIS layer: "+layer.getTitle());
+        logger.info("--mapLayers after add:");
+        ks = mapLayers.keySet();
+        for (String k : ks) logger.info("----"+k);
+        logger.info("addGISLayer(MapLayer): Added GIS layer: "+layer.getTitle());
     }
     
     /**
@@ -423,9 +384,17 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer 
      */
     public void addGISLayerAtBase(MapLayer layer){
+        logger.info("addGISLayerAtBase(MapLayer): Adding GIS layer: "+layer.getTitle());
+        Set<String> ks = mapLayers.keySet();
+        logger.info("--mapLayers before add:");
+        for (String k : ks) logger.info("----"+k);
         mapLayers.put(layer.getTitle(),layer);
         mapGUI.addLayerAtBottom(layer);
         mapGUI.repaint();
+        logger.info("--mapLayers after add:");
+        ks = mapLayers.keySet();
+        for (String k : ks) logger.info("----"+k);
+        logger.info("addGISLayerAtBase(MapLayer): Added GIS layer: "+layer.getTitle());
     }
     
     /**

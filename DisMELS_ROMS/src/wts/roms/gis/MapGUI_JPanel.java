@@ -301,16 +301,35 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayerAtBottom(MapLayer layer) {
-        logger.info("Adding layer at bottom");
+        logger.info("--Adding layer at bottom");
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(0, layer);//add as 1st element in context, as this gets painted first
-        MapLayer[] mls = context.getLayers();
-        for (int i=0;i<mls.length;i++) {
-            logger.info("layer "+i+" is '"+mls[i].getTitle()+"'");
+        for (int i=0;i<context.getLayerCount();i++) {
+            logger.info("----map layer "+i+" is '"+context.getLayer(i).getTitle()+"'");
         }
         if (mapPane.getMapContext()==null) setContext();
         setCursor(c);
+        logger.info("--Added layer at bottom");
+    }
+
+    /**
+     * Adds layer to "bottom" of existing layers so that it is painted BEFORE all
+     * other layers.
+     * @param layer
+     */
+    public void addLayerAtTop(MapLayer layer) {
+        logger.info("--Adding layer at top");
+        Cursor c = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        int top = context.getLayerCount();
+        context.addLayer(top, layer);//add as last element in context, as this gets painted first
+        for (int i=0;i<context.getLayerCount();i++) {
+            logger.info("----map layer "+i+" is '"+context.getLayer(i).getTitle()+"'");
+        }
+        if (mapPane.getMapContext()==null) setContext();//only set context if not already set
+        setCursor(c);
+        logger.info("--Added layer at top");
     }
 
     @Override

@@ -287,6 +287,8 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         jbScalarColorScale = new javax.swing.JButton();
         sfCustomizer = new wts.GIS.styling.ColorBarStyleCustomizer();
         jbRefreshMap = new javax.swing.JButton();
+        jbRemoveLayer = new javax.swing.JButton();
+        jchkAtTop = new javax.swing.JCheckBox();
 
         jcbScalarVar.setToolTipText(org.openide.util.NbBundle.getMessage(ModelGridViewerTopComponent.class, "ModelGridViewerTopComponent.jcbScalarVar.toolTipText")); // NOI18N
         jcbScalarVar.addItemListener(new java.awt.event.ItemListener() {
@@ -362,6 +364,16 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(jbRemoveLayer, org.openide.util.NbBundle.getMessage(ModelGridViewerTopComponent.class, "ModelGridViewerTopComponent.jbRemoveLayer.text")); // NOI18N
+        jbRemoveLayer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbRemoveLayerActionPerformed(evt);
+            }
+        });
+
+        jchkAtTop.setSelected(true);
+        org.openide.awt.Mnemonics.setLocalizedText(jchkAtTop, org.openide.util.NbBundle.getMessage(ModelGridViewerTopComponent.class, "ModelGridViewerTopComponent.jchkAtTop.text")); // NOI18N
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -369,25 +381,33 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jcbScalarVar, javax.swing.GroupLayout.PREFERRED_SIZE, 447, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jpScalarRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jbScalarColorScale)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jbRefreshMap))
-                    .addComponent(sfCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jbRefreshMap)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jbRemoveLayer))
+                    .addComponent(sfCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jcbScalarVar, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jchkAtTop)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jcbScalarVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jcbScalarVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jchkAtTop))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jpScalarRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jbScalarColorScale)
-                    .addComponent(jbRefreshMap))
+                    .addComponent(jbRefreshMap)
+                    .addComponent(jbRemoveLayer))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(sfCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
@@ -485,13 +505,21 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         logger.info("finished jbRefreshMapActionPerformed()");
     }//GEN-LAST:event_jbRefreshMapActionPerformed
 
+    private void jbRemoveLayerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbRemoveLayerActionPerformed
+        logger.info("starting jbRemoveLayerActionPerformed()");
+        if (scalarLayer!=null) tcMapViewer.removeGISLayer(scalarLayer);
+        logger.info("finished jbRemoveLayerActionPerformed()");
+    }//GEN-LAST:event_jbRemoveLayerActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton jbRefreshMap;
+    private javax.swing.JButton jbRemoveLayer;
     private javax.swing.JButton jbScalarColorScale;
     private javax.swing.JComboBox jcbScalarVar;
+    private javax.swing.JCheckBox jchkAtTop;
     private javax.swing.JPanel jpScalarRange;
     private javax.swing.JTextField jtfScalarMax;
     private javax.swing.JTextField jtfScalarMin;
@@ -550,7 +578,9 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         Cursor c = this.getCursor();
         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         if (instance==null){
-            logger.warning("instance is NULL!!");
+            logger.warning("createScalarMapLayer(): instance is NULL!!");
+        } else {
+            logger.info("createScalarMapLayer(): instance is  not NULL");
         }
         Runnable r = new Runnable(){
             @Override
@@ -590,7 +620,13 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
 
                     scalarLayer = new DefaultMapLayer(scalarFC,scalarStyle,scalarFld);
                     if (scalarLayer!=null) {
-                        tcMapViewer.addGISLayerAtBase(scalarLayer);
+                        logger.info("Adding "+scalarLayer.toString());
+                        //tcMapViewer.addGISLayerAtBase(scalarLayer);
+                        if (jchkAtTop.isSelected()) {
+                            tcMapViewer.addGISLayer(scalarLayer);
+                        } else {
+                            tcMapViewer.addGISLayerAtBase(scalarLayer);
+                        }
                     } else {
                         logger.severe("Could not create scalarLayer.");
                     }
