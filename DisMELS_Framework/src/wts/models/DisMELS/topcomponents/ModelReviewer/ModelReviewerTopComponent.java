@@ -130,15 +130,15 @@ public final class ModelReviewerTopComponent extends TopComponent
     private long skip = 0;
     private long stride = 250000;
     private File ptsF;
-    private File sgsF;
+//    private File sgsF;
     /** the shapefile creator for the points layer */
     private final ShapefileCreatorPoints scp;
     /** the shapefile creator for the track segments layer */
-    private final ShapefileCreatorSegments scs;
+//    private final ShapefileCreatorSegments scs;
     /** the points layer */
     private MapLayer ptsLayer = null;
     /** the track segments layer */
-    private MapLayer sgsLayer = null;    
+//    private MapLayer sgsLayer = null;    
     
     private TreeSet<Double> times = new TreeSet<>();
     private Double[] vTimes = null;
@@ -174,7 +174,7 @@ public final class ModelReviewerTopComponent extends TopComponent
         
         //the shapefile creators
         scp = new ShapefileCreatorPoints();
-        scs = new ShapefileCreatorSegments();
+//        scs = new ShapefileCreatorSegments();
     }
 
     /**
@@ -247,7 +247,7 @@ public final class ModelReviewerTopComponent extends TopComponent
         logger.info("starting compnonentClosed()");
         mtb.removeMediaToolBarEventListener(this);
         if (ptsLayer!=null) tcMapViewer.removeGISLayer(ptsLayer);
-        if (sgsLayer!=null) tcMapViewer.removeGISLayer(sgsLayer);
+//        if (sgsLayer!=null) tcMapViewer.removeGISLayer(sgsLayer);
         tcMapViewer.removePartner();
         if (tcMapViewer.canClose()) tcMapViewer.close();
         logger.info("finished compnonentClosed()");
@@ -289,9 +289,9 @@ public final class ModelReviewerTopComponent extends TopComponent
                 lhs = LHS_Factory.createAttributesFromCSV(fnCSV,skip,stride,create);
             }
             scp.closeShapefile();//close the shapefile
-            scs.closeShapefile();//close the shapefile
+//            scs.closeShapefile();//close the shapefile
             loadPointsLayer(ptsF);//ptsF assigned in createShapefiles(...);
-            loadSegsLayer(sgsF);  //sgsF assigned in createShapefiles(...);
+//            loadSegsLayer(sgsF);  //sgsF assigned in createShapefiles(...);
         } catch (MalformedURLException ex) {
             Exceptions.printStackTrace(ex);
         } catch (IOException ex) {
@@ -352,37 +352,37 @@ public final class ModelReviewerTopComponent extends TopComponent
         }
     }
     
-    private void loadSegsLayer(File f) {
-        try {
-            URL url = f.toURI().toURL();
-            ShapefileDataStore store = new ShapefileDataStore(url);
-            String name = store.getTypeNames()[0];
-            FeatureSource source = store.getFeatureSource(name);
-            FeatureType ft = source.getSchema();
-            Class geometryClass = ft.getDefaultGeometry().getType();
-
-            if (LineString.class.isAssignableFrom(geometryClass)
-                    || MultiLineString.class.isAssignableFrom(geometryClass)) {
-                Style style = createSegsStyle(ft,vTimes[0],vTimes[vTimes.length-1]);
-                style.setName("segment results");
-                style.setTitle("segment results");
-            
-                if (sgsLayer!=null) tcMapViewer.removeGISLayer(sgsLayer);
-                sgsLayer = new DefaultMapLayer(source,style,"Track segments");
-                tcMapViewer.addGISLayer(sgsLayer);
-            } else {
-           }
-        } catch (MalformedURLException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (java.io.IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-    }
+//    private void loadSegsLayer(File f) {
+//        try {
+//            URL url = f.toURI().toURL();
+//            ShapefileDataStore store = new ShapefileDataStore(url);
+//            String name = store.getTypeNames()[0];
+//            FeatureSource source = store.getFeatureSource(name);
+//            FeatureType ft = source.getSchema();
+//            Class geometryClass = ft.getDefaultGeometry().getType();
+//
+//            if (LineString.class.isAssignableFrom(geometryClass)
+//                    || MultiLineString.class.isAssignableFrom(geometryClass)) {
+//                Style style = createSegsStyle(ft,vTimes[0],vTimes[vTimes.length-1]);
+//                style.setName("segment results");
+//                style.setTitle("segment results");
+//            
+//                if (sgsLayer!=null) tcMapViewer.removeGISLayer(sgsLayer);
+//                sgsLayer = new DefaultMapLayer(source,style,"Track segments");
+//                tcMapViewer.addGISLayer(sgsLayer);
+//            } else {
+//           }
+//        } catch (MalformedURLException ex) {
+//            Exceptions.printStackTrace(ex);
+//        } catch (java.io.IOException ex) {
+//            Exceptions.printStackTrace(ex);
+//        }
+//    }
 
     private void createShapefiles(ArrayList<Feature> fv) 
             throws MalformedURLException, IllegalAttributeException, SchemaException, IOException {
         scp.closeShapefile();
-        scs.closeShapefile();
+//        scs.closeShapefile();
         String ptsShp = fnCSV;
         String sgsShp = fnCSV;
         ptsShp = ptsShp.replaceAll(".csv", "Points.shp");
@@ -390,15 +390,15 @@ public final class ModelReviewerTopComponent extends TopComponent
         System.out.println("points shapefile = "+ptsShp);
         System.out.println("segs shapefile = "+sgsShp);
         ptsF = new File(ptsShp);
-        sgsF = new File(sgsShp);
+//        sgsF = new File(sgsShp);
         scp.createShapefile(ptsF,fv);
-        scs.createShapefile(sgsF,fv);
+//        scs.createShapefile(sgsF,fv);
     }
     
     private void addToShapefiles(ArrayList<Feature> fv) 
             throws MalformedURLException, IllegalAttributeException, SchemaException, IOException {
         scp.addToShapefile(fv);
-        scs.addToShapefile(fv);
+//        scs.addToShapefile(fv);
     }
     
     private Style createPointsStyle(FeatureType ft, double tmin, double tmax) {

@@ -217,6 +217,7 @@ public class LHS_Factory implements PropertyChangeListener {
         String lhsName;
         String[] strv = null;
         if (first) {
+            logger.info("Opening csv file for initial attributes.");
             FileReader     fr   = new FileReader(file);
             BufferedReader br   = new BufferedReader(fr);
             instance.pCSV = new ParseCSV(br);
@@ -226,18 +227,23 @@ public class LHS_Factory implements PropertyChangeListener {
             instance.pCSV.decodeLine(); //decode header line
         }
         //now decode input data
-        logger.info("Reading csv file for initial attributes.");
-        long ctr = 0;
-        while (((strv = instance.pCSV.decodeLine()) != null)&&(ctr++<max)) {
-            lhsName = strv[0];
-            aLHS = createAttributes(lhsName);
-            aLHS.setValues(strv);
-            list.add(aLHS);
-            for (long i=0;i<skip;i++) strv = instance.pCSV.decodeLine();//skip lines as requested
-        }
-        if (strv==null) {
-            instance.pCSV.close();
-            instance.pCSV = null;//can set to null because we're past eof
+        if (instance.pCSV==null){
+            logger.info("--csv file for initial attributes closed, returning empty list.");
+            return list;//return empty list
+        } else {
+            logger.info("--Reading csv file for initial attributes.");
+            long ctr = 0;
+            while (((strv = instance.pCSV.decodeLine()) != null)&&(ctr++<max)) {
+                lhsName = strv[0];
+                aLHS = createAttributes(lhsName);
+                aLHS.setValues(strv);
+                list.add(aLHS);
+                for (long i=0;i<skip;i++) strv = instance.pCSV.decodeLine();//skip lines as requested
+            }
+            if (strv==null) {
+                instance.pCSV.close();
+                instance.pCSV = null;//can set to null because we're past eof
+            }
         }
         return list;
     }
