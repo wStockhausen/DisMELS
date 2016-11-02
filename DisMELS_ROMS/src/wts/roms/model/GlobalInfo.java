@@ -464,19 +464,22 @@ public class GlobalInfo implements PropertyChangeListener {
                 if (f.exists()){
                     readProperties(f);
                 } else {
-                    JOptionPane.showMessageDialog(null, 
-                                                  new String("ROMS.properties file not found.\nUsing previously-defined or default ROMS info.\nPlease define ROMS info and save file."), 
-                                                  "File not found.", JOptionPane.INFORMATION_MESSAGE);
+                    logger.info(romsPropsPath+" does not exist.");
+//                    JOptionPane.showMessageDialog(null, 
+//                                                  new String("ROMS.properties file not found.\nUsing previously-defined or default ROMS info.\nPlease define ROMS info and save file."), 
+//                                                  "File not found.", JOptionPane.INFORMATION_MESSAGE);
                 }
             } catch (FileNotFoundException ex) {
-                JOptionPane.showMessageDialog(null, 
-                                              new String("ROMS.properties file not found.\nPlease define ROMS Info and save file."), 
-                                              "File not found.", JOptionPane.INFORMATION_MESSAGE);
                 logger.info(ex.toString());
+//                JOptionPane.showMessageDialog(null, 
+//                                              new String("ROMS.properties file not found.\nPlease define ROMS Info and save file."), 
+//                                              "File not found.", JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException | SecurityException ex) {
-                JOptionPane.showMessageDialog(null, 
-                                              new String("Problem reading ROMS.properties file.\nPlease define ROMS Info and save file."), 
-                                              "Problem reading file.", JOptionPane.WARNING_MESSAGE);
+                logger.info(ex.toString());
+//                JOptionPane.showMessageDialog(null, 
+//                                              new String("Problem reading ROMS.properties file.\nPlease define ROMS Info and save file."), 
+//                                              "Problem reading file.", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception ex){
                 logger.info(ex.toString());
             }
             logger.info("---Changed working directory to "+workingDirFN);

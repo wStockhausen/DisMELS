@@ -189,7 +189,7 @@ public class GlobalInfo implements LookupListener {
      * @param dir - path to new working directory directory
      */
     public void setWorkingDir(String dir){
-        logger.info("setWorkingDir('"+dir+")");
+        logger.info("setWorkingDir('"+dir+"')");
         String oldVal = workingDirFN;
         workingDirFN = dir;
         romsGI.setWorkingDir(dir);
