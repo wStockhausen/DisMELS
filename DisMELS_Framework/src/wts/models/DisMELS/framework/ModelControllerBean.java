@@ -595,17 +595,22 @@ public class ModelControllerBean extends Object
                 logger.info("ModelControllerBean: WARNING!! PE.updateLayerDepthsLikeROMS is true!!");
             }
             statMessage = "Initializing output files";
+            logger.info(statMessage);
             initializeOutputFiles();
             statMessage = "Initializing environment";
+            logger.info(statMessage);
             initializeEnvironment();
             statMessage = "Initializing biology";
+            logger.info(statMessage);
             initializeBioModel();
             statMessage="Finished initialization";
         } catch (FileNotFoundException ex) {
             statMessage="Initialization halted: FileNotFoundException thrown";
+            logger.info(statMessage);
             throw ex;
         } catch(IOException ex) {
             statMessage="Initialization halted: IOException thrown";
+            logger.info(statMessage);
             throw ex;
         }
         //initialize counters and model time
@@ -1195,7 +1200,7 @@ public class ModelControllerBean extends Object
             }
             //add indivs after stage changes
             if (!newIndivs.isEmpty()){
-                logger.info("Adding "+newIndivs.size()+" individuals.");
+                //logger.info("Adding "+newIndivs.size()+" individuals.");
                 indivs.addAll(newIndivs);
             }
             
@@ -1206,7 +1211,7 @@ public class ModelControllerBean extends Object
                     while (itOutput.hasNext()) {
                         lhs = itOutput.next();
                         lhs.setActive(true);
-                        logger.info("new LHS "+lhs.getID()+" set active.");
+                        //logger.info("new LHS "+lhs.getID()+" set active.");
                         if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
                         lhs.setStartTime(time+dt);//output lhs's regarded as created at end of time step
     //                    lhs.step(0.0);//no dispersal, but make sure all internal var.s are set
@@ -1217,7 +1222,7 @@ public class ModelControllerBean extends Object
                             //can't get track: length would be 0.
                         }
                     }
-                    logger.info("Adding "+newIndivs1.size()+" individuals");
+                    //logger.info("Adding "+newIndivs1.size()+" individuals");
                     indivs.addAll(newIndivs1);
                 }
             }

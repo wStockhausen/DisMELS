@@ -18,7 +18,6 @@ import org.openide.util.lookup.ServiceProvider;
 import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHS;
 import wts.models.DisMELS.framework.*;
 import wts.models.utilities.DateTimeFunctions;
-import wts.models.utilities.ModelCalendar;
 import wts.roms.model.LagrangianParticle;
 
 /**
@@ -47,6 +46,8 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
             "wts.models.DisMELS.LHS.Settler.SimpleSettlerLHS"};
     /* Classes for spawned LHS */
     public static final String[] spawnedLHSClasses = new String[]{};
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(SimplePelagicLHS.class.getName());
     
         //Instance fields
             //  Fields hiding ones from superclass
@@ -243,7 +244,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
             super.setAttributes(newAtts);        
         } else {
             //TODO: should throw an error here
-            System.out.println("SimplePelagicLHS.setAttributes(): no match for attributes type:"+newAtts.toString());
+            logger.info("SimplePelagicLHS.setAttributes(): no match for attributes type:"+newAtts.toString());
         }
     }
     
@@ -489,7 +490,6 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
      * and finally calls updatePosition(), updateEnvVars(), and updateAttributes().
      */
     public void initialize() {
-//        atts.setValue(SimplePelagicLHSAttributes.PROP_id,id);//TODO: should do this beforehand!!
         updateVariables();//set instance variables to attribute values
         int hType,vType;
         hType=vType=-1;
@@ -502,7 +502,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
         zPos       = atts.getValue(SimplePelagicLHSAttributes.PROP_vertPos,zPos);
         time       = startTime;
         numTrans   = 0.0; //set numTrans to zero
-        System.out.println(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
+        if (debug) logger.info(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
         if (i3d!=null) {
             double[] IJ = new double[] {xPos,yPos};
             if (hType==Types.HORIZ_XY) {
@@ -512,7 +512,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
                 IJ = i3d.getGrid().computeIJfromLL(yPos,xPos);
             }
             double z = i3d.interpolateBathymetricDepth(IJ);
-            System.out.println("Bathymetric depth = "+z);
+            if (debug) logger.info("IJ = {"+IJ[0]+", "+IJ[1]+"} Bathymetric depth = "+z);
             double ssh = i3d.interpolateSSH(IJ);
 
             double K = 0;  //set K = 0 (at bottom) as default
@@ -589,7 +589,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
             //now do corrector step
             lp.doCorrectorStep();
             pos = lp.getIJK();
-            if (debug) System.out.println("Depth after corrector step = "+(-i3d.calcZfromK(pos[0],pos[1],pos[2])));
+            if (debug) logger.info("Depth after corrector step = "+(-i3d.calcZfromK(pos[0],pos[1],pos[2])));
         }
         time = time+dt;
         updateSize(dt);
@@ -601,9 +601,8 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
         if (i3d.isAtGridEdge(pos,tolGridEdge)){
             alive=false;
             active=false;
-        }
-        if (debug) {
-            System.out.println(toString());
+            gridCellID=i3d.getGridCellID(pos, tolGridEdge);
+            logger.info("Indiv "+id+" exited grid at ["+pos[0]+","+pos[1]+"]: "+gridCellID);
         }
         updateAttributes(); //update the attributes object w/ nmodified values
     }
@@ -655,7 +654,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
             double r = Math.sqrt(horizDiffusion/Math.abs(dt));
             uv[0] += r*rng.computeNormalVariate(); //stochastic swimming rate
             uv[1] += r*rng.computeNormalVariate(); //stochastic swimming rate
-            if (debug) System.out.print("uv: "+r+"; "+uv[0]+", "+uv[1]+"\n");
+            if (debug) logger.info("uv: "+r+"; "+uv[0]+", "+uv[1]+"\n");
         }
         uv[0] = Math.signum(dt)*uv[0];
         uv[1] = Math.signum(dt)*uv[1];

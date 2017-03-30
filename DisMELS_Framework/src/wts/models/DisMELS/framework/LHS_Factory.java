@@ -583,6 +583,7 @@ public class LHS_Factory implements PropertyChangeListener {
         }
         instance.pCSV.close();
         instance.pCSV = null;//can set to null because we're past eof
+        logger.info("Finished reading csv file for initial attributes.");
         return list;
     }
     

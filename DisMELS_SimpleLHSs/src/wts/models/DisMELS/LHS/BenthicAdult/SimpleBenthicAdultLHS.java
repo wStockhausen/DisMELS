@@ -53,6 +53,8 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
     /* Classes for spawned LHS */
     public static final String[] spawnedLHSClasses = new String[]{ 
             "wts.models.DisMELS.LHS.PelagicStages.SimplePelagicLHS"};
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(SimpleBenthicAdultLHS.class.getName());
     
         //Instance fields
             //  Fields hiding ones from superclass
@@ -247,7 +249,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
             super.setAttributes(newAtts);
         } else {
             //TODO: should throw an error here
-            System.out.println("SimpleBenthicAdultLHS.setAttributes(): no match for attributes type");
+            logger.info("SimpleBenthicAdultLHS.setAttributes(): no match for attributes type");
         }
     }
     
@@ -484,7 +486,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
     @Override
     public List<LifeStageInterface> getSpawnedIndividuals() {
         output.clear();
-        //System.out.println("Adult "+id+": "+isSpawningSeason+", "+elapsedTimeToSpawn);
+        //logger.info("Adult "+id+": "+isSpawningSeason+", "+elapsedTimeToSpawn);
         if (isSpawningSeason && (elapsedTimeToSpawn<0)) doSpawning();
         return output;
     }
@@ -492,7 +494,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
     private void doSpawning() {
         try {
             //create number of new individuals = fecundity
-            //System.out.println("Adult"+id+" spawning: fecundity = "+fecundity);
+            //logger.info("Adult"+id+" spawning: fecundity = "+fecundity);
             LifeStageInterface nLHS = null;
             LifeStageAttributesInterface newAttsI = null;
             for (int i=0;i<fecundity;i++) {
@@ -550,7 +552,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
                     nLHS.setAttributes(newAtts);
                 } else {
                     //should throw error
-                    System.out.println("SimpleBenthicAdultLHS.doSpawning(): no match for attributes type:"+newAttsI.toString());
+                    logger.info("SimpleBenthicAdultLHS.doSpawning(): no match for attributes type:"+newAttsI.toString());
                 }
                 output.add(nLHS);
                 nLHS = null;
@@ -626,7 +628,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
         zPos       = atts.getValue(SimpleBenthicAdultLHSAttributes.PROP_vertPos,zPos);
         time       = startTime;
         numTrans   = 0.0; //set numTrans to zero
-        System.out.println(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
+        if (debug) logger.info(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
         if (i3d!=null) {
             double[] IJ = new double[] {xPos,yPos};
             if (hType==Types.HORIZ_XY) {
@@ -637,7 +639,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
             }
             double K = 0;  //benthic adult starts out on bottom
             double z = i3d.interpolateBathymetricDepth(IJ);
-            System.out.println("Bathymetric depth = "+z);
+            if (debug) logger.info("Bathymetric depth = "+z);
             lp.setIJK(IJ[0],IJ[1],K);
             //reset track array
             track.clear();
@@ -698,7 +700,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
             //assume same daytime status, but recalc depth and revise W 
 //            pos = lp.getPredictedIJK();
 //            depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-//            if (debug) System.out.println("Depth after predictor step = "+depth);
+//            if (debug) logger.info("Depth after predictor step = "+depth);
             //w = calcW(dt,lp.getNP1())+r; //set swimming rate for predicted position
             lp.setU(uv[0],lp.getNP1());
             lp.setV(uv[1],lp.getNP1());
@@ -715,9 +717,8 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
         if (i3d.isAtGridEdge(pos,tolGridEdge)){
             alive=false;
             active=false;
-        }
-        if (debug) {
-            System.out.println(toString());
+            gridCellID=i3d.getGridCellID(pos, tolGridEdge);
+            logger.info("Indiv "+id+" exited grid at ["+pos[0]+","+pos[1]+"]: "+gridCellID);
         }
         updateAttributes(); //update the attributes object w/ nmodified values
     }

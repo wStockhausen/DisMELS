@@ -723,4 +723,27 @@ public class Interpolator3D extends Interpolator2D {
         ModelGrid3D grid = globalInfo.getGrid3D();
         return ((pos[0]<tolGridEdge)||((grid.getLm()-tolGridEdge)<pos[0])||(pos[1]<tolGridEdge)||((grid.getMm()-tolGridEdge)<pos[1]));
     }
+
+    /**
+     * Returns a grid cell id string for an input position, accounting for
+     * location relative to the grid edge.
+     * 
+     * @param pos         - position in grid coordinates to test
+     * @param tolGridEdge - max distance in grid coordinates that results in true
+     * @return            - grid cell id string
+     */
+    public String getGridCellID(double[] pos, double tolGridEdge) {
+        ModelGrid3D grid = globalInfo.getGrid3D();
+        
+        String gx = ""+Math.round(pos[0]);
+        if ((pos[0]<tolGridEdge)) gx = "-0";
+        else if ((grid.getLm()-tolGridEdge)<pos[0]) gx = "+"+Math.round(pos[0]);
+        
+        String gy = ""+Math.round(pos[1]);
+        if ((pos[1]<tolGridEdge)) gy = "0-"; else
+        if ((grid.getMm()-tolGridEdge)<pos[1]) gy = Math.round(pos[1])+"+";
+        
+        String s = gx + "_" + gy;
+        return s;
+    }
 }

@@ -48,6 +48,8 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             "wts.models.DisMELS.LHS.BenthicAdult.SimpleBenthicAdultLHS"};
     /* Classes for spawned LHS */
     public static final String[] spawnedLHSClasses = new String[]{};
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(SimpleBenthicJuvenileLHS.class.getName());
     
         //Instance fields
             //  Fields hiding ones from superclass
@@ -230,7 +232,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             super.setAttributes(newAtts);
         } else {
             //TODO: should throw an error here
-            System.out.println("SimpleBenthicJuvenileLHS.setAttributes(): no match for attributes type");
+            logger.info("SimpleBenthicJuvenileLHS.setAttributes(): no match for attributes type");
         }
     }
     
@@ -465,7 +467,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
         zPos       = atts.getValue(SimpleBenthicJuvenileLHSAttributes.PROP_vertPos,zPos);
         time       = startTime;
         numTrans   = 0.0; //set numTrans to zero
-        System.out.println(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
+        if (debug) logger.info(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
         if (i3d!=null) {
             double[] IJ = new double[] {xPos,yPos};
             if (hType==Types.HORIZ_XY) {
@@ -476,7 +478,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             }
             double K = 0;  //benthic juvenile starts out on bottom
             double z = i3d.interpolateBathymetricDepth(IJ);
-            System.out.println("Bathymetric depth = "+z);
+            if (debug) logger.info("Bathymetric depth = "+z);
             lp.setIJK(IJ[0],IJ[1],K);
             //reset track array
             track.clear();
@@ -504,7 +506,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             //assume same daytime status, but recalc depth and revise W 
 //            pos = lp.getPredictedIJK();
 //            depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-//            if (debug) System.out.println("Depth after predictor step = "+depth);
+//            if (debug) logger.info("Depth after predictor step = "+depth);
             //w = calcW(dt,lp.getNP1())+r; //set swimming rate for predicted position
             lp.setU(uv[0],lp.getNP1());
             lp.setV(uv[1],lp.getNP1());
@@ -521,9 +523,8 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
         if (i3d.isAtGridEdge(pos,tolGridEdge)){
             alive=false;
             active=false;
-        }
-        if (debug) {
-            System.out.println(toString());
+            gridCellID=i3d.getGridCellID(pos, tolGridEdge);
+            logger.info("Indiv "+id+" exited grid at ["+pos[0]+","+pos[1]+"]: "+gridCellID);
         }
         updateAttributes(); //update the attributes object w/ nmodified values
     }

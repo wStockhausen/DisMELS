@@ -47,6 +47,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             "wts.models.DisMELS.LHS.BenthicJuvenile.SimpleBenthicJuvenileLHS"};
     /* Classes for spawned LHS */
     public static final String[] spawnedLHSClasses = new String[]{};
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(SimpleSettlerLHS.class.getName());
     
         //Instance fields
             //  Fields hiding ones from superclass
@@ -239,7 +241,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             super.setAttributes(newAtts);
         } else {
             //TODO: should throw an error here
-            System.out.println("SimpleSettlerLHS.setAttributes(): no match for attributes type");
+            logger.info("SimpleSettlerLHS.setAttributes(): no match for attributes type");
         }
     }
     
@@ -489,7 +491,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         zPos       = atts.getValue(SimpleSettlerLHSAttributes.PROP_vertPos,zPos);
         time       = startTime;
         numTrans   = 0.0; //set numTrans to zero
-        System.out.println(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
+        if (debug) logger.info(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
         if (i3d!=null) {
             double[] IJ = new double[] {xPos,yPos};
             if (hType==Types.HORIZ_XY) {
@@ -499,7 +501,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
                 IJ = i3d.getGrid().computeIJfromLL(yPos,xPos);
             }
             double z = i3d.interpolateBathymetricDepth(IJ);
-            System.out.println("Bathymetric depth = "+z);
+            if (debug) logger.info("Bathymetric depth = "+z);
 
             double K = 0;  //set K = 0 (at bottom) as default
             if (vType==Types.VERT_K) {
@@ -566,7 +568,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             //assume same daytime status, but recalc depth and revise W 
 //            pos = lp.getPredictedIJK();
 //            depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-//            if (debug) System.out.println("Depth after predictor step = "+depth);
+//            if (debug) logger.info("Depth after predictor step = "+depth);
             //w = calcW(dt,lp.getNP1())+r; //set swimming rate for predicted position
             lp.setW(w,lp.getNP1());
             lp.setU(uv[0],lp.getNP1());
@@ -575,7 +577,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             lp.doCorrectorStep();
             pos = lp.getIJK();
         }
-//        System.out.println("id: "+id+cc+isDaytime+cc+depth+cc+totalDepth+cc+attached);
+//        logger.info("id: "+id+cc+isDaytime+cc+depth+cc+totalDepth+cc+attached);
         time = time+dt;
         updateSize(dt);
         updateNum(dt);
@@ -586,9 +588,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         if (i3d.isAtGridEdge(pos,tolGridEdge)){
             alive=false;
             active=false;
-        }
-        if (debug) {
-            System.out.println(toString());
+            gridCellID=i3d.getGridCellID(pos, tolGridEdge);
+            logger.info("Indiv "+id+" exited grid at ["+pos[0]+","+pos[1]+"]: "+gridCellID);
         }
         updateAttributes(); //update the attributes object w/ modified values
     }
