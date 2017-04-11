@@ -121,7 +121,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jPanel3" alignment="0" pref="445" max="32767" attributes="1"/>
                           <Component id="jPanel4" alignment="0" max="32767" attributes="1"/>
-                          <Component id="jPanel5" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jPanel5" alignment="0" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -315,13 +315,13 @@
                           </Group>
                           <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="jtfRngSeed" max="32767" attributes="1"/>
+                              <Component id="jtfRngSeed" pref="133" max="32767" attributes="1"/>
                               <Component id="jtfStageTransRate" max="32767" attributes="1"/>
                               <Component id="jtfAnimRate" max="32767" attributes="1"/>
                               <Component id="jtfResRate" max="32767" attributes="1"/>
-                              <Component id="jtfNLTP" alignment="1" pref="133" max="32767" attributes="1"/>
+                              <Component id="jtfNLTP" alignment="1" max="32767" attributes="1"/>
                           </Group>
-                          <EmptySpace pref="153" max="32767" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>

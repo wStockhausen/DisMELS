@@ -149,9 +149,10 @@ public final class ModelTimeTopComponent extends TopComponent implements Propert
             if (doActions) {
                 System.out.println("Setting start time " + jtfROMSTime.getText());
                 double n = Double.parseDouble(jtfROMSTime.getText());
-                ModelCalendar.getCalendar().setTimeOffset((long) n);
+                wts.roms.model.GlobalInfo giROMS = wts.roms.model.GlobalInfo.getInstance();
+                giROMS.getCalendar().setTimeOffset((long) n);
                 doActions = false;
-                jtfDate.setText(ModelCalendar.getCalendar().getDateTimeString());
+                jtfDate.setText(giROMS.getCalendar().getDateTimeString());
                 doActions = true;
             }
         } catch (NumberFormatException ex) {

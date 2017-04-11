@@ -333,12 +333,12 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                     .add(jLabel8))
                 .add(11, 11, 11)
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(jtfRngSeed)
+                    .add(jtfRngSeed, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
                     .add(jtfStageTransRate)
                     .add(jtfAnimRate)
                     .add(jtfResRate)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jtfNLTP, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE))
-                .addContainerGap(153, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jtfNLTP))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -374,7 +374,7 @@ public class ModelControllerBeanCustomizer extends javax.swing.JPanel
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
                     .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
