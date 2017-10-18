@@ -3,8 +3,8 @@
  *
  * Created on December 16, 2005, 5:23 PM
  *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
+ * Revisions:
+ * 20171018: 1. Revised to accomodate motion without advection by currents.
  */
 
 package wts.roms.model;
@@ -29,7 +29,15 @@ public class LagrangianParticleTracker {
     public static boolean maskLikeROMS = true;
     /** w = zero if true so passive, non-diffusive particle stays on isosurface */
     public static boolean noVerticalMotion = false;
-    /** u,v,w = zero if true so passive, non-diffusive particle doesn't move */
+    /** 
+     * Static flag to set advective u,v,w = zero if true 
+     * so NO particles are advected by local currents. This should
+     * be used for TESTING ONLY. 
+     * 
+     * NOTE: to incorporate movement without advection
+     * for simulated individuals, noAdvection should be set to true in the
+     * LagrangianParticle instance associated with the individuals.
+     */
     public static boolean noAdvection = false;
     
     private GlobalInfo globalInfo = GlobalInfo.getInstance();
@@ -41,16 +49,16 @@ public class LagrangianParticleTracker {
     private ModelData umask;
     /* mask for v interpolation */
     private ModelData vmask;
-    private int L,M,N;
+    private final int L,M,N;
     private double dt;
     
     private boolean vertWalk = false;
-    private double cff1p,cff2p;
-    private double cff1c,cff2c,cff3c,cff4c;
+    private final double cff1p,cff2p;
+    private final double cff1c,cff2c,cff3c,cff4c;
     private double val;
     private double[][] track;
-    private double[] pos = new double[3];
-    private int ixgrd,iygrd,izgrd,ixrhs,iyrhs,izrhs,iu,iv,iw;
+    private final double[] pos = new double[3];
+    private final int ixgrd,iygrd,izgrd,ixrhs,iyrhs,izrhs,iu,iv,iw;
     private int np1, n, nm1, nm2, nm3;
     /** logger for class */
     private static final Logger logger = Logger.getLogger(LagrangianParticleTracker.class.getName());
@@ -132,6 +140,59 @@ public class LagrangianParticleTracker {
         return s;
     }
     
+    /**
+     * Initialize integration for LagrangianParticle INCLUDING advection by currents
+     * (unless static variable noAdvection is true).
+     * 
+     * @param lp
+     * @throws ArrayIndexOutOfBoundsException 
+     */
+    public void initialize(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
+        np1 = lp.np1;
+        n   = lp.n;
+        nm1 = lp.nm1;
+        nm2 = lp.nm2;
+        nm3 = lp.nm3;
+        track = lp.getTrackData();
+        //Interpolate "slopes" at corrected locations
+        for (int i=0;i<3;i++) pos[i] = track[ixgrd+i][n];
+        if (Interpolator3D.debug) logger.info("\tU interpolation:");
+        if (noAdvection){
+            track[ixrhs][n] = 0.0;
+            track[iyrhs][n] = 0.0;
+            track[izrhs][n] = 0.0;
+        } else {
+            track[ixrhs][n] = i3d.interpolateValue3D(pos,
+                                                    i3d.pe.getField("u"),
+                                                    umask,
+                                                    Interpolator3D.INTERP_SLOPE);
+            if (Interpolator3D.debug) logger.info("\tV interpolation:");
+            track[iyrhs][n] = i3d.interpolateValue3D(pos,
+                                                    i3d.pe.getField("v"),
+                                                    vmask,
+                                                    Interpolator3D.INTERP_SLOPE);
+            if (!noVerticalMotion) {
+                if (Interpolator3D.debug) logger.info("\tW interpolation:");
+                track[izrhs][n] = i3d.interpolateValue3D(pos,
+                                                        i3d.pe.getField("w"),
+                                                        globalInfo.getGrid3D().mask_rho,
+                                                        Interpolator3D.INTERP_SLOPE);
+            } else track[izrhs][n] = 0.0;
+        }
+        if (debug||LagrangianParticle.debug) {
+            logger.info("After initialization: ");
+            printTrackArray(track);
+        }
+        track = null;
+    }
+    
+    /**
+     * Calculates predictor step of 4th-order Milne time-stepping scheme INCLUDING
+     * advection by currents (unless static variable noAdvection is true).
+     * 
+     * @param lp
+     * @throws ArrayIndexOutOfBoundsException 
+     */
     public void doPredictorStep(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
         ModelGrid3D grid3D = globalInfo.getGrid3D();
         if (maskLikeROMS) {
@@ -217,6 +278,13 @@ public class LagrangianParticleTracker {
         track = null;
    }
     
+    /**
+     * Calculates corrector step of 4th-order Milne time-stepping scheme INCLUDING
+     * advection by currents (unless static variable noAdvection is true).
+     * 
+     * @param lp
+     * @throws ArrayIndexOutOfBoundsException 
+     */
     public void doCorrectorStep(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
         np1 = lp.np1;
         n   = lp.n;
@@ -312,7 +380,14 @@ public class LagrangianParticleTracker {
         track = null;
     }
     
-    public void initialize(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
+    /**
+     * Initialize integration for LagrangianParticle EXCLUDING advection by currents
+     * (unless static variable noAdvection is true).
+     * 
+     * @param lp
+     * @throws ArrayIndexOutOfBoundsException 
+     */
+    public void initializeNoAdvection(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
         np1 = lp.np1;
         n   = lp.n;
         nm1 = lp.nm1;
@@ -322,31 +397,170 @@ public class LagrangianParticleTracker {
         //Interpolate "slopes" at corrected locations
         for (int i=0;i<3;i++) pos[i] = track[ixgrd+i][n];
         if (Interpolator3D.debug) logger.info("\tU interpolation:");
-        if (noAdvection){
-            track[ixrhs][n] = 0.0;
-            track[iyrhs][n] = 0.0;
-            track[izrhs][n] = 0.0;
-        } else {
-            track[ixrhs][n] = i3d.interpolateValue3D(pos,
-                                                    i3d.pe.getField("u"),
-                                                    umask,
-                                                    Interpolator3D.INTERP_SLOPE);
-            if (Interpolator3D.debug) logger.info("\tV interpolation:");
-            track[iyrhs][n] = i3d.interpolateValue3D(pos,
-                                                    i3d.pe.getField("v"),
-                                                    vmask,
-                                                    Interpolator3D.INTERP_SLOPE);
-            if (!noVerticalMotion) {
-                if (Interpolator3D.debug) logger.info("\tW interpolation:");
-                track[izrhs][n] = i3d.interpolateValue3D(pos,
-                                                        i3d.pe.getField("w"),
-                                                        globalInfo.getGrid3D().mask_rho,
-                                                        Interpolator3D.INTERP_SLOPE);
-            } else track[izrhs][n] = 0.0;
-        }
+        //no advection, so
+        track[ixrhs][n] = 0.0;
+        track[iyrhs][n] = 0.0;
+        track[izrhs][n] = 0.0;
         if (debug||LagrangianParticle.debug) {
             logger.info("After initialization: ");
             printTrackArray(track);
+        }
+        track = null;
+    }
+    
+    /**
+     * Calculates predictor step of 4th-order Milne time-stepping scheme EXCLUDING
+     * advection by currents.
+     * 
+     * @param lp
+     * @throws ArrayIndexOutOfBoundsException 
+     */
+    public void doPredictorStepNoAdvection(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid3D = globalInfo.getGrid3D();
+        if (maskLikeROMS) {
+            umask = grid3D.mask_rho;
+            vmask = grid3D.mask_rho;
+        } else {
+            umask = grid3D.mask_u;
+            vmask = grid3D.mask_v;
+        }
+        np1 = lp.np1;
+        n   = lp.n;
+        nm1 = lp.nm1;
+        nm2 = lp.nm2;
+        nm3 = lp.nm3;
+        track = lp.getTrackData();
+        if (debug||Interpolator3D.debug) {
+            logger.info("Before predictor step:");
+            printTrackArray(track);
+        }
+        if (vertWalk) {
+            //TODO: fill this in
+            logger.info("Error: vertWalk not implemented in LPT!");
+            System.exit(1);
+        } else {
+            //Predictor step: predict particle locations at new time step using 
+            //4th-order Milne time-stepping scheme.
+            val = track[ixgrd][nm3]+
+                                dt*(cff1p*(track[ixrhs][n  ]+track[iu][n  ])-
+                                    cff2p*(track[ixrhs][nm1]+track[iu][nm1])+
+                                    cff1p*(track[ixrhs][nm2]+track[iu][nm2]));
+            track[ixgrd][np1] = Math.max(0,Math.min(val,L));
+            val = track[iygrd][nm3]+
+                                dt*(cff1p*(track[iyrhs][n  ]+track[iv][n  ])-
+                                    cff2p*(track[iyrhs][nm1]+track[iv][nm1])+
+                                    cff1p*(track[iyrhs][nm2]+track[iv][nm2]));
+            track[iygrd][np1] = Math.max(0,Math.min(val,M));
+            if (!noVerticalMotion) {
+                val = track[izgrd][nm3]+
+                                    dt*(cff1p*(track[izrhs][n  ]+track[iw][n  ])-
+                                        cff2p*(track[izrhs][nm1]+track[iw][nm1])+
+                                        cff1p*(track[izrhs][nm2]+track[iw][nm2]));
+                track[izgrd][np1] = Math.max(0,Math.min(val,N));
+            }
+        }
+         if (debug||Interpolator3D.debug) {
+            logger.info("After predictor step: "+dt);
+            printTrackArray(track);
+        }
+        //Predict "slopes" at new timestep
+        for (int i=0;i<3;i++) pos[i] = track[ixgrd+i][np1];
+        if (Interpolator3D.debug) {
+            logger.info("\tU interpolation:");
+        }
+        track[ixrhs][n] = 0.0;
+        track[iyrhs][n] = 0.0;
+        track[izrhs][n] = 0.0;
+        if (debug||Interpolator3D.debug) {
+           logger.info("After interpolation: "+dt);
+           printTrackArray(track);
+            logger.info("End of doPredictorStep(lp)");
+        }
+        umask = null;
+        vmask = null;
+        track = null;
+   }
+    
+    /**
+     * Calculates corrector step of 4th-order Milne time-stepping scheme EXCLUDING
+     * advection by currents.
+     * 
+     * @param lp
+     * @throws ArrayIndexOutOfBoundsException 
+     */
+    public void doCorrectorStepNoAdvection(LagrangianParticle lp) throws ArrayIndexOutOfBoundsException {
+        np1 = lp.np1;
+        n   = lp.n;
+        nm1 = lp.nm1;
+        nm2 = lp.nm2;
+        nm3 = lp.nm3;
+        track = lp.getTrackData();
+        if (vertWalk) {
+            //TODO: fill this in
+            logger.info("Error: vertWalk not implemented in LPT!");
+            System.exit(1);
+        } else {
+            //Corrector step: predict particle locations at new time step using 
+            //4th-order Milne time-stepping scheme.
+            val =  cff1c*track[ixgrd][n  ]-
+                                 cff2c*track[ixgrd][nm2]+
+                                 dt*(cff3c*(track[ixrhs][np1]+track[iu][np1])+
+                                     cff4c*(track[ixrhs][n  ]+track[iu][n  ])-
+                                     cff3c*(track[ixrhs][nm1]+track[iu][nm1]));
+            track[ixgrd][np1] = Math.max(0,Math.min(val,L));
+            val =  cff1c*track[iygrd][n  ]-
+                                 cff2c*track[iygrd][nm2]+
+                                 dt*(cff3c*(track[iyrhs][np1]+track[iv][np1])+
+                                     cff4c*(track[iyrhs][n  ]+track[iv][n  ])-
+                                     cff3c*(track[iyrhs][nm1]+track[iv][nm1]));
+            track[iygrd][np1] = Math.max(0,Math.min(val,M));
+            if (!noVerticalMotion) {
+                val =  cff1c*track[izgrd][n  ]-
+                                     cff2c*track[izgrd][nm2]+
+                                     dt*(cff3c*(track[izrhs][np1]+track[iw][np1])+
+                                         cff4c*(track[izrhs][n  ]+track[iw][n  ])-
+                                         cff3c*(track[izrhs][nm1]+track[iw][nm1]));
+                track[izgrd][np1] = Math.max(0,Math.min(val,N));
+            }
+        }
+        //reflect particles at surface or bottom
+//        if (track[izgrd][np1]>N) 
+//            track[izgrd][np1] = 2*N-track[izgrd][np1];
+//        if (track[izgrd][np1]<0) 
+//            track[izgrd][np1] = -track[izgrd][np1];
+
+        //Interpolate "slopes" at corrected locations
+        for (int i=0;i<3;i++) pos[i] = track[ixgrd+i][np1];
+        if (globalInfo.getGrid2D().isOnLand(pos)){
+            //set position to edge of previous ocean cell
+            double dx = track[ixgrd][np1]-track[ixgrd][n];
+            if ((dx>0) && (Math.round(track[ixgrd][n])<Math.round(track[ixgrd][np1]))){
+                track[ixgrd][np1] = Math.round(track[ixgrd][n])+0.49;
+            } else
+            if ((dx<0) && (Math.round(track[ixgrd][np1])<Math.round(track[ixgrd][n]))){
+                track[ixgrd][np1] = Math.round(track[ixgrd][n])-0.49;
+            }
+            double dy = track[iygrd][np1]-track[iygrd][n];
+            if ((dy>0) && (Math.round(track[iygrd][n])<Math.round(track[iygrd][np1]))){
+                track[iygrd][np1] = Math.round(track[iygrd][n])+0.49;
+            } else
+            if ((dy<0) && (Math.round(track[iygrd][np1])<Math.round(track[iygrd][n]))){
+                track[iygrd][np1] = Math.round(track[iygrd][n])-0.49;
+            }
+        }
+        if (debug||Interpolator3D.debug) {
+            logger.info("After corrector step: "+dt);
+            printTrackArray(track);
+        }
+        if (Interpolator3D.debug) logger.info("\tU interpolation:");
+        //no advection, so
+        track[ixrhs][n] = 0.0;
+        track[iyrhs][n] = 0.0;
+        track[izrhs][n] = 0.0;
+        if (debug||Interpolator3D.debug) {
+            logger.info("After interpolation: "+dt);
+            printTrackArray(track);
+            logger.info("End doCorrectorStep()");
         }
         track = null;
     }

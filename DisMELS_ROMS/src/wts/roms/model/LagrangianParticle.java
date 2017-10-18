@@ -1,10 +1,10 @@
-/*
+/**
  * LagrangianParticle.java
  *
  * Created on December 16, 2005, 5:23 PM
  *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
+ * Revisions:
+ * 20171018: 1. Added "noAdvection" flag to implement movement without advection.
  */
 
 package wts.roms.model;
@@ -43,6 +43,9 @@ public class LagrangianParticle implements Cloneable {
     private double[][] trackData;
     int np1,n,nm1,nm2,nm3,nsv;
     
+    /** instance variable flagging motion does not include advection by currents */
+    private boolean noAdvection = false;
+    
     /** logger for class */
     private static final Logger logger = Logger.getLogger(LagrangianParticle.class.getName());
     
@@ -62,6 +65,7 @@ public class LagrangianParticle implements Cloneable {
                     clone.trackData[i][j] = trackData[i][j];
                 }
             }
+            clone.noAdvection = noAdvection;
             if (debug) {
                 logger.info("Cloned track:");
                 lpt.printTrackArray(clone.trackData);
@@ -86,7 +90,11 @@ public class LagrangianParticle implements Cloneable {
      * integration scheme.
      */
     public void doCorrectorStep() throws ArrayIndexOutOfBoundsException {
-        lpt.doCorrectorStep(this);
+        if (noAdvection){
+            lpt.doCorrectorStepNoAdvection(this);
+        } else {
+            lpt.doCorrectorStep(this);
+        }
         nsv = nm3;
         nm3 = nm2;
         nm2 = nm1;
@@ -115,7 +123,11 @@ public class LagrangianParticle implements Cloneable {
      * integration scheme.
      */
     public void doPredictorStep() throws ArrayIndexOutOfBoundsException {
-        lpt.doPredictorStep(this);
+        if (noAdvection) {
+            lpt.doPredictorStepNoAdvection(this);
+        } else {
+            lpt.doPredictorStep(this);
+        }
     }
     
     /**
@@ -202,7 +214,11 @@ public class LagrangianParticle implements Cloneable {
             trackData[IV][m] = 0.0;
             trackData[IW][m] = 0.0;
         }
-        lpt.initialize(this);
+        if (noAdvection){
+            lpt.initializeNoAdvection(this);
+        } else {
+            lpt.initialize(this);
+        }
     }
     
     public void setTimeStep(double dt) {
@@ -330,4 +346,21 @@ public class LagrangianParticle implements Cloneable {
         return np1;
     }
     
+    /**
+     * Returns value of flag indicating no advection.
+     * 
+     * @return - boolean value
+     */
+    public boolean getNoAdvection(){
+        return noAdvection;
+    }
+    
+    /**
+     * Sets the value for the flag indicating no advection.
+     * 
+     * @param val - bollean value
+     */
+    public void setNoAdvection(boolean val){
+        noAdvection = val;
+    }
 }
