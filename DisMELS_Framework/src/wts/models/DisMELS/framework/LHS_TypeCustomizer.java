@@ -7,12 +7,16 @@
 package wts.models.DisMELS.framework;
 
 import java.awt.Color;
-import java.util.HashSet;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JColorChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.table.DefaultTableModel;
 
 /**
  * @author William Stockhausen
@@ -21,9 +25,10 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                                 implements java.beans.Customizer {
     
     private LHS_Type lhsType;
-    private boolean updateNextLHSClass = false;
+    private boolean updateNextLHSs = false;
     private boolean updateSpawnedLHSClass = false;
-    
+    private final DefaultTableModel dtm = new DefaultTableModel();
+
     private static final Logger logger = Logger.getLogger(LHS_TypeCustomizer.class.getName());
     
     /** Creates new customizer LHS_TypeCustomizer */
@@ -41,6 +46,9 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         DefaultComboBoxModel m = new DefaultComboBoxModel(classNames.toArray());
         jcbClasses.setModel(m);
         jcbClasses.setSelectedIndex(-1);
+        
+        dtm.addColumn("lhs name");
+        dtm.addColumn("lhs class");
     }
     
     public void initializeOutputInfo() {
@@ -54,20 +62,14 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         if (nextLHSClassNames.length > 0) {
             //output classes are defined
             jtfNextLHSName.setEnabled(true);
-            updateNextLHSClass = false;//turn off to avoid updates while adding items
-            for (int i = 0; i < nextLHSClassNames.length; i++) {
-                jcbNextLHSClasses.addItem(nextLHSClassNames[i]);
+            updateNextLHSs = false;//turn off to avoid updates while adding items
+            for (String nextLHSClassName : nextLHSClassNames) {
+                jcbNextLHSClasses.addItem(nextLHSClassName);
+                dtm.addRow(new Object[]{nextLHSClassName,lhsType.getNextLHSClass(nextLHSClassName)});
             }
-            if (!lhsType.getNextLHSClass().isEmpty()) {
-                logger.info("initializeNextLHSInfo: output class is: "+lhsType.getNextLHSClass());
-                jcbNextLHSClasses.setSelectedItem(lhsType.getNextLHSClass());
-            } else {
-                jcbNextLHSClasses.setSelectedIndex(-1);
-            }
-            updateNextLHSClass = true;//turn updates on
+            jcbNextLHSClasses.setSelectedIndex(-1);
+            updateNextLHSs = true;//turn updates on
             jcbNextLHSClasses.setEnabled(true);
-        } else {
-            //no transition classes are defined
         }
         //spawning classes
         jcbSpawnedLHSClasses.removeAllItems();
@@ -110,7 +112,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 jcbSpawnedLHSClasses.setEnabled(false);
             }
             jtfName.setText(lhsType.getLHSName());
-            jtfNextLHSName.setText(lhsType.getNextLHSName());
+            jtfNextLHSName.setText("<not set>");
             jtfSpawnedLHSName.setText(lhsType.getSpawnedLHSName());
             jpColor.setBackground(lhsType.getColor());
         }
@@ -139,6 +141,9 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         jtfNextLHSName = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         jcbNextLHSClasses = new javax.swing.JComboBox();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jtblNextLHSs = new javax.swing.JTable();
+        jbAddNextLHS = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         jPanel7 = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
@@ -182,7 +187,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 .add(20, 20, 20)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jLabel2)
-                    .add(jcbClasses, 0, 348, Short.MAX_VALUE))
+                    .add(jcbClasses, 0, 392, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -237,7 +242,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 .add(jpColor, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jbColorChange)
-                .addContainerGap(422, Short.MAX_VALUE))
+                .addContainerGap(471, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -258,18 +263,37 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         jLabel3.setText("Name");
 
         jtfNextLHSName.setText("<null>");
-        jtfNextLHSName.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfNextLHSNameActionPerformed(evt);
-            }
-        });
 
         jLabel4.setText("Java class");
 
         jcbNextLHSClasses.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jcbNextLHSClasses.addActionListener(new java.awt.event.ActionListener() {
+
+        jtblNextLHSs.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "LHS name", "LHS class"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Object.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jtblNextLHSs.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(jtblNextLHSs);
+        if (jtblNextLHSs.getColumnModel().getColumnCount() > 0) {
+            jtblNextLHSs.getColumnModel().getColumn(0).setResizable(false);
+        }
+
+        jbAddNextLHS.setText("add");
+        jbAddNextLHS.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jcbNextLHSClassesActionPerformed(evt);
+                jbAddNextLHSActionPerformed(evt);
             }
         });
 
@@ -280,12 +304,18 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             .add(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel3)
-                    .add(jtfNextLHSName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 159, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(20, 20, 20)
-                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel4)
-                    .add(jcbNextLHSClasses, 0, 348, Short.MAX_VALUE))
+                    .add(jScrollPane1)
+                    .add(jPanel2Layout.createSequentialGroup()
+                        .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jLabel3)
+                            .add(jtfNextLHSName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 159, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(20, 20, 20)
+                        .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel2Layout.createSequentialGroup()
+                                .add(jLabel4)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .add(jbAddNextLHS))
+                            .add(jcbNextLHSClasses, 0, 392, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -293,12 +323,14 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             .add(jPanel2Layout.createSequentialGroup()
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel3)
-                    .add(jLabel4))
+                    .add(jLabel4)
+                    .add(jbAddNextLHS))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jtfNextLHSName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jcbNextLHSClasses, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 103, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
 
         jPanel4.add(jPanel2, java.awt.BorderLayout.NORTH);
@@ -337,7 +369,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 .add(20, 20, 20)
                 .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jLabel6)
-                    .add(jcbSpawnedLHSClasses, 0, 348, Short.MAX_VALUE))
+                    .add(jcbSpawnedLHSClasses, 0, 392, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
@@ -375,11 +407,6 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         logger.info("-----setting LHSName to "+lhsType.getLHSName());
     }//GEN-LAST:event_jtfNameActionPerformed
 
-    private void jtfNextLHSNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNextLHSNameActionPerformed
-        lhsType.setNextLHSName(jtfNextLHSName.getText());
-        logger.info("-----setting NextLHSName to "+lhsType.getNextLHSName());
-}//GEN-LAST:event_jtfNextLHSNameActionPerformed
-
     private void jcbClassesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbClassesActionPerformed
         if (jcbClasses.getSelectedItem()!=null) {
             logger.info("------LHS_TypeCustomizer.jcbClassesActionEvent: selecting class "+(String) jcbClasses.getSelectedItem());
@@ -387,14 +414,6 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             initializeOutputInfo();
         }
     }//GEN-LAST:event_jcbClassesActionPerformed
-
-    private void jcbNextLHSClassesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbNextLHSClassesActionPerformed
-        if (!updateNextLHSClass) return;
-        if (jcbNextLHSClasses.getSelectedItem()!=null) {
-            logger.info("------NextLHSClasses action event: selecting class "+(String) jcbNextLHSClasses.getSelectedItem());
-            lhsType.setNextLHSClass((String) jcbNextLHSClasses.getSelectedItem());
-        }
-}//GEN-LAST:event_jcbNextLHSClassesActionPerformed
 
     private void jtfSpawnedLHSNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfSpawnedLHSNameActionPerformed
         lhsType.setSpawnedLHSName(jtfSpawnedLHSName.getText());
@@ -407,6 +426,15 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
             lhsType.setSpawnedLHSClass((String) jcbSpawnedLHSClasses.getSelectedItem());
         }
 }//GEN-LAST:event_jcbSpawnedLHSClassesActionPerformed
+
+    private void jbAddNextLHSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAddNextLHSActionPerformed
+        if (!updateNextLHSs) return;
+        if (jcbNextLHSClasses.getSelectedItem()!=null) {
+            logger.info("------addNextLHS: adding "+jtfNextLHSName.getText()+": "+(String) jcbNextLHSClasses.getSelectedItem());
+            lhsType.addNextLHS(jtfNextLHSName.getText(),(String) jcbNextLHSClasses.getSelectedItem());
+        }
+
+    }//GEN-LAST:event_jbAddNextLHSActionPerformed
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -423,11 +451,14 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton jbAddNextLHS;
     private javax.swing.JButton jbColorChange;
     private javax.swing.JComboBox jcbClasses;
     private javax.swing.JComboBox jcbNextLHSClasses;
     private javax.swing.JComboBox jcbSpawnedLHSClasses;
     private javax.swing.JPanel jpColor;
+    private javax.swing.JTable jtblNextLHSs;
     private javax.swing.JTextField jtfName;
     private javax.swing.JTextField jtfNextLHSName;
     private javax.swing.JTextField jtfSpawnedLHSName;

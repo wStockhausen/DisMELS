@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.geotools.feature.Feature;
 import org.geotools.feature.IllegalAttributeException;
@@ -608,31 +609,35 @@ public class LHS_Factory implements PropertyChangeListener {
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static LifeStageInterface createNextLHS(String key) 
+    public static List<LifeStageInterface> createNextLHSs(String key) 
                         throws InstantiationException, IllegalAccessException {
         if (instance==null) instance = new LHS_Factory();
         LHS_Type lhsType = instance.types.getType(key);
         if (lhsType==null) return null; //key not defined!
-        String nKey = lhsType.getNextLHSName();//key for next LHS
-        LHS_Type nlhsType = instance.types.getType(nKey);
-        if (nlhsType==null) {
-            logger.info("No LHS type '"+nKey+"' found as next stage for LHS '"+key+"'.");
-            return null;//no object for key!
-        } 
-        LifeStageInterface nlhs = null;
-        try {
-            ClassLoader syscl = Lookup.getDefault().lookup(ClassLoader.class);
-            Class nlhsClass = syscl.loadClass(nlhsType.getLHSClass());
-            if (nlhsClass==null) {
-                logger.info("Could not find class "+nlhsType.getLHSClass());
-                return null;//class not defined!
+        List<LifeStageInterface> nLHSs = new ArrayList<LifeStageInterface>();
+        Set<String> nKeys = lhsType.getNextLHSNames();//key for next LHS
+        for (String nKey : nKeys){
+            LHS_Type nlhsType = instance.types.getType(nKey);
+            if (nlhsType==null) {
+                logger.info("No LHS type '"+nKey+"' found as next stage for LHS '"+key+"'.");
+                return null;//no object for key!
             } 
-            Constructor con = nlhsClass.getDeclaredConstructor(String.class);
-            nlhs = (LifeStageInterface) con.newInstance(nKey);
-        } catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException ex) {
-            Exceptions.printStackTrace(ex);
+            LifeStageInterface nlhs = null;
+            try {
+                ClassLoader syscl = Lookup.getDefault().lookup(ClassLoader.class);
+                Class nlhsClass = syscl.loadClass(nlhsType.getLHSClass());
+                if (nlhsClass==null) {
+                    logger.info("Could not find class "+nlhsType.getLHSClass());
+                } else {
+                    Constructor con = nlhsClass.getDeclaredConstructor(String.class);
+                    nlhs = (LifeStageInterface) con.newInstance(nKey);
+                    nLHSs.add(nlhs);
+                }
+            } catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException ex) {
+                Exceptions.printStackTrace(ex);
+            }
         }
-        return nlhs;
+        return nLHSs;
     }
     
     /**
@@ -644,16 +649,20 @@ public class LHS_Factory implements PropertyChangeListener {
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static LifeStageInterface createNextLHSFromIndividual(String key, LifeStageInterface oldLHS) 
+    public static List<LifeStageInterface> createNextLHSFromIndividual(String key, LifeStageInterface oldLHS) 
                         throws InstantiationException, IllegalAccessException {
-        LifeStageInterface nlhs = null;
+        List<LifeStageInterface> nLHSs = null;
         try {
-            nlhs = createNextLHS(key);
-            if (nlhs!=null) nlhs.setInfoFromIndividual(oldLHS);
+            nLHSs = createNextLHSs(key);
+            if (nLHSs!=null) {
+                for (LifeStageInterface nLHS : nLHSs){
+                    nLHS.setInfoFromIndividual(oldLHS);
+                }
+            }
         } catch (SecurityException | IllegalArgumentException ex) {
             Exceptions.printStackTrace(ex);
         }
-        return nlhs;
+        return nLHSs;
     }
     
     /**
@@ -665,28 +674,36 @@ public class LHS_Factory implements PropertyChangeListener {
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static LifeStageInterface createNextLHSFromSuperIndividual(String key, LifeStageInterface oldLHS,double numTrans) 
+    public static List<LifeStageInterface> createNextLHSFromSuperIndividual(String key, LifeStageInterface oldLHS,double numTrans) 
                         throws InstantiationException, IllegalAccessException {
-        LifeStageInterface nlhs = null;
+        List<LifeStageInterface> nLHSs = null;
         try {
-            nlhs = createNextLHS(key);
-            if (nlhs!=null) nlhs.setInfoFromSuperIndividual(oldLHS,numTrans);
+            nLHSs = createNextLHSs(key);
+            if (nLHSs!=null) {
+                for (LifeStageInterface nlhs : nLHSs){
+                    nlhs.setInfoFromSuperIndividual(oldLHS,numTrans);
+                }
+            }
         } catch (SecurityException | IllegalArgumentException ex) {
             Exceptions.printStackTrace(ex);
         }
-        return nlhs;
+        return nLHSs;
     }
     
     /**
-     *  Returns the defined next stage LHS class for the key 
+     *  Returns the defined next stage LHS classes for the key 
      * @param key - name of LHS type
      * @return - class of output LHS associated with LHS type identified by key
      */
-    public static String getNextLHSClass(String key) {
+    public static Set<String> getNextLHSClasses(String key) {
         if (instance==null) instance = new LHS_Factory();
         LHS_Type lhs = instance.types.getType(key);
-        String c = null;
-        if (lhs!=null) c = lhs.getNextLHSClass();
+        Set<String> c = null;
+        if (lhs!=null) {
+            for (String name : lhs.getNextLHSNames()){
+                c.add(lhs.getNextLHSClass(name));
+            }
+        }
         return c;
     }    
         

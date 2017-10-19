@@ -1,7 +1,10 @@
-/*
+/**
  * LHS_Type.java
  *
  * Created on April 3, 2006, 3:47 PM
+ * 
+ * Revisions:
+ * 20171018: 1. Revised to accommodate multiple next life stages.
  */
 
 package wts.models.DisMELS.framework;
@@ -10,6 +13,9 @@ import java.awt.Color;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import wts.models.DisMELS.framework.LHS_Classes.LHS_ClassInfo;
 
 /**
@@ -20,20 +26,19 @@ public class LHS_Type extends Object implements Serializable {
     public static final String VALUE_NOT_SET        = "--not set--";
     
     public static final String PROP_lhsName         = "LHS name";
-    public static final String PROP_nextLHSName     = "next LHS name";
+    public static final String PROP_nextLHSs        = "next LHSs";
     public static final String PROP_spawnedLHSName  = "spawned LHS name";
     public static final String PROP_lhsClass        = "LHS class";
     public static final String PROP_attributesClass = "attributes class";
     public static final String PROP_parametersClass = "parameters class";
     public static final String PROP_pointFTClass    = "point feature type class";
-    public static final String PROP_nextLHSClass    = "next LHS class";
     public static final String PROP_spawnedLHSClass = "spawned LHS class";
     public static final String PROP_color           = "display color";
     
     /** name of LH stage */ 
     private String lhsName         = "";
-    /** name of 'next' LH stage */ 
-    private String nextLHSName     = "";
+    /** map for 'next' LH stages */ 
+    private final Map<String,String> nextLHSs = new HashMap<>();
     /** name of spawned LH stage */ 
     private String spawnedLHSName  = "";
     /** class name of LH stage */ 
@@ -44,14 +49,12 @@ public class LHS_Type extends Object implements Serializable {
     private String parametersClass = "";
     /** class name of LH stage point feature type */ 
     private String pointFTClass    = "";
-    /** class name of 'next' LH stage */ 
-    private String nextLHSClass    = "";
     /** class name of spawned LH stage */ 
     private String spawnedLHSClass = "";
     /** color used to identify individuals of this LH stage */ 
     private Color color            = java.awt.Color.GRAY;
     
-    transient private PropertyChangeSupport propertySupport;
+    private final transient PropertyChangeSupport propertySupport;
     
     public LHS_Type() {
         propertySupport = new PropertyChangeSupport(this);
@@ -87,24 +90,14 @@ public class LHS_Type extends Object implements Serializable {
         propertySupport.firePropertyChange(PROP_lhsName, oldValue, lhsName);
     }
      
-    /**
-     * Gets name identifying the next life history stage.
-     * 
-     * @return - the name
-     */
-    public String getNextLHSName() {
-        return  nextLHSName;
+    public void addNextLHS(String name, String clazz){
+        nextLHSs.put(name,clazz);
+        propertySupport.firePropertyChange(PROP_nextLHSs, null,  name);
     }
     
-    /**
-     * Sets the name identifying the next life history stage.
-     * 
-     * @param value - the new name
-     */
-    public void setNextLHSName(String value) {
-        String oldValue =  nextLHSName;
-        nextLHSName = value;
-        propertySupport.firePropertyChange(PROP_nextLHSName, oldValue,  nextLHSName);
+    public void removeNextLHS(String name){
+        nextLHSs.remove(name);
+        propertySupport.firePropertyChange(PROP_nextLHSs, name,  null);
     }
     
     /**
@@ -195,23 +188,23 @@ public class LHS_Type extends Object implements Serializable {
     }
     
     /**
-     * Gets the name of the next life stage class for this life history stage.
+     * Gets the next life stage class (as a String)associated with a name for the
+     * next life stage.
      * 
+     * @param name - name of next life stage
      * @return - the class name
      */
-    public String getNextLHSClass() {
-        return nextLHSClass;
+    public String getNextLHSClass(String name) {
+        return nextLHSs.get(name);
     }
     
     /**
-     * Sets the next life stage class for this life history stage by class name.
+     * Gets the names of the next LHSs as a Set<String> collection.
      * 
-     * @param value - the new class name
+     * @return - the lhs names, as a Set<String> collection
      */
-    public void setNextLHSClass(String value) {
-        String oldValue = nextLHSClass;
-        nextLHSClass = value;
-        propertySupport.firePropertyChange(PROP_nextLHSClass, oldValue, nextLHSClass);
+    public Set<String> getNextLHSNames() {
+        return nextLHSs.keySet();
     }
     
     /**
