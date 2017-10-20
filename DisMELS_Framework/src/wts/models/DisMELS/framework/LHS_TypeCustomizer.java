@@ -7,15 +7,12 @@
 package wts.models.DisMELS.framework;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JColorChooser;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -27,7 +24,6 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
     private LHS_Type lhsType;
     private boolean updateNextLHSs = false;
     private boolean updateSpawnedLHSClass = false;
-    private final DefaultTableModel dtm = new DefaultTableModel();
 
     private static final Logger logger = Logger.getLogger(LHS_TypeCustomizer.class.getName());
     
@@ -47,29 +43,33 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         jcbClasses.setModel(m);
         jcbClasses.setSelectedIndex(-1);
         
-        dtm.addColumn("lhs name");
-        dtm.addColumn("lhs class");
     }
     
     public void initializeOutputInfo() {
         GlobalInfo globalInfo = GlobalInfo.getInstance();
         LHS_Classes.LHS_ClassInfo ci = globalInfo.getLHSClassesInfo().getClassInfo(lhsType.getLHSClass());
-        //next classes
-        jcbNextLHSClasses.removeAllItems();
+        //set values for next LHS classes
         jtfNextLHSName.setEnabled(false);
+        jtfNextLHSName.setText("<not set>");
+        jcbNextLHSClasses.removeAllItems();
         jcbNextLHSClasses.setEnabled(false);
         String[] nextLHSClassNames = ci.nextLHSClasses;
         if (nextLHSClassNames.length > 0) {
             //output classes are defined
-            jtfNextLHSName.setEnabled(true);
             updateNextLHSs = false;//turn off to avoid updates while adding items
             for (String nextLHSClassName : nextLHSClassNames) {
                 jcbNextLHSClasses.addItem(nextLHSClassName);
-                dtm.addRow(new Object[]{nextLHSClassName,lhsType.getNextLHSClass(nextLHSClassName)});
             }
             jcbNextLHSClasses.setSelectedIndex(-1);
             updateNextLHSs = true;//turn updates on
+            jtfNextLHSName.setEnabled(true);
             jcbNextLHSClasses.setEnabled(true);
+            //set values for next LHSs in table
+            DefaultTableModel dtm = (DefaultTableModel) jtblNextLHSs.getModel();
+            dtm.setRowCount(0);//clear rows
+            for (String name: lhsType.getNextLHSNames()){
+                dtm.addRow(new Object[]{name,lhsType.getNextLHSClass(name)});
+            }
         }
         //spawning classes
         jcbSpawnedLHSClasses.removeAllItems();
@@ -110,6 +110,8 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 jcbNextLHSClasses.setEnabled(false);
                 jtfSpawnedLHSName.setEnabled(false);
                 jcbSpawnedLHSClasses.setEnabled(false);
+                DefaultTableModel dtm = (DefaultTableModel) jtblNextLHSs.getModel();
+                dtm.setRowCount(0);
             }
             jtfName.setText(lhsType.getLHSName());
             jtfNextLHSName.setText("<not set>");
@@ -284,7 +286,13 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
                 return types [columnIndex];
             }
         });
+        jtblNextLHSs.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         jtblNextLHSs.getTableHeader().setReorderingAllowed(false);
+        jtblNextLHSs.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jtblNextLHSsMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(jtblNextLHSs);
         if (jtblNextLHSs.getColumnModel().getColumnCount() > 0) {
             jtblNextLHSs.getColumnModel().getColumn(0).setResizable(false);
@@ -430,11 +438,27 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
     private void jbAddNextLHSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAddNextLHSActionPerformed
         if (!updateNextLHSs) return;
         if (jcbNextLHSClasses.getSelectedItem()!=null) {
-            logger.info("------addNextLHS: adding "+jtfNextLHSName.getText()+": "+(String) jcbNextLHSClasses.getSelectedItem());
-            lhsType.addNextLHS(jtfNextLHSName.getText(),(String) jcbNextLHSClasses.getSelectedItem());
+            String name = jtfNextLHSName.getText();
+            String clazz = (String) jcbNextLHSClasses.getSelectedItem();
+            logger.info("------addNextLHS: adding "+name+": "+clazz);
+            lhsType.addNextLHS(name,clazz);
+            DefaultTableModel dtm = (DefaultTableModel) jtblNextLHSs.getModel();
+            dtm.addRow(new Object[]{name,clazz});
+            jtblNextLHSs.repaint();
         }
 
     }//GEN-LAST:event_jbAddNextLHSActionPerformed
+
+    private void jtblNextLHSsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jtblNextLHSsMouseClicked
+        int r = jtblNextLHSs.getSelectedRow();
+        DefaultTableModel tm = (DefaultTableModel) jtblNextLHSs.getModel();
+        String str = (String) tm.getValueAt(r, 0);
+        int res = JOptionPane.showConfirmDialog(null, "Delete life stage '"+str+"'?");
+        if (res==JOptionPane.OK_OPTION) {
+            tm.removeRow(r);
+            jtblNextLHSs.repaint();
+        } 
+    }//GEN-LAST:event_jtblNextLHSsMouseClicked
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

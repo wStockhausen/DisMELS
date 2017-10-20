@@ -424,22 +424,22 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     @Override
     public List<LifeStageInterface> getMetamorphosedIndividuals(double dt) {
         output.clear();
-        LifeStageInterface nLHS = null;
+        List<LifeStageInterface> nLHSs = null;
         //if total depth is appropriate for settlement and 
         //indiv is near the bottom, then settle and transform to next stage.
         if ((totalDepth>=minSettlementDepth)&&
                 (totalDepth<=maxSettlementDepth)&&
                 (depth>(totalDepth-5))) {
             if ((numTrans>0)||!isSuperIndividual){
-                nLHS = createNextLHS();
-                if (nLHS!=null) output.add(nLHS);
+                nLHSs = createNextLHSs();
+                if (nLHSs!=null) output.addAll(nLHSs);
             }
         }
         return output;
     }
 
-    private LifeStageInterface createNextLHS() {
-        LifeStageInterface nLHS = null;
+    private List<LifeStageInterface> createNextLHSs() {
+        List<LifeStageInterface> nLHSs = null;
         try {
             //create LHS with "output" stage
             if (isSuperIndividual) {
@@ -453,7 +453,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
                  *          5) set number in new LHS to numTrans for current LHS
                  *          6) reset numTrans in current LHS
                  */
-                nLHS = LHS_Factory.createNextLHSFromSuperIndividual(typeName,this,numTrans);
+                nLHSs = LHS_Factory.createNextLHSsFromSuperIndividual(typeName,this,numTrans);
                 numTrans = 0.0;//reset numTrans to zero
             } else {
                 /** 
@@ -467,14 +467,14 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
                  *          4) copy current LHS origID to new LHS origID
                  *          5) kill current LHS
                  */
-                nLHS = LHS_Factory.createNextLHSFromIndividual(typeName,this);
+                nLHSs = LHS_Factory.createNextLHSsFromIndividual(typeName,this);
                 alive  = false; //allow only 1 transition, so kill this stage
                 active = false; //set stage inactive, also
             }
         } catch (IllegalAccessException | InstantiationException ex) {
             ex.printStackTrace();
         }
-        return nLHS;
+        return nLHSs;
     }
 
     public void initialize() {

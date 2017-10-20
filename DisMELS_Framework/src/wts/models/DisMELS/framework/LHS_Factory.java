@@ -649,7 +649,7 @@ public class LHS_Factory implements PropertyChangeListener {
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static List<LifeStageInterface> createNextLHSFromIndividual(String key, LifeStageInterface oldLHS) 
+    public static List<LifeStageInterface> createNextLHSsFromIndividual(String key, LifeStageInterface oldLHS) 
                         throws InstantiationException, IllegalAccessException {
         List<LifeStageInterface> nLHSs = null;
         try {
@@ -674,7 +674,7 @@ public class LHS_Factory implements PropertyChangeListener {
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static List<LifeStageInterface> createNextLHSFromSuperIndividual(String key, LifeStageInterface oldLHS,double numTrans) 
+    public static List<LifeStageInterface> createNextLHSsFromSuperIndividual(String key, LifeStageInterface oldLHS,double numTrans) 
                         throws InstantiationException, IllegalAccessException {
         List<LifeStageInterface> nLHSs = null;
         try {

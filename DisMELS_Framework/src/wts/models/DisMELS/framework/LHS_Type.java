@@ -100,6 +100,16 @@ public class LHS_Type extends Object implements Serializable {
         propertySupport.firePropertyChange(PROP_nextLHSs, name,  null);
     }
     
+    public Map<String,String> getNextLHSs(){
+        return nextLHSs;
+    }
+    
+    public void setNextLHSs(Map<String,String> newNextLHSs){
+        nextLHSs.clear();
+        nextLHSs.putAll(newNextLHSs);
+        propertySupport.firePropertyChange(PROP_nextLHSs, null,  nextLHSs);
+    }
+    
     /**
      * Gets name identifying the spawned life history stage.
      * 
