@@ -22,6 +22,9 @@ public abstract class AbstractLHSAttributes2 implements LifeStageAttributesInter
     /** Number of attributes defined by this class (including typeName) */
     public static final int numAttributes = 19;
     
+    /** new boolean attribute indicating whether or not individual is "attached" to bottom */
+    public static final String PROP_attached = "Attached";
+    
     protected static final Set<String> keys = new LinkedHashSet<>(32);
     
     /** map to attributes values */

@@ -92,6 +92,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
     
     /**
      * Creates a new instance of AbstractLHS
+     * @param typeName
      */
     protected AbstractLHS(String typeName) {
         this.typeName = typeName;
@@ -111,10 +112,10 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
     
     /**
-     * Subclasses can use this method to make sure the attributes object from
+     * Subclasses can use this method to make sure the parameters object from
      * this superclass refers to the one from their class.
      * 
-     * @param subAtts 
+     * @param subParams 
      */
     protected void setParametersFromSubClass(LifeStageParametersInterface subParams){
         params = subParams;
@@ -122,6 +123,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
     
     /**
      *  Returns the instance id.
+     * @return 
      */
     @Override
     public final long getID() {
@@ -196,7 +198,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
      */
     @Override
     public String getTrackAsString(int coordType){
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         if (coordType==COORDINATE_TYPE_PROJECTED) {
             for (Coordinate c : track){
                 strb.append(decFormat.format(c.x));strb.append(":");
@@ -216,6 +218,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
 
     /**
      *  Returns the LHS type for the instance.
+     * @return 
      */
     @Override
     public String getTypeName() {return typeName;}
@@ -306,7 +309,11 @@ public abstract class AbstractLHS implements LifeStageInterface {
         key = LifeStageAttributesInterface.PROP_alive;      atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_age;        atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_ageInStage; atts.setValue(key,newAtts.getValue(key));
-        key = LifeStageAttributesInterface.PROP_attached;   atts.setValue(key,newAtts.getValue(key));
+        if (newAtts instanceof AbstractLHSAttributes) {
+            key = AbstractLHSAttributes.PROP_attached;   atts.setValue(key,newAtts.getValue(key));
+        } else if (newAtts instanceof AbstractLHSAttributes2) {
+            key = AbstractLHSAttributes2.PROP_attached;   atts.setValue(key,newAtts.getValue(key));
+        }
         key = LifeStageAttributesInterface.PROP_gridCellID; atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_horizPos1;  atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_horizPos2;  atts.setValue(key,newAtts.getValue(key));
@@ -332,7 +339,11 @@ public abstract class AbstractLHS implements LifeStageInterface {
         //  id, parentID, origID, startTime, horizType, vertType
         atts.setValue(LifeStageAttributesInterface.PROP_active,active);
         atts.setValue(LifeStageAttributesInterface.PROP_alive,alive);
-        atts.setValue(LifeStageAttributesInterface.PROP_attached,attached);
+        if (atts instanceof AbstractLHSAttributes) {
+            atts.setValue(AbstractLHSAttributes.PROP_attached,attached);
+        } else if (atts instanceof AbstractLHSAttributes2) {
+            atts.setValue(AbstractLHSAttributes2.PROP_attached,attached);
+        }
         atts.setValue(LifeStageAttributesInterface.PROP_time,time);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos2,lat);
@@ -351,7 +362,11 @@ public abstract class AbstractLHS implements LifeStageInterface {
     protected void updateVariables() {
         active     = atts.getValue(LifeStageAttributesInterface.PROP_active,active);
         alive      = atts.getValue(LifeStageAttributesInterface.PROP_alive,alive);
-        attached   = atts.getValue(LifeStageAttributesInterface.PROP_attached,attached);
+        if (atts instanceof AbstractLHSAttributes) {
+            attached   = atts.getValue(AbstractLHSAttributes.PROP_attached,attached);
+        } else if (atts instanceof AbstractLHSAttributes2) {
+            attached   = atts.getValue(AbstractLHSAttributes.PROP_attached,attached);
+        }
         startTime  = atts.getValue(LifeStageAttributesInterface.PROP_startTime,startTime);
         time       = atts.getValue(LifeStageAttributesInterface.PROP_time,time);
         lon        = atts.getValue(LifeStageAttributesInterface.PROP_horizPos1,lon);

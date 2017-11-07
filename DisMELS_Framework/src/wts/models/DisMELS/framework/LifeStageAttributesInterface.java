@@ -1,10 +1,5 @@
 /*
  * LifeStageAttributesInterface.java
- *
- * Created on January 19, 2006, 11:19 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
  */
 
 package wts.models.DisMELS.framework;
@@ -19,30 +14,50 @@ import java.util.ArrayList;
  */
 public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     
+    /** the number of life stage attributes defined in this interface */
+    public static final int PROP_NumAtts = 18;
+    /** property key for the life stage type name of the individual */
     public static final String PROP_typeName   = "Life stage type name";
+    /** property key for the life stage ID of the individual */
     public static final String PROP_id         = "ID";
+    /** property key for the life stage ID of the object's parent */
     public static final String PROP_parentID   = "Parent ID";
+    /** property key for the life stage ID of the "original" individual */
     public static final String PROP_origID     = "Original ID";
+    /** property key for the start time of the individual */
     public static final String PROP_startTime  = "Start time (s)";
+    /** property key for the current time */
     public static final String PROP_time       = "Time (s)";
+    /** property key for the current horizontal position type */
     public static final String PROP_horizType  = "Horiz. position type";
+    /** property key for the current vertical position type */
     public static final String PROP_vertType   = "Vert. position type";
+    /** property key for the current value of component 1 of the individual's horizontal position */
     public static final String PROP_horizPos1  = "Horiz. position 1";
+    /** property key for the current value of component 2 of the individual's horizontal position */
     public static final String PROP_horizPos2  = "Horiz. position 2";
+    /** property key for the current value of the individual's vertical position */
     public static final String PROP_vertPos    = "Vert. position";
+    /** property key for the ROMS grid cell ID the individual is currently in */
     public static final String PROP_gridCellID = "Grid Cell ID";
+    /** property key for the current track of the individual's location */
     public static final String PROP_track      = "track";
+    /** property key for the individual's activity status */
     public static final String PROP_active     = "Active status";
+    /** property key for the individual's life status */
     public static final String PROP_alive      = "Alive status";
-    public static final String PROP_attached   = "Attached status";
+    /** property key for the individual's current age */
     public static final String PROP_age        = "Age (d)";
+    /** property key for the individual's age within its current life stage */
     public static final String PROP_ageInStage = "Age in stage (d)";
+    /** property key for the number of individuals associated with this life stage "object" */
     public static final String PROP_number     = "Number of individuals";
     
     /**
      *  Creates an instance of a subclass.
      *
-     *@param strv - array of values (as Strings) used to create the new instance. 
+     * @param strv - array of values (as Strings) used to create the new instance. 
+     * @return an object implementing LifeStageAttributesInterface 
      */
     public LifeStageAttributesInterface createInstance(final String[] strv);
     

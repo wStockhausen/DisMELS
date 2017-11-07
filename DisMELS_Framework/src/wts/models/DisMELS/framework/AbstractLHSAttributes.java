@@ -23,6 +23,7 @@ import java.util.HashMap;
 public abstract class AbstractLHSAttributes 
                         implements LifeStageAttributesInterface {
     
+    public final static String PROP_attached   = "Attached";
     public final static String PROP_size       = "Size (cm)";
     public final static String PROP_temp       = "Temperature";
     public final static String PROP_salinity   = "Salinity";
