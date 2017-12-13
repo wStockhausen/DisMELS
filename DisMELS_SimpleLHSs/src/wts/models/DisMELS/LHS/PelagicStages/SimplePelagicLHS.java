@@ -1,5 +1,5 @@
 /*
- * GenericLHS.java
+ * SimplePelagicLHS.java
  *
  * Created on January 24, 2006, 11:33 AM
  *
@@ -103,6 +103,10 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
      * The attributes are vanilla.  Initial attribute values should be set,
      * then initialize() should be called to initialize all instance variables.
      * DO NOT DELETE THIS CONSTRUCTOR!!
+     * 
+     * @param typeName
+     * @throws java.lang.InstantiationException
+     * @throws java.lang.IllegalAccessException
      */
     public SimplePelagicLHS(String typeName) 
                 throws InstantiationException, IllegalAccessException {
@@ -183,6 +187,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
 
     /**
      *  Returns the associated attributes.  
+     * @return - the attributes object
      */
     @Override
     public SimplePelagicLHSAttributes getAttributes() {
@@ -553,7 +558,7 @@ public class SimplePelagicLHS extends AbstractSimpleLHS {
     public void step(double dt) throws ArrayIndexOutOfBoundsException {
         double[] pos;
         //determine daytime/nighttime for vertical migration & calc indiv. W
-        isDaytime = DateTimeFunctions.isDaylight(lon,lat,globalInfo.getCalendar().getYearDay());
+        isDaytime = DateTimeFunctions.isDaylight(lon,lat,GlobalInfo.getInstance().getCalendar().getYearDay());
         if (isDaytime&&willAttachDay&&(depth>(totalDepth-1))) {
             //set indiv on bottom and don't let it move
             attached = true;

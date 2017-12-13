@@ -541,7 +541,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     public void step(double dt) throws ArrayIndexOutOfBoundsException {
         double[] pos = null;
         //determine daytime/nighttime for vertical migration & calc indiv. W
-        isDaytime = DateTimeFunctions.isDaylight(lon,lat,globalInfo.getCalendar().getYearDay());
+        isDaytime = DateTimeFunctions.isDaylight(lon,lat,GlobalInfo.getInstance().getCalendar().getYearDay());
         if (isDaytime&&willAttachDay&&(depth>(totalDepth-1))) {
             //set indiv on bottom and don't let it move
             attached = true;

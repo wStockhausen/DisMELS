@@ -1,10 +1,5 @@
 /*
  * AbstractSimpleLHS.java
- *
- * Created on January 19, 2006, 1:58 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
  */
 
 package wts.models.DisMELS.LHS.SimpleLHSs;
@@ -13,23 +8,30 @@ import wts.models.DisMELS.framework.AbstractLHS;
 import wts.models.DisMELS.framework.LifeStageAttributesInterface;
 
 /**
- *
- * @author William Stockhausen
+ * An abstract base class for the SimpleLHSs that provides default implementations for many of the 
+ * methods required to implement LifeStageInterface.
+ * 
+ * This class adds variables/attributes
+ *  atttached
+ *  size
+ *  salinity
+ *  temperature
  */
 public abstract class AbstractSimpleLHS extends AbstractLHS {
     
     //Instance fields
-    /* the LHS attributes */
-    protected AbstractSimpleLHSAttributes atts = null;
-    
-    //fields that reflect new attribute values
+    //fields that reflect new attribute values not inherited from AbstractLHS
     protected boolean attached=false;
     protected double size=0;
     protected double salinity=-1;
     protected double temperature=-1;
     
     /**
-     * Creates a new instance of AbstractLHS
+     * Superclass constructor for subclass implementing AbstractSimpleLHS.
+     * 
+     * Subclasses should call this constructor from their constructor.
+     * 
+     * @param typeName
      */
     protected AbstractSimpleLHS(String typeName) {
         super(typeName);
@@ -42,13 +44,15 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
      * @param subAtts 
      */
     protected void setAttributesFromSubClass(AbstractSimpleLHSAttributes subAtts){
-        atts = subAtts;
         super.setAttributesFromSubClass(atts);
     }
     
-//  Methods inherited from LifeHistoryStageIF  
     /**
      *  This method should be overridden by extending classes.
+     * 
+     * @return 
+     * @throws java.lang.CloneNotSupportedException
+     * @TODO: make sure this is a complete implementation.
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
@@ -70,7 +74,7 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
 
      /**
      * This provides a default implementation of getReportHeader() that returns
-     * the attribute names (via AbstractLHSAttributes.getCSVHeaderShortNames())
+     * the attribute names (via LifeStageAttributesINterface.getCSVHeaderShortNames())
      * and "track" as a CSV formatted string.
      *
      * @return - the header names as a csv-formatted String
@@ -80,7 +84,7 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
     public String getReportHeader() {
         return atts.getCSVHeaderShortNames()+cc+"track";
     }
-
+    
     /**
      * Sets the attributes for the instance by copying values from the input.
      * This does NOT change the typeName of the LHS instance (or the associated 
@@ -90,12 +94,12 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
      *  Side effects:
      *      updateVariables() is called to update instance variables.
      *      Instance field "id" is also updated.
-     * @param newAtts - should be instance of SimplePelagicLHSAttributes
+     * @param newAtts - should be instance of AbstractSimpleLHSAttributes
      */
     @Override
     public void setAttributes(LifeStageAttributesInterface newAtts) {
         if (newAtts instanceof AbstractSimpleLHSAttributes){
-            super.setAttributes(newAtts);
+            super.setAttributes(newAtts);//also updates superclass varaibles
             AbstractSimpleLHSAttributes spAtts = (AbstractSimpleLHSAttributes) newAtts;
             atts.setValue(AbstractSimpleLHSAttributes.PROP_attached,spAtts.getValue(AbstractSimpleLHSAttributes.PROP_attached));
             atts.setValue(AbstractSimpleLHSAttributes.PROP_salinity,spAtts.getValue(AbstractSimpleLHSAttributes.PROP_salinity));
@@ -110,6 +114,9 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
 
     }
     
+    /**
+     * Updates attribute values defined for this class.
+     */
     @Override
     protected void updateAttributes() {
         //note that the following do not need to be updated
@@ -133,5 +140,5 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
         size       = atts.getValue(AbstractSimpleLHSAttributes.PROP_size,size);
         temperature= atts.getValue(AbstractSimpleLHSAttributes.PROP_temp,temperature);
         salinity   = atts.getValue(AbstractSimpleLHSAttributes.PROP_salinity,salinity);
-    }    
+    }        
 }

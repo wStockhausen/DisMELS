@@ -1,10 +1,5 @@
 /*
- * GenericLHS.java
- *
- * Created on January 24, 2006, 11:33 AM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
+ *SimpleBenthicAdultLHS.java
  */
 
 package wts.models.DisMELS.LHS.BenthicAdult;
@@ -26,8 +21,8 @@ import wts.roms.model.LagrangianParticle;
 
 
 /**
- * DisMELS class representing individuals in the 
- * "simple" benthic juvenile life stages (e.g., flatfish).
+ * DisMELS class representing benthic adults in the 
+ * "simple" life stages (e.g., flatfish).
  * 
  * @author William Stockhausen
  */

@@ -116,33 +116,33 @@ public class SimpleBenthicJuvenileLHSAttributesBeanInfo extends SimpleBeanInfo {
             methods[METHOD_createInstance1].setDisplayName ( "" );
             methods[METHOD_createMap2] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("createMap", new Class[] {})); // NOI18N
             methods[METHOD_createMap2].setDisplayName ( "" );
-            methods[METHOD_getValue3] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Boolean.class})); // NOI18N
+            methods[METHOD_getValue3] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Boolean.class})); // NOI18N
             methods[METHOD_getValue3].setDisplayName ( "" );
-            methods[METHOD_getValue4] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Double.class})); // NOI18N
+            methods[METHOD_getValue4] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Double.class})); // NOI18N
             methods[METHOD_getValue4].setDisplayName ( "" );
-            methods[METHOD_getValue5] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Integer.class})); // NOI18N
+            methods[METHOD_getValue5] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Integer.class})); // NOI18N
             methods[METHOD_getValue5].setDisplayName ( "" );
-            methods[METHOD_getValue6] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Long.class})); // NOI18N
+            methods[METHOD_getValue6] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.Long.class})); // NOI18N
             methods[METHOD_getValue6].setDisplayName ( "" );
-            methods[METHOD_getValue7] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.String.class})); // NOI18N
+            methods[METHOD_getValue7] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, java.lang.String.class})); // NOI18N
             methods[METHOD_getValue7].setDisplayName ( "" );
-            methods[METHOD_getValue8] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, boolean.class})); // NOI18N
+            methods[METHOD_getValue8] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, boolean.class})); // NOI18N
             methods[METHOD_getValue8].setDisplayName ( "" );
-            methods[METHOD_getValue9] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, double.class})); // NOI18N
+            methods[METHOD_getValue9] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, double.class})); // NOI18N
             methods[METHOD_getValue9].setDisplayName ( "" );
-            methods[METHOD_getValue10] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, int.class})); // NOI18N
+            methods[METHOD_getValue10] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, int.class})); // NOI18N
             methods[METHOD_getValue10].setDisplayName ( "" );
-            methods[METHOD_getValue11] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, long.class})); // NOI18N
+            methods[METHOD_getValue11] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class, long.class})); // NOI18N
             methods[METHOD_getValue11].setDisplayName ( "" );
-            methods[METHOD_getValue12] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class})); // NOI18N
+            methods[METHOD_getValue12] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("getValue", new Class[] {java.lang.String.class})); // NOI18N
             methods[METHOD_getValue12].setDisplayName ( "" );
-            methods[METHOD_setValue13] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, double.class})); // NOI18N
+            methods[METHOD_setValue13] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, double.class})); // NOI18N
             methods[METHOD_setValue13].setDisplayName ( "" );
-            methods[METHOD_setValue14] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, float.class})); // NOI18N
+            methods[METHOD_setValue14] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, float.class})); // NOI18N
             methods[METHOD_setValue14].setDisplayName ( "" );
-            methods[METHOD_setValue15] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, int.class})); // NOI18N
+            methods[METHOD_setValue15] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, int.class})); // NOI18N
             methods[METHOD_setValue15].setDisplayName ( "" );
-            methods[METHOD_setValue16] = new MethodDescriptor(wts.models.DisMELS.framework.AbstractLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, long.class})); // NOI18N
+            methods[METHOD_setValue16] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, long.class})); // NOI18N
             methods[METHOD_setValue16].setDisplayName ( "" );
             methods[METHOD_setValue17] = new MethodDescriptor(wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes.class.getMethod("setValue", new Class[] {java.lang.String.class, java.lang.Object.class})); // NOI18N
             methods[METHOD_setValue17].setDisplayName ( "" );
