@@ -25,6 +25,8 @@ public interface LifeStageInterface extends Cloneable, Serializable {
 
     /**
      * This method should be overridden by extending classes.
+     * @return - a deep clone
+     * @throws java.lang.CloneNotSupportedException
      */
     Object clone() throws CloneNotSupportedException;
 
@@ -41,7 +43,7 @@ public interface LifeStageInterface extends Cloneable, Serializable {
     /**
      * Creates LHS instance using the attributes in theAtts.  The resulting
      * instance should have the same typeName as theAtts.
-     * @param strv
+     * @param theAtts
      * @return instance of new LHS
      * @throws java.lang.InstantiationException
      * @throws java.lang.IllegalAccessException
@@ -50,6 +52,7 @@ public interface LifeStageInterface extends Cloneable, Serializable {
 
     /**
      * Returns the associated attributes object.
+     * @return 
      */
     LifeStageAttributesInterface getAttributes();
 

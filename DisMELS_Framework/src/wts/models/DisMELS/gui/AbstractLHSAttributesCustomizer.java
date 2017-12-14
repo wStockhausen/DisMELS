@@ -1,29 +1,26 @@
 /*
- * AbstractArrowtoothAttributesCustomizer.java
- *
- * Created on January 12, 2006, 4:20 PM
+ *  AbstractLHSAttributesCustomizer.java
  */
 
 package wts.models.DisMELS.gui;
 
-import wts.models.DisMELS.framework.AbstractLHSAttributes2;
-import wts.models.DisMELS.framework.LifeStageAttributesInterface;
+import wts.models.DisMELS.framework.AbstractLHSAttributes;
 import wts.models.DisMELS.framework.LifeStageAttributesInterface;
 import wts.models.DisMELS.framework.Types;
-import wts.models.DisMELS.framework.Types;
-import wts.models.DisMELS.gui.AttributesCustomizer;
 
 /**
- * @author William Stockhausen
+ * Customizer for a concrete subclass of AbstractLHSCustomizer. This customizer 
+ * is only concerned with the attributes defined in the AbstractLHSCustomizer
+ * superclass.
  */
-public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
+public class AbstractLHSAttributesCustomizer extends AttributesCustomizer {
 
-    private AbstractLHSAttributes2 attributes = null;
+    private AbstractLHSAttributes attributes = null;
     
     /**
      * Creates new customizer AbstractArrowtoothAttributesCustomizer
      */
-    public AbstractLHSAttributes2Customizer() {
+    public AbstractLHSAttributesCustomizer() {
         initComponents();
     }
     
@@ -55,9 +52,8 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
         jtfAge = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         jtfAgeInStage = new javax.swing.JTextField();
-        jtfNumber = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
-        jchkAttached = new javax.swing.JCheckBox();
+        jtfNumber = new javax.swing.JTextField();
 
         setLayout(new java.awt.BorderLayout());
 
@@ -83,7 +79,7 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
             jpTimeLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jpTimeLayout.createSequentialGroup()
                 .add(jtfTime, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
 
         jpHoriz.setBorder(javax.swing.BorderFactory.createTitledBorder("Horizontal position"));
@@ -132,7 +128,7 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
                 .add(jpHorizLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jLabel3)
                     .add(jcbHorizType, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 145, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(29, Short.MAX_VALUE))
         );
         jpHorizLayout.setVerticalGroup(
             jpHorizLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -217,19 +213,12 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
             }
         });
 
+        jLabel6.setText("number");
+
         jtfNumber.setText("0.0");
         jtfNumber.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfNumberActionPerformed(evt);
-            }
-        });
-
-        jLabel6.setText("number");
-
-        jchkAttached.setText("Attached?");
-        jchkAttached.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jchkAttachedActionPerformed(evt);
             }
         });
 
@@ -240,21 +229,19 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jtfAge, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel2))
+                    .add(jLabel2)
+                    .add(jtfAge, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 88, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel6Layout.createSequentialGroup()
                         .add(jLabel4)
-                        .add(18, 18, 18)
-                        .add(jLabel6))
-                    .add(jPanel6Layout.createSequentialGroup()
-                        .add(jtfAgeInStage, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jtfNumber, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jchkAttached)))
-                .addContainerGap(11, Short.MAX_VALUE))
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(jtfAgeInStage))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jtfNumber, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 115, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel6))
+                .add(32, 32, 32))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -267,9 +254,8 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
                 .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jtfAgeInStage, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jtfAge, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jtfNumber, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jchkAttached))
-                .add(0, 3, Short.MAX_VALUE))
+                    .add(jtfNumber, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(0, 5, Short.MAX_VALUE))
         );
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
@@ -284,7 +270,7 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
-                .add(jpTime, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 56, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jpTime, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jpHoriz, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -299,37 +285,37 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
 
     private void jtfNumberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNumberActionPerformed
         Double n = new Double(jtfNumber.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_number,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_number,n);
     }//GEN-LAST:event_jtfNumberActionPerformed
 
     private void jtfAgeInStageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfAgeInStageActionPerformed
         Double n = new Double(jtfAgeInStage.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_ageInStage,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_ageInStage,n);
     }//GEN-LAST:event_jtfAgeInStageActionPerformed
 
     private void jtfAgeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfAgeActionPerformed
         Double n = new Double(jtfAge.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_age,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_age,n);
     }//GEN-LAST:event_jtfAgeActionPerformed
 
     private void jtfZActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfZActionPerformed
         Double n = new Double(jtfZ.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_vertPos,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_vertPos,n);
     }//GEN-LAST:event_jtfZActionPerformed
 
     private void jtfYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfYActionPerformed
         Double n = new Double(jtfY.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_horizPos2,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_horizPos2,n);
     }//GEN-LAST:event_jtfYActionPerformed
 
     private void jtfXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfXActionPerformed
         Double n = new Double(jtfX.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_horizPos1,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_horizPos1,n);
     }//GEN-LAST:event_jtfXActionPerformed
 
     private void jcbHorizTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbHorizTypeActionPerformed
         int idx = jcbHorizType.getSelectedIndex();
-        attributes.setValue(AbstractLHSAttributes2.PROP_horizType,new Integer(idx));
+        attributes.setValue(AbstractLHSAttributes.PROP_horizType,new Integer(idx));
         switch (idx) {
             case 0:
                 lblX.setText("I");
@@ -348,12 +334,12 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
 
     private void jtfTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfTimeActionPerformed
         Double n = new Double(jtfTime.getText());
-        attributes.setValue(AbstractLHSAttributes2.PROP_startTime,n);
+        attributes.setValue(AbstractLHSAttributes.PROP_startTime,n);
     }//GEN-LAST:event_jtfTimeActionPerformed
 
     private void jcbVertTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVertTypeActionPerformed
         int idx = jcbVertType.getSelectedIndex();
-        attributes.setValue(AbstractLHSAttributes2.PROP_vertType,new Integer(idx));
+        attributes.setValue(AbstractLHSAttributes.PROP_vertType,new Integer(idx));
         switch (idx) {
             case Types.VERT_K:
                 lblZ.setText("K");
@@ -370,39 +356,34 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
         }
     }//GEN-LAST:event_jcbVertTypeActionPerformed
 
-    private void jchkAttachedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkAttachedActionPerformed
-        attributes.setValue(AbstractLHSAttributes2.PROP_attached,jchkAttached.isSelected());
-    }//GEN-LAST:event_jchkAttachedActionPerformed
-
     @Override
     public void setObject(Object bean) {
-        if (bean instanceof AbstractLHSAttributes2) {
-            setAttributes((AbstractLHSAttributes2) bean);
+        if (bean instanceof AbstractLHSAttributes) {
+            setAttributes((AbstractLHSAttributes) bean);
         }
     }
     
     @Override
-    public AbstractLHSAttributes2 getAttributes() {
+    public AbstractLHSAttributes getAttributes() {
         return attributes;
     }
     
     @Override
     public void setAttributes(LifeStageAttributesInterface newAtts) {
-        if (newAtts instanceof AbstractLHSAttributes2) {
-            attributes = (AbstractLHSAttributes2) newAtts;
+        if (newAtts instanceof AbstractLHSAttributes) {
+            attributes = (AbstractLHSAttributes) newAtts;
             Boolean b = null;
             Double  d = null;
             Integer i = null;
-            jcbHorizType.setSelectedIndex(attributes.getValue(AbstractLHSAttributes2.PROP_horizType,i).intValue());
-            jcbVertType.setSelectedIndex(attributes.getValue(AbstractLHSAttributes2.PROP_vertType,i).intValue());
-            jtfTime.setText(attributes.getValue(AbstractLHSAttributes2.PROP_startTime,d).toString());
-            jtfAge.setText(attributes.getValue(AbstractLHSAttributes2.PROP_age,d).toString());
-            jtfAgeInStage.setText(attributes.getValue(AbstractLHSAttributes2.PROP_ageInStage,d).toString());
-            jtfNumber.setText(attributes.getValue(AbstractLHSAttributes2.PROP_number,d).toString());
-            jchkAttached.setSelected(attributes.getValue(AbstractLHSAttributes2.PROP_attached, b));
-            jtfX.setText(attributes.getValue(AbstractLHSAttributes2.PROP_horizPos1,d).toString());
-            jtfY.setText(attributes.getValue(AbstractLHSAttributes2.PROP_horizPos2,d).toString());
-            jtfZ.setText(attributes.getValue(AbstractLHSAttributes2.PROP_vertPos,d).toString());
+            jcbHorizType.setSelectedIndex(attributes.getValue(AbstractLHSAttributes.PROP_horizType,i).intValue());
+            jcbVertType.setSelectedIndex(attributes.getValue(AbstractLHSAttributes.PROP_vertType,i).intValue());
+            jtfTime.setText(attributes.getValue(AbstractLHSAttributes.PROP_startTime,d).toString());
+            jtfAge.setText(attributes.getValue(AbstractLHSAttributes.PROP_age,d).toString());
+            jtfAgeInStage.setText(attributes.getValue(AbstractLHSAttributes.PROP_ageInStage,d).toString());
+            jtfNumber.setText(attributes.getValue(AbstractLHSAttributes.PROP_number,d).toString());
+            jtfX.setText(attributes.getValue(AbstractLHSAttributes.PROP_horizPos1,d).toString());
+            jtfY.setText(attributes.getValue(AbstractLHSAttributes.PROP_horizPos2,d).toString());
+            jtfZ.setText(attributes.getValue(AbstractLHSAttributes.PROP_vertPos,d).toString());
         }
     }
     
@@ -428,7 +409,6 @@ public class AbstractLHSAttributes2Customizer extends AttributesCustomizer {
     private javax.swing.JPanel jPanel6;
     private javax.swing.JComboBox jcbHorizType;
     private javax.swing.JComboBox jcbVertType;
-    private javax.swing.JCheckBox jchkAttached;
     private javax.swing.JPanel jpHoriz;
     private javax.swing.JPanel jpTime;
     private javax.swing.JPanel jpVert;

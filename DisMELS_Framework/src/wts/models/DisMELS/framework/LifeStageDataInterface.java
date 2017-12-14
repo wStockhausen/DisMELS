@@ -1,10 +1,5 @@
 /*
  * LifeStageDataInterface.java
- *
- * Created on January 18, 2006, 1:32 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
  */
 
 package wts.models.DisMELS.framework;
@@ -12,20 +7,28 @@ package wts.models.DisMELS.framework;
 import java.io.Serializable;
 
 /**
- * Interface for life history stage parameter classes to implement.
- * @author William Stockhausen
+ * Interface for life history stage parameter and attribute classes to implement.
  */
 public interface LifeStageDataInterface extends Cloneable, Serializable {
     
+    /** String with value "," */
     public static final String cc = ",";
+    /** Boolean with value true */
     public static final Boolean b = true;
+    /** Double with value 0.0 */
     public static final Double  d = new Double(0);
+    /** Integer with value 0 */
     public static final Integer i = new Integer(0);
+    /** Long with value 0 */
     public static final Long    l = new Long(0);
+    /** String with value "" */
     public static final String  s = "";
         
     /**
-     * This method creates a clone of the instance on which it is called.
+     * Creates a clone of the instance on which it is called.
+     * 
+     * @return - cloned instance as an Object
+     * @throws java.lang.CloneNotSupportedException
      */
     public Object clone() throws CloneNotSupportedException;
     
@@ -48,14 +51,14 @@ public interface LifeStageDataInterface extends Cloneable, Serializable {
     /**
      * Gets the type name for the LHS.
      *
-     * @return - String value containning the type name.
+     * @return - String value containing the type name.
      */
     public String getTypeName();
         
     /**
      * Gets the property keys corresponding to the param map.
      *
-     * @return - String array containning the keys.
+     * @return - String array containing the keys.
      */
     public String[] getKeys();
     
@@ -98,7 +101,7 @@ public interface LifeStageDataInterface extends Cloneable, Serializable {
      * is returned.
      * 
      *@param key - String value containing the parameter key
-     *@param i   - instance of a Integer (req'd to identify method)
+     *@param l   - instance of a Long (req'd to identify method)
      *@return    - parameter value (if Integer) or null (if not)
      */
     public Long getValue(String key, Long l);
@@ -153,7 +156,7 @@ public interface LifeStageDataInterface extends Cloneable, Serializable {
      * is returned.
      * 
      *@param key - String value containing the parameter key
-     *@param s   - instance of a long (req'd to identify method)
+     *@param l   - instance of a long (req'd to identify method)
      *@return    - parameter value (if long) or null (if not)
      */
     public long getValue(String key, long l);
@@ -166,10 +169,40 @@ public interface LifeStageDataInterface extends Cloneable, Serializable {
      */
     public Object getValue(String key);
     
+    /**
+     * Sets the value of the parameter associated with the key as an Object.
+     * 
+     * @param key - String value containing the parameter key
+     * @param value - value to set as an Object
+     */
     public void setValue(String key, Object value);
 //    public void setValue(String key, boolean value);
+    /**
+     * Sets the value of the parameter associated with the key as an Object.
+     * 
+     * @param key - String value containing the parameter key
+     * @param value - value to set as a double
+     */
     public void setValue(String key, double value);
+    /**
+     * Sets the value of the parameter associated with the key as an Object.
+     * 
+     * @param key - String value containing the parameter key
+     * @param value - value to set as a float
+     */
     public void setValue(String key, float value);
+    /**
+     * Sets the value of the parameter associated with the key as an Object.
+     * 
+     * @param key - String value containing the parameter key
+     * @param value - value to set as an integer
+     */
     public void setValue(String key, int value);
+    /**
+     * Sets the value of the parameter associated with the key as an Object.
+     * 
+     * @param key - String value containing the parameter key
+     * @param value - value to set as a long
+     */
     public void setValue(String key, long value);
 }

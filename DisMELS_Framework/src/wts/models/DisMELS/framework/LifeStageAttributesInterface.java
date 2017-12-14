@@ -7,10 +7,8 @@ package wts.models.DisMELS.framework;
 import java.util.ArrayList;
 
 /**
- * This class provides the interface that all life stage attribute classes
+ * This class provides the base interface that all life stage attribute classes
  * must implement.
- * 
- * @author William Stockhausen
  */
 public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     
@@ -69,7 +67,7 @@ public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     public void setValues(final String[] strv);
     
     /**
-     * Returns the life history stage atributes as an Object array.
+     * Returns the life history stage attributes as an Object array.
      *
      *@return - Object[] of life history attributes.  Will be in same
      *          order as the keys returned by getKeys();
@@ -79,19 +77,47 @@ public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     /**
      * Returns the comma-delimited string corresponding to the attributes
      * to be used as a header for a csv file.  
+     * 
      * This should be overriden by subclasses that add additional attributes, 
      * possibly calling super.getCSVHeaderGetShortNames() to get an initial header string 
      * to which additional field names could be appended.
+     * 
      * Use getCSV() to get the string of actual attribute values.
      *
      *@return - String of CSV header names (short style)
      */
     public String getCSVHeaderShortNames();
                 
+    /**
+     * Gets an array of the classes associated with the attribute values in the 
+     * implementing Attributes class.
+     * 
+     * The order of classes should be the same as the order of values returned
+     * by getAttributes(). Must be overridden by implementing classes to provide the array.
+     * 
+     * @return - an array of Class objects
+     */
     public Class[] getClasses();
 
+    /**
+     * Gets an array of Strings with the short name associated with each attribute.
+     * 
+     * The order of classes should be the same as the order of values returned
+     * by getAttributes(). Must be overridden by implementing classes.
+     * 
+     * @return - an array of Strings
+     */
     public String[] getShortNames();
 
+    /**
+     * Gets the type name and attribute values as an ArrayList.
+     * 
+     * The type name (as a String) should be the first element of the ArrayList. 
+     * The order of values should then be the same as the order of values returned
+     * by getAttributes(). Must be overridden by implementing classes to provide the array.
+     * 
+     * @return - the array list.
+     */
     public ArrayList getArrayList();
     
     /**

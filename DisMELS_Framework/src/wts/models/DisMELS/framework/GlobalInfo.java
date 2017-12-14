@@ -213,7 +213,6 @@ public class GlobalInfo implements LookupListener {
      */
     public void setRefDateString(String strDate) {
         romsGI.setRefDateString(strDate);
-        AbstractLHSAttributes.refDate = romsGI.getRefDate();
     }
     
     /**

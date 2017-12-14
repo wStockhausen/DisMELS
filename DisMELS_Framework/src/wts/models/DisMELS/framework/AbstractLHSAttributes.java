@@ -1,178 +1,280 @@
 /*
  * AbstractLHSAttributes.java
- *
- * Created on January 19, 2006, 5:47 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
  */
 
 package wts.models.DisMELS.framework;
 
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
+import java.beans.PropertyChangeSupport;
+import java.util.*;
+import wts.models.DisMELS.framework.IBMAttributes.*;
 
 /**
- *
- * @author William Stockhausen
+ * Abstract class for DisMELS life stage attributes classes. 
+ * 
+ * This abstract class provides an extensible implementation for creating
+ * concrete subclasses.
  */
-public abstract class AbstractLHSAttributes 
-                        implements LifeStageAttributesInterface {
+public abstract class AbstractLHSAttributes implements LifeStageAttributesInterface {
     
-    public final static String PROP_attached   = "Attached";
-    public final static String PROP_size       = "Size (cm)";
-    public final static String PROP_temp       = "Temperature";
-    public final static String PROP_salinity   = "Salinity";
-        
-    public static Date refDate = GlobalInfo.getInstance().getRefDate();
-    protected static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    protected static final DecimalFormat decFormat = new DecimalFormat("#.#####");
+    /** Number of attributes defined by this class (including typeName) */
+    public static final int numAttributes = 18;
     
-    /* String array with property names */
-    protected static final String[] keys=  new String[]{PROP_id,
-                                                        PROP_parentID,
-                                                        PROP_origID,
-                                                        PROP_horizType,
-                                                        PROP_vertType,
-                                                        PROP_active,
-                                                        PROP_alive,
-                                                        PROP_attached,
-                                                        PROP_startTime,
-                                                        PROP_time,
-                                                        PROP_age,
-                                                        PROP_ageInStage,
-                                                        PROP_size,
-                                                        PROP_number,
-                                                        PROP_horizPos1,
-                                                        PROP_horizPos2,
-                                                        PROP_vertPos,
-                                                        PROP_temp,
-                                                        PROP_salinity,
-                                                        PROP_gridCellID};
-    /* String array with field names for shapefiles */
-    protected static final String[] shortNames =  new String[]{"typeName",
-                                                                "id",
-                                                                "parentID",
-                                                                "origID",
-                                                                "horizType",
-                                                                "vertType",
-                                                                "active",
-                                                                "alive",
-                                                                "attached",
-                                                                "startTime",
-                                                                "time",
-                                                                "age",
-                                                                "ageInStage",
-                                                                "size",
-                                                                "number",
-                                                                "horizPos1",
-                                                                "horizPos2",
-                                                                "vertPos",
-                                                                "temp",
-                                                                "salinity",
-                                                                "gridCellID"};
-    /* class list corresponding to shortNames for shapefile input/output */
-    protected static final Class[] classes = new Class[]{String.class,
-                                                        Long.class,
-                                                        Long.class,
-                                                        Long.class,
-                                                        Integer.class,
-                                                        Integer.class,
-                                                        Boolean.class,
-                                                        Boolean.class,
-                                                        Boolean.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        Double.class,
-                                                        String.class};
-    /* LHS type name assigned to instance*/
+    /** Set of keys (as Strings) to the map of attribute values */
+    protected static final Set<String> keys = new LinkedHashSet<>(32);
+    
+    /** the map to attributes values */
+    protected static final Map<String,IBMAttribute> mapAttributes = new HashMap<>(32);
+    
+    /** LHS type name assigned to instance*/
     protected String typeName;
-    /* attributes map */
-    protected HashMap<String,Object> map;
+    /** map of values for attributes defined in the this class (subclasses should add their attribute values to it) */
+    protected Map<String,Object> mapValues;
     
+    /**
+     * Utility field used by bound properties.
+     */
+    protected PropertyChangeSupport propertySupport;
+
     /** 
-     * Assigns the LHS type name to the constructed subclass instance.
-     * Subclasses should call this constructor with a valid LHS type name from
-     * all constructors to set the type name.
+     * Assigns the life stage type name to the constructed subclass instance and adds
+     * the attribute keys and information defined in this class to the static Set "keys" 
+     * and the static Map mapAttributes.
      * 
-     *@param typeName - the LHS type name as a String.
+     * Subclasses should call this constructor with a valid life stage type name from
+     * all constructors to set the type name.  They should then 
+     * 
+     *@param typeName - the type name as a String.
      */
     protected AbstractLHSAttributes(String typeName) {
-       this.typeName = typeName;
+        this.typeName = typeName;
+        propertySupport =  new PropertyChangeSupport(this);
+        if (mapAttributes.isEmpty()){
+            //assign static-level attributes information for this class
+            String key;
+            key = PROP_typeName;   keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"typeName"));
+            key = PROP_id;         keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,"id"));
+            key = PROP_parentID;   keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,"parentID"));
+            key = PROP_origID;     keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,"origID"));
+            key = PROP_startTime;  keys.add(key); mapAttributes.put(key,new IBMAttributeROMSDate(key,"startTime"));
+            key = PROP_time;       keys.add(key); mapAttributes.put(key,new IBMAttributeROMSDate(key,"time"));
+            key = PROP_horizType;  keys.add(key); mapAttributes.put(key,new IBMAttributeInteger(key,"horizType"));
+            key = PROP_vertType;   keys.add(key); mapAttributes.put(key,new IBMAttributeInteger(key,"vertType"));
+            key = PROP_horizPos1;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"horizPos1"));
+            key = PROP_horizPos2;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"horizPos2"));
+            key = PROP_vertPos;    keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"vertPos"));
+            key = PROP_gridCellID; keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"gridCellID"));
+            key = PROP_track;      keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"track"));
+            key = PROP_active;     keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key,"active"));
+            key = PROP_alive;      keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key,"alive"));
+            key = PROP_age;        keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"age"));
+            key = PROP_ageInStage; keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"ageInStage"));
+            key = PROP_number;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"number"));
+        }
+        //assign instance-level attributes values for this class
+        mapValues = new HashMap<>(2*numAttributes);
+        mapValues.put(PROP_id,        new Long(-1));
+        mapValues.put(PROP_parentID,  new Long(-1));
+        mapValues.put(PROP_origID,    new Long(-1));
+        mapValues.put(PROP_startTime, new Double(0));
+        mapValues.put(PROP_time,      new Double(0));
+        mapValues.put(PROP_horizType, new Integer(0));
+        mapValues.put(PROP_vertType,  new Integer(0));
+        mapValues.put(PROP_horizPos1, new Double(0));
+        mapValues.put(PROP_horizPos2, new Double(0));
+        mapValues.put(PROP_vertPos,   new Double(0));
+        mapValues.put(PROP_gridCellID,"");
+        mapValues.put(PROP_track,     "");
+        mapValues.put(PROP_active,    false);
+        mapValues.put(PROP_alive,     true);
+        mapValues.put(PROP_age,       new Double(0));
+        mapValues.put(PROP_ageInStage,new Double(0));
+        mapValues.put(PROP_number,    new Double(1));
     }
-    
-    //Abstract methods should be overriden by inheriting classes
-    
+
     /**
-     *  Sets values of a subclass from a String vector.
-     *
-     *@param strv - array of values (as Strings). 
-     */
-    @Override
-    public abstract void setValues(final String[] strv);
-    
-    /**
-     *  Creates an instance of a subclass.
-     *
-     *@param strv - array of values (as Strings) used to create the new instance. 
+     *  This method should be overridden by extending classes.
      */
     @Override
     public abstract LifeStageAttributesInterface createInstance(final String[] strv);
+
+    /**
+     *  This method should be overridden by extending classes.
+     */
+    @Override
+    public abstract Object clone() throws CloneNotSupportedException;
     
     /**
-     * This creates the basic attributes map. Subclasses should override this 
-     * method as appropriate, possibly calling super.createMap() to create
-     * this map as super.map.  Subclass-specific attributes could then be mapped
-     * in a subclass-specific map.
+     *  Returns attribute values as an Object array.
+     *  Subclasses should order the values in the array
+     *  in the same order as in the keys array.
      */
-    protected void createMap() {
-        map = new HashMap<String,Object>(keys.length+2,1);
-        for (int i=0;i<keys.length;i++) {
-            map.put(keys[i],null);
-        }
-        map.put(PROP_id,        new Long(-1));
-        map.put(PROP_parentID,  new Long(-1));
-        map.put(PROP_origID,    new Long(-1));
-        map.put(PROP_horizType, new Integer(0));
-        map.put(PROP_vertType,  new Integer(0));
-        map.put(PROP_active,    false);
-        map.put(PROP_alive,     true);
-        map.put(PROP_attached,  false);
-        map.put(PROP_startTime, new Double(0));
-        map.put(PROP_time,      new Double(0));
-        map.put(PROP_age,       new Double(0));
-        map.put(PROP_ageInStage,new Double(0));
-        map.put(PROP_size,      new Double(0));
-        map.put(PROP_number,    new Double(1));
-        map.put(PROP_horizPos1, new Double(0));
-        map.put(PROP_horizPos2, new Double(0));
-        map.put(PROP_vertPos,   new Double(0));
-        map.put(PROP_temp,      new Double(-1));
-        map.put(PROP_salinity,  new Double(-1));
-        map.put(PROP_gridCellID,"");
-    }
+    @Override
+    public abstract Object[] getAttributes();
 
+    /**
+     * Gets the parameter keys as a String array.
+     * 
+     * This method is abstract to force dispatch of method to overriding method
+     * in subclasses.
+     * 
+     * @return - keys as String array.
+     */
+    @Override
+    public abstract String[] getKeys();
+    
+    /**
+     * Gets the classes for the parameter values as an array of Classes.
+     * 
+     * This method is abstract to force dispatch of method to overriding method
+     * in subclasses.
+     * 
+     * @return - classes for parameter values as a Class array.
+     */
     @Override
     public abstract Class[] getClasses();
 
+    /**
+     * Gets the short names for the parameters as an array of Strings.
+     * 
+     * This method is abstract to force dispatch of method to overriding method
+     * in subclasses.
+     * 
+     * @return - short names for the parameters as an array of Strings
+     */
     @Override
     public abstract String[] getShortNames();
-
-    @Override
-    public abstract ArrayList getArrayList();
     
+    /**
+     * NOTE: This method should be overridden in subclasses, with the subclass method
+     * possibly calling super.setValues(strv) to set the values for this class.
+     * 
+     * The order of the String[] should be:
+     *  typeName [this is not set]
+     *  id
+     *  parentID
+     *  oirigID
+     *  horizType
+     *  vertType
+     *  horizPos1
+     *  horizPos2
+     *  vertPos
+     *  gridCellID
+     *  track
+     *  startTime
+     *  time
+     *  active
+     *  alive
+     *  age
+     *  ageInStage
+     *  number
+     * @param strv - String[] of attribute values.
+     */
+    @Override
+    public void setValues(final String[] strv){
+        int j = 1;
+        try {
+            Iterator<String> it = keys.iterator();
+            it.next();//skip typeName
+            while (it.hasNext()) setValueFromString(it.next(),strv[j++]);
+        } catch (java.lang.IndexOutOfBoundsException ex) {
+            //@TODO: should throw an exception here that identifies the problem
+            String[] aKeys = new String[keys.size()];
+            aKeys = keys.toArray(aKeys);
+                String str = "Missing attribute value for "+aKeys[j]+".\n"+
+                             "Prior values are ";
+                for (int i=0;i<(j);i++) str = str+strv[i]+" ";
+                javax.swing.JOptionPane.showMessageDialog(
+                        null,
+                        str,
+                        "Error setting attribute values:",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                throw ex;
+        } catch (java.lang.NumberFormatException ex) {
+            String[] aKeys = new String[keys.size()];
+            aKeys = keys.toArray(aKeys);
+            String str = "Bad attribute value for "+aKeys[j-2]+".\n"+
+                         "Value was '"+strv[j-1]+"'.\n"+
+                         "Entry was '";
+            try {
+                for (int i=0;i<(strv.length-1);i++) {
+                    if ((strv[i]!=null)&&(!strv[i].isEmpty())) {
+                        str = str+strv[i]+", ";
+                    } else {
+                        str = str+"<missing_value>, ";
+                    }
+                }
+                if ((strv[strv.length-1]!=null)&&(!strv[strv.length-1].isEmpty())) {
+                    str = str+strv[strv.length-1]+"'.";
+                } else {
+                    str = str+"<missing_value>'.";
+                }
+            }  catch (java.lang.IndexOutOfBoundsException ex1) {
+                //do nothing
+            }
+            javax.swing.JOptionPane.showMessageDialog(
+                    null,
+                    str,
+                    "Error setting attribute values:",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            throw ex;
+        }
+    }
+
+    /**
+     * Gets type name and attribute values as an ArrayList.  Subclasses should 
+     * override this method. The overriding method can call super.getArrayList()
+     * to return an ArrayList of the correct size and with the values filled in
+     * for the attributes defined in this class.
+     * 
+     * @return - the array list.
+     */
+    @Override
+    public ArrayList getArrayList() {
+        ArrayList a = new ArrayList(mapValues.size());
+        a.add(typeName);
+        Iterator<String> it = keys.iterator();
+        it.next();//skip PROP_typeName
+        while (it.hasNext()) a.add(getValue(it.next()));
+        return a;
+    }
+    
+    /**
+     * Sets the value for the mapValues object indicated by the key.
+     * This overrides the superclass method to provide property change support.
+     * 
+     * @param key   - String giving key name
+     * @param value - Object to be set as value
+     */
+    @Override
+    public void setValue(String key, Object value) {
+        if (mapValues.containsKey(key)) {
+            Object old = mapValues.get(key);
+            Object val = mapValues.put(key,value);
+            propertySupport.firePropertyChange(key,old,val);
+        }
+    }
+
+    /**
+     * Adds a PropertyChangeListener to the listener list.
+     * @param l The listener to add.
+     */
+    public void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
+        propertySupport.addPropertyChangeListener(l);
+    }
+
+    /**
+     * Removes a PropertyChangeListener from the listener list.
+     * @param l The listener to remove.
+     */
+    public void removePropertyChangeListener(java.beans.PropertyChangeListener l) {
+        propertySupport.removePropertyChangeListener(l);
+    }
+    
+    /**
+     * Gets the value of the "active" attribute.
+     * 
+     * @return - boolean indicating whether associated LHS is active or not
+     */
     @Override
     public boolean isActive() {
         return getValue(PROP_active,b);
@@ -188,11 +290,15 @@ public abstract class AbstractLHSAttributes
         setValue(PROP_active,b);
     }
 
+    /**
+     * Gets the value of the "alive" attribute.
+     * 
+     * @return - boolean indicating whether associated LHS is alive or not
+     */
     @Override
     public boolean isAlive() {
         return getValue(PROP_alive,b);
     }
-
 
     /**
      * Sets "alive" value.
@@ -204,11 +310,21 @@ public abstract class AbstractLHSAttributes
         setValue(PROP_alive,b);
     }
 
+    /**
+     * Gets the ID for the LHS.
+     * 
+     * @return - the ID, as a long
+     */
     @Override
     public long getID() {
         return getValue(PROP_id,l);
     }
 
+    /**
+     * Gets the start time for the LHS.
+     * 
+     * @return - start time (in seconds)
+     */
     @Override
     public double getStartTime() {
         return getValue(PROP_startTime,d);
@@ -224,26 +340,6 @@ public abstract class AbstractLHSAttributes
         setValue(PROP_startTime,t);
     }
     
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//      The following are implemented to extend LifeStageAttributesInterface
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    /**
-     *  This method should be overridden by extending classes.
-     */
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
-    
-    /**
-     *  Returns attribute values as an Object array.
-     *  Subclasses should order the values in the array
-     *  in the same order as in the keys array.
-     */
-    @Override
-    public abstract Object[] getAttributes();
-    
     /**
      * Returns a CSV string representation of the attribute values.
      * This method should be overriden by subclasses that add additional attributes, 
@@ -254,42 +350,13 @@ public abstract class AbstractLHSAttributes
      */
     @Override
     public String getCSV() {
-        String startDateStr = "0";
-        long startTimeMS = this.getValue(PROP_startTime,d).longValue();
-        if (startTimeMS>0){
-            Date startDate = new Date(1000L*startTimeMS+refDate.getTime());
-            startDateStr = dateFormat.format(startDate);
+        String str = typeName;
+        Iterator<String> it = keys.iterator();
+        it.next();//skip typeName
+        while (it.hasNext()) {
+            String key = it.next();
+            str = str+cc+getValueAsString(key);
         }
-        String currDateStr = "0";
-        long currTimeMS = this.getValue(PROP_time,d).longValue();
-        if (currTimeMS>0){
-            Date currDate = new Date(1000L*currTimeMS+refDate.getTime());
-            currDateStr = dateFormat.format(currDate);
-        }
-
-        String str = typeName+cc
-                    +this.getValue(PROP_id,l).toString()+cc
-                    +this.getValue(PROP_parentID,l).toString()+cc
-                    +this.getValue(PROP_origID,l).toString()+cc
-                    +this.getValue(PROP_horizType,i).toString()+cc
-                    +this.getValue(PROP_vertType,i).toString()+cc
-                    +this.getValue(PROP_active,b).toString()+cc
-                    +this.getValue(PROP_alive,b).toString()+cc
-                    +this.getValue(PROP_attached,b).toString()+cc
-                    +this.getValue(PROP_startTime,d).toString()+cc
-                    +this.getValue(PROP_time,d).toString()+cc
-//                    +startDateStr+cc
-//                    +currDateStr+cc
-                    +decFormat.format(this.getValue(PROP_age,d))+cc
-                    +decFormat.format(this.getValue(PROP_ageInStage,d))+cc
-                    +decFormat.format(this.getValue(PROP_size,d))+cc
-                    +decFormat.format(this.getValue(PROP_number,d))+cc
-                    +decFormat.format(this.getValue(PROP_horizPos1,d))+cc
-                    +decFormat.format(this.getValue(PROP_horizPos2,d))+cc
-                    +decFormat.format(this.getValue(PROP_vertPos,d))+cc
-                    +decFormat.format(this.getValue(PROP_temp,d))+cc
-                    +decFormat.format(this.getValue(PROP_salinity,d))+cc
-                    +this.getValue(PROP_gridCellID,s);
         return str;
     }
                 
@@ -305,31 +372,23 @@ public abstract class AbstractLHSAttributes
      */
     @Override
     public String getCSVHeader() {
-        String str = "LHS type name";
-        int n = keys.length;
-        for (int i=0;i<n;i++) {
-            str = str+cc+keys[i];
-        }
+        Iterator<String> it = keys.iterator();
+        String str = it.next();//typeName
+        while (it.hasNext()) str = str+cc+it.next();
         return str;
     }
                 
     /**
      * Returns the comma-delimited string corresponding to the attributes
      * to be used as a header for a csv file.  
-     * This should be overriden by subclasses that add additional attributes, 
-     * possibly calling super.getCSVHeaderGetShortNames() to get an initial header string 
-     * to which additional field names could be appended.
-     * Use getCSV() to get the string of actual attribute values.
      *
      *@return - String of CSV header names (short style)
      */
     @Override
     public String getCSVHeaderShortNames() {
-        String str = shortNames[0];//this is "typeName"
-        int n = shortNames.length;
-        for (int i=1;i<n;i++) {
-            str = str+cc+shortNames[i];
-        }
+        Iterator<String> it = keys.iterator();
+        String str = mapAttributes.get(it.next()).shortName;//this is "typeName"
+        while (it.hasNext())  str = str+cc+mapAttributes.get(it.next()).shortName;
         return str;
     }
     
@@ -367,30 +426,20 @@ public abstract class AbstractLHSAttributes
      */
     @Override
     public void setGeometry(double[] pt) {
-        map.put(PROP_horizPos1, pt[0]);
-        map.put(PROP_horizPos2, pt[1]);
+        mapValues.put(PROP_horizPos1, pt[0]);
+        mapValues.put(PROP_horizPos2, pt[1]);
     }
 
     
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //      The following are implemented to extend LifeStageDataInterface
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-    /**
-     * Gets the parameter keys.
-     * This method is abstract to force dispatch of method to overriding method
-     * in subclasses.
-     * 
-     * @return - keys as String array.
-     */
-    @Override
-    public abstract String[] getKeys();
     
     @Override
     public Boolean getValue(String key, Boolean b) {
         Boolean v = null;
         try {
-            v = (Boolean) map.get(key);
+            v = (Boolean) mapValues.get(key);
         } catch (ClassCastException exc) {}
         return v;
     }
@@ -399,7 +448,7 @@ public abstract class AbstractLHSAttributes
     public Double getValue(String key, Double d) {
         Double v = null;
         try {
-            v = (Double) map.get(key);
+            v = (Double) mapValues.get(key);
         } catch (ClassCastException exc) {}
         return v;
     }
@@ -408,7 +457,7 @@ public abstract class AbstractLHSAttributes
     public Integer getValue(String key, Integer i) {
         Integer v = null;
         try {
-            v = (Integer) map.get(key);
+            v = (Integer) mapValues.get(key);
         } catch (ClassCastException exc) {}
         return v;
     }
@@ -417,7 +466,7 @@ public abstract class AbstractLHSAttributes
     public Long getValue(String key, Long l) {
         Long v = null;
         try {
-            v = (Long) map.get(key);
+            v = (Long) mapValues.get(key);
         } catch (ClassCastException exc) {}
         return v;
     }
@@ -426,50 +475,39 @@ public abstract class AbstractLHSAttributes
     public String getValue(String key, String s) {
         String v = null;
         try {
-            v = (String) map.get(key);
+            v = (String) mapValues.get(key);
         } catch (ClassCastException exc) {}
         return v;
     }
 
     @Override
     public boolean getValue(String key, boolean b) throws ClassCastException {
-        boolean v = ((Boolean) map.get(key)).booleanValue();
+        boolean v = ((Boolean) mapValues.get(key)).booleanValue();
         return v;
     }
 
     @Override
     public double getValue(String key, double d) throws ClassCastException {
-        double v = ((Double) map.get(key)).doubleValue();
+        double v = ((Double) mapValues.get(key)).doubleValue();
         return v;
     }
 
     @Override
     public int getValue(String key, int i) throws ClassCastException {
-        int v = ((Integer) map.get(key)).intValue();
+        int v = ((Integer) mapValues.get(key)).intValue();
         return v;
     }
 
     @Override
     public long getValue(String key, long l) throws ClassCastException {
-        long v = ((Long) map.get(key)).longValue();
+        long v = ((Long) mapValues.get(key)).longValue();
         return v;
     }
 
     @Override
     public Object getValue(String key) {
-        return map.get(key);
+        return mapValues.get(key);
     }
-    
-    /**
-     * Abstract method to set attribute value identified by the key.
-     * This method is abstract to allow subclasses that want to use property
-     * change support to dispatch to their method from a method call on an
-     * AbstractLHSAttribures instance.
-     * @param key   - key identifying attribute to be set
-     * @param value - value to set
-     */
-    @Override
-    public abstract void setValue(String key, Object value);
 //    
 //    @Override
 //    public void setValue(String key, boolean value) {
@@ -495,5 +533,21 @@ public abstract class AbstractLHSAttributes
     @Override
     public void setValue(String key, long value) {
         setValue(key,new Long(value));
+    }
+    
+    public String getValueAsString(String key){
+        Object val = getValue(key);
+        IBMAttribute att = mapAttributes.get(key);
+        att.setValue(val);
+        String str = att.getValueAsString();
+        return str;
+    }
+    
+    public void setValueFromString(String key, String value) throws NumberFormatException {
+        if (!key.equals(PROP_typeName)){
+            IBMAttribute att = mapAttributes.get(key);
+            att.parseValue(value);
+            setValue(key,att.getValue());
+        }
     }
 }

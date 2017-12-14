@@ -1,10 +1,5 @@
 /*
  * AbstractLHS.java
- *
- * Created on January 19, 2006, 1:58 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
  */
 
 package wts.models.DisMELS.framework;
@@ -18,8 +13,14 @@ import wts.roms.model.Interpolator3D;
 import wts.roms.model.LagrangianParticle;
 
 /**
- *
- * @author William Stockhausen
+ * An abstract base class that provides default implementations for many of the 
+ * methods required to implement LifeStageInterface.
+ * 
+ * The implementations for the methods setAttributes(LifeStageAttributesInterface),
+ * updateAttributes() and updateVariables() cover the attributes identified by keys
+ * in LifeStageAttributesInterface. Subclasses overriding these methods may call
+ * the overriden method on super to obtain this functionality without having to
+ * rewrite it.
  */
 public abstract class AbstractLHS implements LifeStageInterface {
     
@@ -31,10 +32,10 @@ public abstract class AbstractLHS implements LifeStageInterface {
     /** tolerance to edge of model grid */
     protected static double tolGridEdge = 0.5;
     
+    /** String for "," */
     protected static final String cc = ",";
+    /** the output format used for decimal numbers */
     protected static final DecimalFormat decFormat = new DecimalFormat("#.#####");
-    
-    protected static final GlobalInfo globalInfo = GlobalInfo.getInstance();
 
     /**flag to write track info to output file */
     protected static boolean writeTracksFlag = false;
@@ -226,6 +227,10 @@ public abstract class AbstractLHS implements LifeStageInterface {
 //  Methods inherited from LifeHistoryStageIF  
     /**
      *  This method should be overridden by extending classes.
+     * 
+     * @return - clone of the instance on which it was called
+     * 
+     * @throws java.lang.CloneNotSupportedException
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
@@ -233,7 +238,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
 
     /**
-     * Returns the reportfor the implementing class as a CSV formatted string.
+     * Returns the report for the implementing class as a CSV formatted string.
      *
      * @return - the attributes and track as a csv-formatted String
      */
@@ -259,7 +264,11 @@ public abstract class AbstractLHS implements LifeStageInterface {
         return writeTracksFlag;
     }
     
-    /** Sets flag to write complete track information (if true) */
+    /** 
+     * Sets flag to write complete track information (if true)
+     * 
+     * @param b - the value to set
+     */
     @Override
     public void setWriteTracksFlag(boolean b){
         writeTracksFlag = b;
@@ -276,7 +285,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
             track.add(c);
             trackLL.add(new Coordinate(lon,lat,-depth));
         } else {
-            if (track.size()==0) {
+            if (track.isEmpty()) {
                 //add current location to tracks as 1st coordinate
                 track.add(c);
                 trackLL.add(new Coordinate(lon,lat,-depth));
@@ -309,11 +318,6 @@ public abstract class AbstractLHS implements LifeStageInterface {
         key = LifeStageAttributesInterface.PROP_alive;      atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_age;        atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_ageInStage; atts.setValue(key,newAtts.getValue(key));
-        if (newAtts instanceof AbstractLHSAttributes) {
-            key = AbstractLHSAttributes.PROP_attached;   atts.setValue(key,newAtts.getValue(key));
-        } else if (newAtts instanceof AbstractLHSAttributes2) {
-            key = AbstractLHSAttributes2.PROP_attached;   atts.setValue(key,newAtts.getValue(key));
-        }
         key = LifeStageAttributesInterface.PROP_gridCellID; atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_horizPos1;  atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_horizPos2;  atts.setValue(key,newAtts.getValue(key));
@@ -339,11 +343,6 @@ public abstract class AbstractLHS implements LifeStageInterface {
         //  id, parentID, origID, startTime, horizType, vertType
         atts.setValue(LifeStageAttributesInterface.PROP_active,active);
         atts.setValue(LifeStageAttributesInterface.PROP_alive,alive);
-        if (atts instanceof AbstractLHSAttributes) {
-            atts.setValue(AbstractLHSAttributes.PROP_attached,attached);
-        } else if (atts instanceof AbstractLHSAttributes2) {
-            atts.setValue(AbstractLHSAttributes2.PROP_attached,attached);
-        }
         atts.setValue(LifeStageAttributesInterface.PROP_time,time);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos2,lat);
@@ -362,11 +361,6 @@ public abstract class AbstractLHS implements LifeStageInterface {
     protected void updateVariables() {
         active     = atts.getValue(LifeStageAttributesInterface.PROP_active,active);
         alive      = atts.getValue(LifeStageAttributesInterface.PROP_alive,alive);
-        if (atts instanceof AbstractLHSAttributes) {
-            attached   = atts.getValue(AbstractLHSAttributes.PROP_attached,attached);
-        } else if (atts instanceof AbstractLHSAttributes2) {
-            attached   = atts.getValue(AbstractLHSAttributes.PROP_attached,attached);
-        }
         startTime  = atts.getValue(LifeStageAttributesInterface.PROP_startTime,startTime);
         time       = atts.getValue(LifeStageAttributesInterface.PROP_time,time);
         lon        = atts.getValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
