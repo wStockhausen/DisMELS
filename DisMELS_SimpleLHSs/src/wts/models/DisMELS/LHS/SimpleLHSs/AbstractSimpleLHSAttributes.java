@@ -1,5 +1,5 @@
 /*
- * AbstractLHSAttributes.java
+ * AbstractSimpleLHSAttributes.java
  */
 
 package wts.models.DisMELS.LHS.SimpleLHSs;
@@ -19,12 +19,9 @@ import wts.models.DisMELS.framework.LifeStageAttributesInterface;
 import wts.models.DisMELS.framework.Types;
 
 /**
- * This abstract class provides a base class that can be extended to provide a
- * concrete class representing the attributes for a DisMELS  life stage.
- * 
- * IBM designers should probably extend AbstractLHSAttributes2 rather than this class.
- * AbstractLHSAttributes2 provides an abstract implementation that is much easier
- * to extend.
+ * This abstract class provides a base class that is extended in the 
+ * Simple...LHSAttributes classes to provide concrete classes 
+ * representing the attributes for the "simple" DisMELS life stages.
  */
 public abstract class AbstractSimpleLHSAttributes 
                         implements LifeStageAttributesInterface {
