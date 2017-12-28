@@ -16,18 +16,19 @@ import wts.models.DisMELS.framework.IBMAttributes.*;
  */
 public abstract class AbstractLHSAttributes implements LifeStageAttributesInterface {
     
-    /** Number of attributes defined by this class (including typeName) */
+    /** static number of attributes defined by this class (including typeName) */
     public static final int numAttributes = 18;
     
-    /** Set of keys (as Strings) to the map of attribute values */
+    /** static set of keys (as Strings) to the map of attribute values */
     protected static final Set<String> keys = new LinkedHashSet<>(32);
     
-    /** the map to attributes values */
+    /** static map to the attributes values defined for this class */
     protected static final Map<String,IBMAttribute> mapAttributes = new HashMap<>(32);
     
     /** LHS type name assigned to instance*/
     protected String typeName;
-    /** map of values for attributes defined in the this class (subclasses should add their attribute values to it) */
+    /** instance-level map of keys to values for attributes defined in the this class and subclasses 
+     * (subclasses should add their attribute values to it) */
     protected Map<String,Object> mapValues;
     
     /**
@@ -70,7 +71,7 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
             key = PROP_ageInStage; keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"ageInStage"));
             key = PROP_number;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"number"));
         }
-        //assign instance-level attributes values for this class
+        //assign default instance-level attributes values for this class
         mapValues = new HashMap<>(2*numAttributes);
         mapValues.put(PROP_id,        new Long(-1));
         mapValues.put(PROP_parentID,  new Long(-1));
@@ -535,19 +536,45 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
         setValue(key,new Long(value));
     }
     
-    public String getValueAsString(String key){
-        Object val = getValue(key);
-        IBMAttribute att = mapAttributes.get(key);
-        att.setValue(val);
-        String str = att.getValueAsString();
-        return str;
-    }
+    /**
+     * Returns the value associated with the attribute identified by the key
+     * as a String.
+     * <p>
+     * Subclasses will need to implement something like:<br>
+     * <code>
+     *     public String getValueAsString(String key){          <br>
+     *     &emsp Object val = getValue(key);                      <br>
+     *     &emsp IBMAttribute att = mapAllAttributes.get(key);    <br>
+     *     &emsp att.setValue(val);                               <br>
+     *     &emsp String str = att.getValueAsString();             <br>
+     *     &emsp return str;                                      <br>
+     *     }                                                    <br>
+     * </code>
+     * where mapAllAttributes is the subclass's equivalent to the HashMap mapAttributes.
+     * <p>
+     * @param key - the attribute's key
+     * @return - a String representation of the attribute's value
+     */
+    public abstract String getValueAsString(String key);
     
-    public void setValueFromString(String key, String value) throws NumberFormatException {
-        if (!key.equals(PROP_typeName)){
-            IBMAttribute att = mapAttributes.get(key);
-            att.parseValue(value);
-            setValue(key,att.getValue());
-        }
-    }
+    /**
+     * Sets the value of an attribute from a representation as a String.
+     * <p>
+     * Subclasses will need to implement something like:<br>
+     * <code>
+     *     public void setValueFromString(String key, String value) throws NumberFormatException { <br>
+     *     &emsp if (!key.equals(PROP_typeName)){;                      <br>
+     *     &emsp &emsp IBMAttribute att = mapAllAttributes.get(key);      <br>
+     *     &emsp &emsp att.parseValue(value);                             <br>
+     *     &emsp &emsp setValue(key,att.getValue());                      <br>
+     *     &emsp }                                                        <br>
+     *     }                                                                                       <br>
+     * </code>
+     * where mapAllAttributes is the subclass's equivalent to the HashMap mapAttributes.
+     * <p>
+     * @param key -  the attribute's key
+     * @param value - the String value to parse and set
+     * @throws NumberFormatException 
+     */
+    public abstract void setValueFromString(String key, String value) throws NumberFormatException;
 }
