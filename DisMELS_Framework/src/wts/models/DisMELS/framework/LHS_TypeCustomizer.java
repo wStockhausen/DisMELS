@@ -440,7 +440,7 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
         if (jcbNextLHSClasses.getSelectedItem()!=null) {
             String name = jtfNextLHSName.getText();
             String clazz = (String) jcbNextLHSClasses.getSelectedItem();
-            logger.info("------addNextLHS: adding "+name+": "+clazz);
+            logger.info("------jbAddNextLHSActionPerformed: adding "+name+": "+clazz);
             lhsType.addNextLHS(name,clazz);
             DefaultTableModel dtm = (DefaultTableModel) jtblNextLHSs.getModel();
             dtm.addRow(new Object[]{name,clazz});
@@ -452,9 +452,12 @@ public class LHS_TypeCustomizer extends javax.swing.JPanel
     private void jtblNextLHSsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jtblNextLHSsMouseClicked
         int r = jtblNextLHSs.getSelectedRow();
         DefaultTableModel tm = (DefaultTableModel) jtblNextLHSs.getModel();
-        String str = (String) tm.getValueAt(r, 0);
-        int res = JOptionPane.showConfirmDialog(null, "Delete life stage '"+str+"'?");
+        String name = (String) tm.getValueAt(r, 0);
+        int res = JOptionPane.showConfirmDialog(null, "Delete life stage '"+name+"'?");
         if (res==JOptionPane.OK_OPTION) {
+            String clazz = (String) tm.getValueAt(r, 1);
+            logger.info("------jtblNextLHSsMouseClicked: removing "+name+": "+clazz);
+            lhsType.removeNextLHS(name);
             tm.removeRow(r);
             jtblNextLHSs.repaint();
         } 
