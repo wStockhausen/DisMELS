@@ -20,6 +20,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
@@ -272,12 +273,13 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayer(MapLayer layer) {
+        logger.info("--Adding map layer (at top): "+layer.getTitle());
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(layer);
-        if (mapPane.getMapContext()!=null) return;//only set context if not already set
-        setContext();
+        if (mapPane.getMapContext()==null) setContext();//only set context if not already set
         setCursor(c);
+        logger.info("--Added map layer (at top): "+layer.getTitle());
     }
 
     /**
@@ -287,12 +289,14 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayer(int idx, MapLayer layer) {
+        logger.info("--Adding layer at "+idx+": "+layer.getTitle());
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(idx,layer);
-        if (mapPane.getMapContext()!=null) return;//only set context if not already set
+        if (mapPane.getMapContext()==null) setContext();//only set context if not already set
         setContext();
         setCursor(c);
+        logger.info("--Added layer at "+idx+": "+layer.getTitle());
     }
 
     /**
@@ -301,7 +305,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
      * @param layer
      */
     public void addLayerAtBottom(MapLayer layer) {
-        logger.info("--Adding layer at bottom");
+        logger.info("--Adding layer at bottom: "+layer.getTitle());
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         context.addLayer(0, layer);//add as 1st element in context, as this gets painted first
@@ -310,26 +314,26 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
         }
         if (mapPane.getMapContext()==null) setContext();
         setCursor(c);
-        logger.info("--Added layer at bottom");
+        logger.info("--Added layer at bottom: "+layer.getTitle());
     }
 
     /**
-     * Adds layer to "bottom" of existing layers so that it is painted BEFORE all
+     * Adds layer to "top" of existing layers so that it is painted AFTER all
      * other layers.
      * @param layer
      */
     public void addLayerAtTop(MapLayer layer) {
-        logger.info("--Adding layer at top");
+        logger.info("--Adding layer at top: "+layer.getTitle());
         Cursor c = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         int top = context.getLayerCount();
-        context.addLayer(top, layer);//add as last element in context, as this gets painted first
+        context.addLayer(top, layer);//add as last element in context, as this gets painted last
         for (int i=0;i<context.getLayerCount();i++) {
             logger.info("----map layer "+i+" is '"+context.getLayer(i).getTitle()+"'");
         }
         if (mapPane.getMapContext()==null) setContext();//only set context if not already set
         setCursor(c);
-        logger.info("--Added layer at top");
+        logger.info("--Added layer at top: "+layer.getTitle());
     }
 
     @Override
@@ -419,6 +423,7 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
             mapPane.setMapContext(context);
             RenderedLayer[] rls = mapPane.getRenderer().getLayers();
             for (RenderedLayer rl: rls){
+                logger.info("rendered layer: "+rl.getName(Locale.US));
                 rl.setPreferredPixelSize(dim);
             }
         } catch (Exception ex) {

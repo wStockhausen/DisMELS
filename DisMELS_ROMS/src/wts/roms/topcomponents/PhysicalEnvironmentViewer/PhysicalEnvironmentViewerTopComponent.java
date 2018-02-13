@@ -1611,17 +1611,29 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         if (jchkShowSF.isSelected()) {
             updateScalarMapLayer();
         } else {
-            if (scalarLayer!=null) tcMapViewer.removeGISLayer(scalarLayer);
+            if (scalarLayer!=null) {
+                logger.info("updateMapLayer(): removing scalar layer from map"+scalarLayer.getTitle());
+                tcMapViewer.removeGISLayer(scalarLayer);
+                logger.info("updateMapLayer(): removed scalar layer from map"+scalarLayer.getTitle());
+            }
         }
         if (jchkShowVF.isSelected()) {
             updateVectorMapLayer();
         } else {
-            if (vectorLayer!=null) tcMapViewer.removeGISLayer(vectorLayer);
+            if (vectorLayer!=null) {
+                logger.info("updateMapLayer(): removing vector layer from map"+vectorLayer.getTitle());
+                tcMapViewer.removeGISLayer(vectorLayer);
+                logger.info("updateMapLayer(): removed vector layer from map"+vectorLayer.getTitle());
+            }
         }
         if (jchkShowHGrad.isSelected()) {
             updateHGradMapLayer();
         } else {
-            if (horizGradLayer!=null) tcMapViewer.removeGISLayer(horizGradLayer);
+            if (horizGradLayer!=null) {
+                logger.info("updateMapLayer(): removing HGrad layer from map"+horizGradLayer.getTitle());
+                tcMapViewer.removeGISLayer(horizGradLayer);
+                logger.info("updateMapLayer(): removed HGrad layer from map"+horizGradLayer.getTitle());
+            }
         }
         tcMapViewer.repaint();
     }
@@ -1716,7 +1728,12 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             
             MapDataInterfaceVectorBase vmd;
             //remove last vector map layer
-            if (vectorLayer!=null) tcMapViewer.removeGISLayer(vectorLayer);
+            if (vectorLayer!=null) {
+                logger.info("Remmoving vector layer to map: "+vectorLayer.getTitle());
+                tcMapViewer.removeGISLayer(vectorLayer);
+                logger.info("Removed vector layer to map: "+vectorLayer.getTitle());
+                vectorLayer=null;
+            }
             //create new vector style, if required
             boolean wasNull = false;
             //create feature collection
@@ -1783,7 +1800,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             //create new layer
             vectorLayer = new DefaultMapLayer(fc,vectorStyle,vmd.getName());
             if (vectorLayer!=null) {
+                logger.info("Adding vector layer to map: "+vectorLayer.getTitle());
                 tcMapViewer.addGISLayer(vectorLayer);//paint on top
+                logger.info("Added vector layer to map: "+vectorLayer.getTitle());
             } else {
                 logger.severe("updateVectorMapLayer(): vectorLayer = null");
             }
@@ -1800,7 +1819,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         try {
             //remove last scalar data map layer
             if (scalarLayer!=null) {
+                logger.info("Removing scalar layer to map: "+scalarLayer.getTitle());
                 tcMapViewer.removeGISLayer(scalarLayer);
+                logger.info("Removed scalar layer to map: "+scalarLayer.getTitle());
                 scalarLayer = null;
             }
             String strFld = (String)jcbScalarVar.getSelectedItem();
@@ -1857,7 +1878,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
             scalarLayer = new DefaultMapLayer(fc,scalarStyle,smd.getName());
             if (scalarLayer!=null) {
+                logger.info("Adding scalar layer to map: "+scalarLayer.getTitle());
                 tcMapViewer.addGISLayerAtBase(scalarLayer);
+                logger.info("Added scalar layer to map: "+scalarLayer.getTitle());
             } else {
                 logger.severe("Could not create scalarLayer.");
             }

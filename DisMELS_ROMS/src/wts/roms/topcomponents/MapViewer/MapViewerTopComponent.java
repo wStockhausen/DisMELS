@@ -403,11 +403,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer - name of layer to remove
      */
     public void removeGISLayer(String layer){
-        logger.info("Removing GIS layer: "+layer);
+        logger.info("removeGISLayer(String layer): Removing GIS layer: "+layer);
         MapLayer mapLayer = mapLayers.remove(layer);
         mapGUI.removeLayer(mapLayer);
         mapGUI.repaint();
-        logger.info("Removed GIS layer: "+layer);
+        logger.info("removeGISLayer(String layer): Removed GIS layer: "+layer);
     }
     
     /**
@@ -416,8 +416,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer - the layer to remove
      */
     public void removeGISLayer(MapLayer layer){
+        logger.info("removeGISLayer(MapLayer layer): Removing GIS layer: "+layer.getTitle());
         mapLayers.remove(layer.getTitle());
         mapGUI.removeLayer(layer);
+        mapGUI.repaint();
+        logger.info("removeGISLayer(MapLayer layer): Removed GIS layer: "+layer.getTitle());
     }
     
     /**
