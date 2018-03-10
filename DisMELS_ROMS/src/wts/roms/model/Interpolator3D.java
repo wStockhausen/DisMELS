@@ -736,6 +736,7 @@ public class Interpolator3D extends Interpolator2D {
      * 
      * @param pos         - position in grid coordinates to test
      * @param tolGridEdge - max distance in grid coordinates that results in true
+     * 
      * @return            - true or false
      */
     public boolean isAtGridEdge(double[] pos, double tolGridEdge) {
