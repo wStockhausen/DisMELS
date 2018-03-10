@@ -42,7 +42,7 @@ public class PhysicalEnvironment {
     /** Creates a new instance of PhysicalEnvironment */
     public PhysicalEnvironment() {
         logger.info("starting PhysicalEnvironment()");
-        createFieldMap();
+        createFieldMaps();
         logger.info("finished PhysicalEnvironment()");
     }
     
@@ -54,12 +54,12 @@ public class PhysicalEnvironment {
      */
     public PhysicalEnvironment(NetcdfReader nR) 
                                throws java.io.IOException{
-        logger.info("starting PhysicalEnvironment(nR,modGrid3D)");
-        createFieldMap();
+        logger.info("starting PhysicalEnvironment(nR)");
+        createFieldMaps();
         this.iTime = 0;
         this.nR = nR;
         readTimeDependentFields();
-        logger.info("finished PhysicalEnvironment(nR,modGrid3D)");
+        logger.info("finished PhysicalEnvironment(nR)");
     }
     
     /**
@@ -67,7 +67,6 @@ public class PhysicalEnvironment {
      * 
      * @param iTime
      * @param nR
-     * @param modGrid3D
      * @throws java.lang.ArrayIndexOutOfBoundsException
      * @throws java.io.IOException 
      */
@@ -75,7 +74,7 @@ public class PhysicalEnvironment {
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                        java.io.IOException {
         logger.info("starting PhysicalEnvironment(iTime,nR,modGrid3D)");
-        createFieldMap();
+        createFieldMaps();
         this.iTime = iTime;
         this.nR = nR;
         readTimeDependentFields();
@@ -85,14 +84,16 @@ public class PhysicalEnvironment {
     /**
      * Creates the initial map of internal names to model fields.
      */
-    private void createFieldMap(){
+    private void createFieldMaps(){
         GlobalInfo gi = GlobalInfo.getInstance();
         CriticalModelVariablesInfo cvis = gi.getCriticalModelVariablesInfo();
         Iterator<String> keys = cvis.getNames().iterator();
         while (keys.hasNext()){
             String key = keys.next();
             CriticalVariableInfo cvi = cvis.getVariableInfo(key);
-            if (cvi.isSpatialField()) mdMap.put(key,null);//add field
+            if (cvi.isSpatialField()) {
+                mdMap.put(key,null);
+            }//add field
         }
         mdMap.put("Hz",null);//computed field
         mdMap.put("w",null); //computed field
@@ -101,7 +102,9 @@ public class PhysicalEnvironment {
         while (keys.hasNext()){
             String key = keys.next();
             OptionalVariableInfo mvi = mvis.getVariableInfo(key);
-            if (mvi.isSpatialField()) mdMap.put(key,null);//additional field
+            if (mvi.isSpatialField()) {
+                mdMap.put(key,null);
+            }//additional field
         }        
     }
     

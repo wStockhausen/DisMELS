@@ -147,7 +147,7 @@ public class Interpolator2D {
                                      int interpType) throws ArrayIndexOutOfBoundsException {
         ModelGrid2D grid = GlobalInfo.getInstance().getGrid2D();
         ModelData mdp = grid.getGridField(modelField);
-        MaskData  mkp = grid.getGridMask(maskField);
+        MaskData  mkp = (MaskData) grid.getGridField(maskField);
                     
         //interpolate field
         double val = interpolateValue2D(pos,mdp,mkp,interpType);
@@ -582,7 +582,7 @@ public class Interpolator2D {
     public double[] calcHorizGradient(double[] pos, String modelField, String maskField, int interpType){
         ModelGrid2D grid = GlobalInfo.getInstance().getGrid2D();
         ModelData mdp = grid.getGridField(modelField);
-        MaskData  mkp = grid.getGridMask(maskField);
+        MaskData  mkp = (MaskData) grid.getGridField(maskField);
                     
         return calcHorizGradient(pos, mdp, mkp, interpType);
     }

@@ -8,10 +8,15 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.*;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  * Abstract class representing a collection of AbstractVariableInfo instances.
  * 
+ * Individual AVIs should be extracted using the "internal" DisMELS name assigned to
+ * the variable, NOT the name in the ROMS dataset (the latter may be different in
+ * different ROMS datasets).
  * 
  * @author William.Stockhausen
  */
@@ -35,6 +40,14 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
     /** support for throwing property changes */
     transient protected PropertyChangeSupport propertySupport;
     
+    /** logger */
+    private static final Logger logger = Logger.getLogger(AbstractVariablesInfo.class.getName());
+    
+    /**
+     * Constructor for "n" AVIs.
+     * 
+     * @param n - the initial number ofAVIs to encapsulate
+     */
     public AbstractVariablesInfo(int n) {
         mapAVI = new HashMap<>(n);
     }
@@ -47,45 +60,79 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
     /**
      * Add a VariableInfo instance class to the collection.
      * 
-     * @param mvi 
+     * The "internal" name (from avi.getName())must be used as the key to retrieve the
+     * associated VariableInfo object (not the name in the ROMS dataset, which 
+     * can be retrieved using avi.getNameInROMSDataset()).
+     * 
+     * @param avi 
      */
-    protected void addVariable(AbstractVariableInfo mvi){
-        String name = mvi.getName();
-        mvi.addPropertyChangeListener(this);
-        mapAVI.put(name, mvi);
-        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,mvi);
+    protected void addVariable(AbstractVariableInfo avi){
+        String name = avi.getName();
+        avi.addPropertyChangeListener(this);
+        mapAVI.put(name, avi);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,avi);
     }
 
     /** 
-     * Abstract class to add a VariableInfo instance to the collection, assigning it
+     * Abstract method to add a VariableInfo subclass instance to the collection, assigning it
      * the (internal) name and description provided.
-     * @param name
-     * @param desc 
+     * 
+     * @param name - "internal" name used in DisMELS to refer to this variable
+     * @param desc - a description of the variable
      */
     protected abstract void addVariable(String name, String desc);
 
     /**
-     * Returns the description associated with the variable name.
+     * Returns the description associated with the "internal" variable name.
      *
-     * @param name
-     * @return - the name used in the ROMS dataset
+     * The "internal" name is the one used in DisMELS, not necessarily the name of
+     * the variable in the ROMS dataset. If the name was not found, a warning 
+     * message is displayed and returns a null.
+     *
+     * @param name - the "internal" name used in DisMELS
+     * 
+     * @return - the description of Variable, as a String
      */
     public String getDescription(String name) {
-        return mapAVI.get(name).getDescription();
+        String str = null;
+        AbstractVariableInfo avi = mapAVI.get(name);
+        if (avi != null) {
+            str = avi.getDescription();
+        } else {
+//            JOptionPane.showMessageDialog(
+//                    null,
+//                    "No variable associated with internal name '"+name+"'.",
+//                    "AbstractVariablesInfo.GetDescription: Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//            logger.warning("No variable associated with internal name '"+name+"'.");
+        }
+        return str;
     }
 
     /**
-     * Returns the ROMS name (alias) associated with the variable name,
-     * null if the name was not found.
+     * Returns the name used in the ROMS dataset associated with the 
+     * "internal" variable name.
+     * 
+     * The "internal" name is the one used in DisMELS, not necessarily the name of
+     * the variable in the ROMS dataset. If the name was not found, a warning 
+     * message is displayed and returns a null.
      *
-     * @param name
+     * @param name - the "internal" name used in DisMELS
+     * 
      * @return - the name used in the ROMS dataset
      */
     public String getNameInROMSDataset(String name) {
         String varname = null;
-        AbstractVariableInfo mvi = mapAVI.get(name);
-        if (mvi != null) {
-            varname = mvi.getNameInROMSDataset();
+        AbstractVariableInfo avi = mapAVI.get(name);
+        if (avi != null) {
+            varname = avi.getNameInROMSDataset();
+        } else {
+//            JOptionPane.showMessageDialog(
+//                    null,
+//                    "No variable associated with internal name '"+name+"'.",
+//                    "AbstractVariablesInfo.getNameInROMSDataset: Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//            logger.warning("No variable associated with internal name '"+name+"'.");
         }
         return varname;
     }
@@ -102,13 +149,27 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
     }
 
     /**
-     * Returns the variable information associated with a variable name.
+     * Returns the variable information associated with an "internal" variable name.
+     * 
+     * The "internal" name is the one used in DisMELS, not necessarily the name of
+     * the variable in the ROMS dataset. If the name was not found, a warning 
+     * message is displayed and returns a null.
      *
-     * @param name = the variable's name
-     * @return -
+     * @param name - the variable's "internal" name
+     * 
+     * @return - the associated AbstractVariableInfo object
      */
     public AbstractVariableInfo getVariableInfo(String name){
-        return mapAVI.get(name);
+        AbstractVariableInfo avi = mapAVI.get(name);
+//        if (avi == null) {
+//            JOptionPane.showMessageDialog(
+//                    null,
+//                    "No variable associated with internal name '"+name+"'.",
+//                    "AbstractVariablesInfo.getVariableInfo: Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//            logger.warning("No variable associated with internal name '"+name+"'.");
+//        }
+        return avi;
     }
 
     /**
@@ -117,10 +178,10 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
      * @return 
      */
     public AbstractVariableInfo removeVariable(String name){
-        AbstractVariableInfo mvi = mapAVI.remove(name);
-        if (mvi!=null) mvi.removePropertyChangeListener(this);
-        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_REMOVED,mvi,null);
-        return mvi;
+        AbstractVariableInfo avi = mapAVI.remove(name);
+        if (avi!=null) avi.removePropertyChangeListener(this);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_REMOVED,avi,null);
+        return avi;
     }
 
 

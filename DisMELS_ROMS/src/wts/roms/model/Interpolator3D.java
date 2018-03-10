@@ -110,7 +110,7 @@ public class Interpolator3D extends Interpolator2D {
     
     /**
      * Interpolates a 3D model field (with appropriate mask) to the given position.
-     * @param -- pos position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
+     * @param pos -- position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
      * @param modelField -- name of model field to interpolate
      * @param interpType -- flag to interpolate values directly (=INTERP_VAL) or 
      *                      to interpolate "slopes" (=INTERP_SLOPE)
@@ -126,9 +126,9 @@ public class Interpolator3D extends Interpolator2D {
     
     /**
      * Interpolates a 3D model field (with appropriate mask) to the given position.
-     * @param -- pos position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
+     * @param pos -- position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
      * @param modelField -- name of model field to interpolate
-     * @param modelField -- name of mask field for interpolation
+     * @param maskField -- name of mask field for interpolation
      * @param interpType -- flag to interpolate values directly (=INTERP_VAL) or 
      *                      to interpolate "slopes" (=INTERP_SLOPE)
      * @return value of field at given position or NaN
@@ -154,7 +154,7 @@ public class Interpolator3D extends Interpolator2D {
             return v;
         }
         
-        MaskData  mkp = globalInfo.getGrid2D().getGridMask(maskField);
+        MaskData  mkp = (MaskData) globalInfo.getGrid2D().getGridField(maskField);
                   
         //interpolate field
         v = interpolateValue3D(pos,mdp,mkp,interpType);
@@ -174,7 +174,7 @@ public class Interpolator3D extends Interpolator2D {
      */
     public double interpolateValue3D(double[] pos, 
                                      ModelData mdp, 
-                                     ModelData maskp,
+                                     MaskData maskp,
                                      int interpType) throws ArrayIndexOutOfBoundsException {
         if (pos.length<3) {
             //use the function in Interpolator2D
@@ -711,6 +711,25 @@ public class Interpolator3D extends Interpolator2D {
         return s;
     }
 
+    /**
+     * Calculates the horizontal gradient of a model field and returns the results
+     * in physical units (i.e., [field units]/m), not grid units.
+     * 
+     * @param pos - position at which to calculate gradient
+     * @param modelField - "internal" DisMElS name of field to use
+     * @param interpType - interpolation type (use one of the Interpolator2D.INTERP_ constants)
+     * 
+     * @return 
+     */
+    @Override
+    public double[] calcHorizGradient(double[] pos, String modelField, int interpType){
+        ModelData md = pe.getField(modelField);
+        if (md==null) md = globalInfo.getGrid3D().getGridField(modelField);
+        String maskField = globalInfo.getMaskForField(modelField);
+        MaskData mk = (MaskData) globalInfo.getGrid3D().getGridField(maskField);
+        return calcHorizGradient(pos,md,mk,interpType);
+    }
+    
     /**
      * Returns true if position (in grid coordinates) is within the given tolerance
      * of the edge of the model grid (regarded as [1:Lm, 1:Mm]).

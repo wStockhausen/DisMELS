@@ -368,9 +368,9 @@ public class GlobalInfo implements PropertyChangeListener {
     }
     
     /**
-     * Gets the critical variables info for the ROMS model.
+     * Gets the optional variables info for the ROMS model.
      * 
-     * @return - the CVI 
+     * @return - the OVI 
      */
     public final OptionalModelVariablesInfo getOptionalModelVariablesInfo(){
         return oviModel;
@@ -418,22 +418,31 @@ public class GlobalInfo implements PropertyChangeListener {
      * Returns the name of the internal (DisMELS) mask field associated with the 
      * internal (DisMELS) field name, or null if no mask field is associated with the name.
      * 
-     * @param field - DisMELS (not ROMS file) field name
+     * @param fieldName - DisMELS (not ROMS file) field name
      * @return 
      */
-    public String getMaskForField(String field){
-        AbstractVariableInfo avi = oviModel.getVariableInfo(field);
+    public String getMaskForField(String fieldName){
+        AbstractVariableInfo avi = oviModel.getVariableInfo(fieldName);
         if (avi==null) {
-            avi = cviModel.getVariableInfo(field);
+            avi = cviModel.getVariableInfo(fieldName);
             if (avi==null){
-                avi = cviGrid2D.getVariableInfo(field);
+                avi = cviGrid2D.getVariableInfo(fieldName);
                 if (avi==null) {
-                    avi = oviModel.getVariableInfo(field);
-                    if (avi==null) return null;
+                    avi = oviModel.getVariableInfo(fieldName);
+                    if (avi==null) {
+                        JOptionPane.showMessageDialog(
+                                null,
+                                "No variable associated with internal name '"+fieldName+"'.",
+                                "AbstractVariablesInfo.GetDescription: Error!",
+                                JOptionPane.ERROR_MESSAGE);
+                        logger.warning("No variable associated with internal name '"+fieldName+"'.");
+                        return null;
+                    }
                 }
             }
         }
         String type = avi.getMaskType();
+        logger.info("ModelData "+fieldName+" has mask type "+type);
         if (type.equals(ModelTypes.MASKTYPE_NONE)) return null;
         return "mask_"+type;
     }

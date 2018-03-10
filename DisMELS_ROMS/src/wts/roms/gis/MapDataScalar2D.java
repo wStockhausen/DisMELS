@@ -42,6 +42,7 @@ import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
 import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator2D;
+import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
 import wts.roms.model.ModelGrid2D;
 
@@ -69,7 +70,10 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
         super();
         this.date = null;
         this.field = md;
-        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
+        String maskField = romsGI.getMaskForField(md.getName());
+        logger.info("maskField for "+md.getName()+" is "+maskField);
+        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -86,7 +90,10 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
         super();
         this.date = date;
         this.field = md;
-        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
+        String maskField = romsGI.getMaskForField(md.getName());
+        logger.info("maskField for "+md.getName()+" is "+maskField);
+        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }

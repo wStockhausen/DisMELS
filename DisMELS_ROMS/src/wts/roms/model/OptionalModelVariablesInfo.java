@@ -52,8 +52,13 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
     
     /**
      * Convenience method to construct an OptionalVariableInfo instance.
-     * @param name
-     * @param desc
+     * 
+     * The "name"given is the "internal" variable name used by DisMELS. By default,
+     * this name is also assumed to be the named used in the ROMS dataset(until
+     * changed by the user through the ROMSInfoEditor).
+     * 
+     * @param name - "internal" name used in DisMELS 
+     * @param desc - description of variable
      */
     
     @Override
@@ -66,9 +71,10 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
     }
     
     /**
-     * Returns the OptionalVariableInfo instance associated with the internal variable name.
+     * Removes the OptionalVariableInfo instance associated with the internal variable name.
      * 
      * @param name - internal variable name 
+     * 
      * @return 
      */
     @Override
@@ -80,12 +86,14 @@ public class OptionalModelVariablesInfo extends AbstractVariablesInfo {
     /**
      * Returns the variable information associated with a variable name.
      * 
-     * @param name = the variable's name
-     * @return -
+     * @param name - the "internal" name used to refer to the variable
+     * 
+     * @return - the OptionalVariableInfo object associated with the internal name
      */
     @Override
     public OptionalVariableInfo getVariableInfo(String name){
-        return (OptionalVariableInfo) super.getVariableInfo(name);
+        OptionalVariableInfo vi = (OptionalVariableInfo) super.getVariableInfo(name);
+        return vi;
     }
     
     /**

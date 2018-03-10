@@ -41,6 +41,7 @@ import wts.GIS.styling.ColorBarStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
 import wts.roms.model.Interpolator3D;
+import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
 import wts.roms.model.ModelGrid3D;
 
@@ -70,7 +71,10 @@ public class MapDataScalar3D extends AbstractMapDataScalar3D {
         this.field = md;
         this.i3d   = i3d;
         this.date  = date;
-        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
+        String maskField = romsGI.getMaskForField(md.getName());
+        logger.info("maskField for "+md.getName()+" is "+maskField);
+        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }

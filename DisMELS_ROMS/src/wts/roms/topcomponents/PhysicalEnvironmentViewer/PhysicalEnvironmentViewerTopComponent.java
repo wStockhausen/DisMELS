@@ -1632,7 +1632,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             String strHG = (String)jcbHGradField.getSelectedItem();
             CalendarIF cal = netcdfReader.getCalendar();
             cal.setTimeOffset((long)pe.getOceanTime());
-            ModelData md = i3d.getPhysicalEnvironment().getField(strHG);
+            ModelData md = pe.getField(strHG);
             MapDataInterfaceVectorBase hgmd;
             //remove last map layer
             if (horizGradLayer!=null) tcMapViewer.removeGISLayer(horizGradLayer);
@@ -1643,9 +1643,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             if (jpHGradDepthSelector.isVisible()) {
                 //ModelData is 3D
                 hgmd = new MapDataGradientHorizontal3D(md,i3d,cal.getDate());
-                logger.info("created hgmd");
+                logger.info("created hgmd3D");
                 if (horizGradStyle==null){
-                    logger.info("Creating a new horizontal gradient style");
+                    logger.info("--Creating a new horizontal gradient style");
                     FeatureType ft = hgmd.getFeatureType();
                     horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
                     hgCustomizer.setObject(horizGradStyle);
@@ -1653,20 +1653,22 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     wasNull = true;
                 }
                 hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
-                logger.info("set style on hgmd");
+                logger.info("--set style on hgmd3D");
                 if (jrbHGradK.isSelected()) {
-                    int k = ((Integer)jspHGradK.getValue()).intValue();
+                    int k = ((Integer)jspHGradK.getValue());
                     fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(k);
+                    logger.info("--created feature collection on layer "+k);
                 } else {
                     double d = Double.parseDouble(jtfHGradDepth.getText());
                     fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(-d);
+                    logger.info("--created feature collection at depth "+d);
                 }
             } else {
                 //ModelData is 2D
                 hgmd = new MapDataGradientHorizontal2D(md,cal.getDate());
-                logger.info("created hgmd");
+                logger.info("created hgmd2D");
                 if (horizGradStyle==null){
-                    logger.info("Creating a new horizontal gradient style");
+                    logger.info("--Creating a new horizontal gradient style");
                     FeatureType ft = hgmd.getFeatureType();
                     horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
                     hgCustomizer.setObject(horizGradStyle);
@@ -1674,8 +1676,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                     wasNull = true;
                 }
                 hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
-                logger.info("set style on hgmd");
+                logger.info("--set style on hgmd2D");
                 fc = ((MapDataGradientHorizontal2D)hgmd).createFeatureCollection();
+                logger.info("--created feature collection");
             }
             double mx = hgmd.getMax();
             NumberFormat frmt = NumberFormat.getNumberInstance();

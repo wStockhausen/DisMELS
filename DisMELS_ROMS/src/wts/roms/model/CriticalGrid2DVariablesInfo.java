@@ -10,12 +10,18 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- *
+ * Encapsulates a collection of CriticaModelVariable instances reflecting 
+ * 2D grid variables in a ROMS model grid file. 
+ * 
+ * These encompass 2D grid variables that are REQUIRED to be in all 
+ * ROMS model grids, with the assumption that that the name used in the 
+ * ROMS grid to refer to the variable is the same as the "internal" name used in DisMELS.
+ * 
  * @author William.Stockhausen
  */
 public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
     
-    /** */
+    /** class logger */
     private static final Logger logger = Logger.getLogger(CriticalGrid2DVariablesInfo.class.getName());
     /** version */
     public static final String version = "1.0";
@@ -55,10 +61,11 @@ public class CriticalGrid2DVariablesInfo extends AbstractVariablesInfo {
     
     /**
      * Convenience method to construct a CriticalVariableInfo instance.
-     * @param name
-     * @param isField
-     * @param mask
-     * @param description 
+     * 
+     * @param name - name of variable ("internal" and name in ROMS grid are same)
+     * @param isField - flag indicating whether this variable is a spatial field
+     * @param mask - name of mask field (use one of the ModelTypes.MASKTYPEs)
+     * @param description - description of field
      */
     private void constructCVI(String name, boolean isField, String mask, String description){
         logger.info("---Constructing cvi '"+name+"'");

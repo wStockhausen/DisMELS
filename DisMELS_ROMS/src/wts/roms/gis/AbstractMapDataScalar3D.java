@@ -11,7 +11,7 @@ import org.geotools.feature.FeatureType;
 import wts.models.utilities.DateTime;
 import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator3D;
-import wts.roms.model.ModelData;
+import wts.roms.model.MaskData;
 
 /**
  *
@@ -22,7 +22,7 @@ public abstract class AbstractMapDataScalar3D implements MapDataInterfaceScalar3
     protected GlobalInfo romsGI;
     
     protected Interpolator3D i3d;
-    protected ModelData mask = null;
+    protected MaskData mask = null;
     
     protected DateTime date = null;
     protected FeatureCollection fc = null;

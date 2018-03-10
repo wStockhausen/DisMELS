@@ -12,18 +12,22 @@ import java.util.Properties;
 /**
  * Abstract class to facilitate concrete VariableInfo classes.
  * 
- * Set methods throw PropertyChange events if newVal != oldVal.
+ * Set-type methods throw PropertyChange events if newVal != oldVal.
  * 
  * @author William.Stockhausen
  */
 public abstract class AbstractVariableInfo implements Serializable {
-    /**property: variable info has been checked */
+    /**property key: variable info has been checked */
     public static final String PROP_Checked = "checked";
-    /**property: name in ROMS dataset*/
+    /**property key: name used in ROMS dataset */
     public static final String PROP_NameInROMS  = "nameInROMSdataset";
+    /**property key: alias used internally in DisMELS to refer to field in ROMS dataset */
     public final static String PROP_Name        = "internalVariableName";
+    /**property key: flag indicating whether the variable represents a spatial field or not */
     public final static String PROP_Field       = "isSpatialField";
+    /**property key: flag indicating whether the variable represents a spatial field or not */
     public final static String PROP_MaskType    = "maskType";
+    /**property key: description of variable */
     public final static String PROP_Description = "description";
             
     /**flag indicating variable info has been checked */
@@ -34,7 +38,7 @@ public abstract class AbstractVariableInfo implements Serializable {
     protected boolean isField = false;
     /** the mask type to use for interpolation */
     protected String maskType = ModelTypes.MASKTYPE_NONE;
-    /** the internal name used in the code */
+    /** the internal name (alias) used in the code */
     protected String name = null;
     /** the variable name in the ROMS dataset */
     protected String romsName = null;

@@ -46,9 +46,9 @@ public class LagrangianParticleTracker {
     private Interpolator3D i3d;
     
     /* mask for u interpolation */
-    private ModelData umask;
+    private MaskData umask;
     /* mask for v interpolation */
-    private ModelData vmask;
+    private MaskData vmask;
     private final int L,M,N;
     private double dt;
     

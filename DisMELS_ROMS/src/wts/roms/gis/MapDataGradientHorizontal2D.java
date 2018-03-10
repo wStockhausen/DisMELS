@@ -36,6 +36,7 @@ import wts.GIS.styling.VectorStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
 import wts.roms.model.Interpolator2D;
+import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
 import wts.roms.model.ModelGrid2D;
 
@@ -49,7 +50,7 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
     /** style used to create and visualize vector field */
     private VectorStyle style = null;
     /** logger for the class */
-    private static final Logger logger = Logger.getLogger(MapDataVector3D.class.getName());
+    private static final Logger logger = Logger.getLogger(MapDataGradientHorizontal2D.class.getName());
 
     /**
      * Constructor for the scalar field encapsulated in a ModelData instance.
@@ -62,7 +63,10 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         super();
         this.date  = null;
         this.field = md;
-        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
+        String maskField = romsGI.getMaskForField(md.getName());
+        logger.info("maskField for "+md.getName()+" is "+maskField);
+        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -79,7 +83,10 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         super();
         this.date  = date;
         this.field = md;
-        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
+        String maskField = romsGI.getMaskForField(md.getName());
+        logger.info("maskField for "+md.getName()+" is "+maskField);
+        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }

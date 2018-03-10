@@ -36,6 +36,7 @@ import wts.GIS.styling.VectorStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
 import wts.roms.model.Interpolator3D;
+import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
 import wts.roms.model.ModelGrid3D;
 
@@ -49,7 +50,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
     /** style used to create and visualize vector field */
     private VectorStyle style = null;
     /** logger for the class */
-    private static final Logger logger = Logger.getLogger(MapDataVector3D.class.getName());
+    private static final Logger logger = Logger.getLogger(MapDataGradientHorizontal3D.class.getName());
 
     /**
      * Constructor for the scalar field encapsulated in a ModelData instance.
@@ -65,7 +66,10 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
         this.date = date;
         this.field = md;
         this.i3d   = i3d;
-        this.mask  = romsGI.getGrid2D().getGridMask(md.getName());
+        String maskField = romsGI.getMaskForField(md.getName());
+        logger.info("maskField for "+md.getName()+" is "+maskField);
+        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
     }
@@ -216,7 +220,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
                 }
             }
         }
-        double[] mm = FeatureCollectionUtilities.findMinMax("speed",fc);
+        double[] mm = FeatureCollectionUtilities.findMinMax("magnitude",fc);
         min = mm[0];
         max = mm[1];
         return fc;
@@ -282,7 +286,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
                 }
             }
         }
-        double[] mm = FeatureCollectionUtilities.findMinMax("speed",fc);
+        double[] mm = FeatureCollectionUtilities.findMinMax("magnitude",fc);
         min = mm[0];
         max = mm[1];
         return fc;
@@ -509,9 +513,9 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
                                 f = ftp.create(new Object[] {
                                         pt,
                                         sDate,
-                                        zSlice,
-                                        new Double(sVal),
-                                        new Double(Math.toDegrees(aVal))});
+                                        zSlice, 
+                                        sVal, 
+                                        Math.toDegrees(aVal)});
                                 fcp.add(f);
                             }
                         }

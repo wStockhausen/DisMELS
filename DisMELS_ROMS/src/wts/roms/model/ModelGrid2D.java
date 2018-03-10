@@ -30,8 +30,8 @@ public class ModelGrid2D {
     
     /** map of all ModelData fields */
     protected final HashMap<String,ModelData> mdMap = new HashMap<>(40);
-    /** map of all MaskData fields */
-    protected final HashMap<String,MaskData> mkMap = new HashMap<>(7);
+//    /** map of all MaskData fields */
+//    protected final HashMap<String,MaskData> mkMap = new HashMap<>(7);
     
     
     NetcdfReader nr;
@@ -106,11 +106,11 @@ public class ModelGrid2D {
             if (cvi.isSpatialField()) mdMap.put(key,null);//additional field
         }
         
-        //create mask map (mkMap)
-        mkMap.put("mask_rho",null);
-        mkMap.put("mask_psi",null);
-        mkMap.put("mask_u",null);
-        mkMap.put("mask_v",null);
+//        //create mask map (mkMap)
+//        mkMap.put("mask_rho",null);
+//        mkMap.put("mask_psi",null);
+//        mkMap.put("mask_u",null);
+//        mkMap.put("mask_v",null);
     }
     
     /**
@@ -322,16 +322,17 @@ public class ModelGrid2D {
         return mdMap.get(name);
     }
     
-    /**
-     * Returns a grid mask field based on the internal name (not the ROMS alias) provided.
-     * 
-     * @param name
-     * @return - the mask as a MaskData object (or null).
-     */
-    public MaskData getGridMask(String name) {
-        return mkMap.get(name);
-    }
-    
+//    /**
+//     * Returns a grid mask field based on the internal name (not the ROMS alias) provided.
+//     * 
+//     * @param name
+//     * @return - the mask as a MaskData object (or null).
+//     */
+//    public MaskData getGridMask(String name) {
+//        MaskData md = mkMap.get(name);
+//        return md;
+//    }
+//    
     public double getH(int xi, int eta) 
                             throws java.lang.ArrayIndexOutOfBoundsException {
         return h.getValue(xi,eta);
