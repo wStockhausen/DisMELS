@@ -566,7 +566,12 @@ public class ModelControllerBean extends Object
         try {
             cleanup();
             
-            if (randomNumberSeed>0) globalInfo.setRandomNmberGeneratorSeed(randomNumberSeed);
+            if (randomNumberSeed>0) {
+                globalInfo.setRandomNmberGeneratorSeed(randomNumberSeed);
+            } else {
+                globalInfo.setRandomNmberGeneratorSeed(System.currentTimeMillis());
+            }
+            logger.info("++Using random number seed "+globalInfo.getRandomNumberGenerator().getSeed());
             if (runForward) 
                 timeStep = Math.abs(timeStep);
             else 
@@ -1032,6 +1037,7 @@ public class ModelControllerBean extends Object
             }
 
             //create individuals
+            LHS_Factory.resetID(1);//reset id counter in case of multiple runs
             file = globalInfo.getWorkingDir()+file_InitialAttributes;
             logger.info("reading initial attributes from '"+file+"'");
             indivs = LHS_Factory.createLHSsFromCSV(file);

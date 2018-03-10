@@ -9,11 +9,34 @@ import java.util.ArrayList;
 /**
  * This class provides the base interface that all life stage attribute classes
  * must implement.
+ * 
+ * The standard attributes and associated keys defined here are (in order):
+ * <ul>
+ *  <li> typeName - "Life stage type name"
+ *  <li> id - "ID"
+ *  <li> parentID - "Parent ID"
+ *  <li> origID - "Original ID"
+ *  <li> startTime - "Start tie (s)"
+ *  <li> time - "Time (s)"
+ *  <li> horizType - "Horiz. position type"
+ *  <li> vertType - "Vert. position type"
+ *  <li> horizPos1 - "Horiz. position 1"
+ *  <li> horizPos2 - "Horiz. position 2"
+ *  <li> vertPos - "Vert. position"
+ *  <li> gridCellID - "Grid Cell ID"
+ *  <li> track - "track"
+ *  <li> active - "Active status"
+ *  <li> alive - "Alive status"
+ *  <li> age - "Age (d)"
+ *  <li> ageInStage - "Age in stage (d)"
+ *  <li> number - "Number of individuals"
+ * </ul>
  */
 public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     
     /** the number of life stage attributes defined in this interface */
     public static final int PROP_NumAtts = 18;
+    
     /** property key for the life stage type name of the individual */
     public static final String PROP_typeName   = "Life stage type name";
     /** property key for the life stage ID of the individual */
