@@ -13,3 +13,5 @@
 /DisMELS_ROMS/build/
 /build/
 /DisMELS_Framework/build/
+/DisMELS_NetCDFTools/build/
+/DisMELS_ModelsGenericCode/nbproject/private/
