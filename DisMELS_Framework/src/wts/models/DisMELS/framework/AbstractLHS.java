@@ -80,7 +80,6 @@ public abstract class AbstractLHS implements LifeStageInterface {
     //fields that reflect attribute values
     protected boolean active=false;
     protected boolean alive=true;
-    protected boolean attached=false;
     protected double  startTime=0;
     protected double  time=0;
     protected double  age=0;
