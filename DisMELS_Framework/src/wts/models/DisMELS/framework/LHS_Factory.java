@@ -162,8 +162,10 @@ public class LHS_Factory implements PropertyChangeListener {
         instance.pCSV.decodeLine(); //decode header line
         //now decode input data
         logger.info("Reading csv file for initial attributes.");
+        long ctr = 1;
         try {
             while ((strv = instance.pCSV.decodeLine()) != null) {
+                ctr++;
                 lhsName = strv[0];
                 aLHS = createAttributes(lhsName);
                 aLHS.setValues(strv);//throws null pointer if createAttributes failed
@@ -173,7 +175,7 @@ public class LHS_Factory implements PropertyChangeListener {
             instance.pCSV = null;//can set to null because we're past eof
         } catch (java.lang.NullPointerException ex) {
             String str = file.getAbsolutePath()+"\nTried to create attributes for LHS type "+
-                         lhsName+" from CSV.\nProblem CSV row was: \n'";
+                         lhsName+" from CSV.\nProblem CSV row was "+ctr+": \n'";
             for (int i=0;i<(strv.length-1);i++) str = str+strv[i]+", ";
             str = str+strv[strv.length-1]+"'";
             javax.swing.JOptionPane.showMessageDialog(
@@ -185,10 +187,10 @@ public class LHS_Factory implements PropertyChangeListener {
             throw ex;
        } catch (java.lang.NumberFormatException ex) {
             String str = file.getAbsolutePath()+"\nTried to create attributes for LHS type "+
-                         lhsName+" from CSV.\nProblem CSV row was: \n'";
+                         lhsName+" from CSV.\nProblem CSV row was"+ctr+": \n'";
             for (int i=0;i<(strv.length-1);i++) str = str+strv[i]+", ";
             str = str+strv[strv.length-1]+"'";
-            str = str+"\nNumber format error (check your values!";
+            str = str+"\nNumber format error (check your values or last line!)";
             javax.swing.JOptionPane.showMessageDialog(
                     null,
                     str,
@@ -573,18 +575,28 @@ public class LHS_Factory implements PropertyChangeListener {
         //String from call to getCSVHeader() or getCSVHeaderShortNames()
         instance.pCSV.decodeLine(); //decode header line
         //now decode input data
-        logger.info("Reading csv file for initial attributes.");
+        logger.info("Reading csv file to create LHSs from initial attributes.");
+        long ctr = 1;
         String lhsName;
         LifeStageInterface lhs;
         while ((strv = instance.pCSV.decodeLine()) != null) {
-            lhsName = strv[0];
-            lhs = createLHS(lhsName);
-            lhs.setAttributes(strv);
-            list.add(lhs);
+            ctr++;
+            try {
+                lhsName = strv[0];
+                lhs = createLHS(lhsName);
+                lhs.setAttributes(strv);
+                list.add(lhs);
+            } catch(java.lang.NullPointerException ex) {
+                logger.info("NullPointerException in createLHSsFromCSV on line "+ctr);
+                throw(ex);
+            } catch(java.lang.UnknownError ex) {
+                logger.info("UnknownError in createLHSsFromCSV on line "+ctr);
+                throw(ex);
+            }
         }
         instance.pCSV.close();
         instance.pCSV = null;//can set to null because we're past eof
-        logger.info("Finished reading csv file for initial attributes.");
+        logger.info("Finished reading csv file to create LHSs from initial attributes.");
         return list;
     }
     

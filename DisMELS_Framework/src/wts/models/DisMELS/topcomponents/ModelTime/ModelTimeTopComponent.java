@@ -6,19 +6,14 @@ package wts.models.DisMELS.topcomponents.ModelTime;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import wts.models.DisMELS.framework.GlobalInfo;
 import wts.models.utilities.CalendarIF;
-import wts.models.utilities.ModelCalendar;
-import wts.roms.model.NetcdfReader;
 
 /**
  * Top component which displays something.
@@ -53,22 +48,8 @@ public final class ModelTimeTopComponent extends TopComponent implements Propert
         initComponents();
         setName(Bundle.CTL_ModelTimeTopComponent());
         setToolTipText(Bundle.HINT_ModelTimeTopComponent());
-//        initComponents1();
     }
     
-//    private void initComponents1(){
-//        globalInfo = GlobalInfo.getInstance();
-//        if (ModelCalendar.getCalendar()==null){
-//            try {
-//                NetcdfReader netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
-//                CalendarIF cal = netcdfReader.getCalendar();
-//                ModelCalendar.setCalendar(cal);
-//            } catch (IOException ex) {
-//                Exceptions.printStackTrace(ex);
-//            }
-//        }
-//    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -149,10 +130,10 @@ public final class ModelTimeTopComponent extends TopComponent implements Propert
             if (doActions) {
                 System.out.println("Setting start time " + jtfROMSTime.getText());
                 double n = Double.parseDouble(jtfROMSTime.getText());
-                wts.roms.model.GlobalInfo giROMS = wts.roms.model.GlobalInfo.getInstance();
-                giROMS.getCalendar().setTimeOffset((long) n);
+                CalendarIF cal = wts.roms.model.GlobalInfo.getInstance().getCalendar();
+                cal.setTimeOffset((long) n);
                 doActions = false;
-                jtfDate.setText(giROMS.getCalendar().getDateTimeString());
+                jtfDate.setText(cal.getDateTimeString());
                 doActions = true;
             }
         } catch (NumberFormatException ex) {
@@ -176,8 +157,9 @@ public final class ModelTimeTopComponent extends TopComponent implements Propert
                 int hr = Integer.parseInt(strt[0]);
                 int mi = Integer.parseInt(strt[1]);
                 int sc = Integer.parseInt(strt[2]);
-                ModelCalendar.getCalendar().setDate(yr, mo, dy, hr, mi, sc);
-                double v = ModelCalendar.getCalendar().getTimeOffset();
+                CalendarIF cal = wts.roms.model.GlobalInfo.getInstance().getCalendar();
+                cal.setDate(yr, mo, dy, hr, mi, sc);
+                double v = cal.getTimeOffset();
                 jtfROMSTime.setText(Long.toString((long) v));
                 doActions = true;
             }
