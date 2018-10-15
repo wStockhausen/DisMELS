@@ -9,7 +9,6 @@ import org.geotools.ct.MathTransform;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureType;
 import wts.models.utilities.DateTime;
-import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.MaskData;
 
@@ -18,8 +17,6 @@ import wts.roms.model.MaskData;
  * @author William.Stockhausen
  */
 public abstract class AbstractMapDataScalar3D implements MapDataInterfaceScalar3D {
-    
-    protected GlobalInfo romsGI;
     
     protected Interpolator3D i3d;
     protected MaskData mask = null;
@@ -33,7 +30,6 @@ public abstract class AbstractMapDataScalar3D implements MapDataInterfaceScalar3
     protected MathTransform mt = null; //gt2.1-
 
     protected AbstractMapDataScalar3D() {
-        romsGI = GlobalInfo.getInstance();
     }
 
     /**

@@ -35,6 +35,7 @@ import wts.GIS.shapefile.ShapefileCreator;
 import wts.GIS.styling.VectorStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
@@ -66,9 +67,9 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
         this.date = date;
         this.field = md;
         this.i3d   = i3d;
-        String maskField = romsGI.getMaskForField(md.getName());
+        String maskField = GlobalInfo.getInstance().getMaskForField(md.getName());
         logger.info("maskField for "+md.getName()+" is "+maskField);
-        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        this.mask  = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
         if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
@@ -178,7 +179,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
     public FeatureCollection createFeatureCollection(int k)
             throws SchemaException, IllegalAttributeException, TransformException {       
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -237,7 +238,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
     public FeatureCollection createFeatureCollection(double z)
             throws SchemaException, IllegalAttributeException, TransformException {
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -318,7 +319,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,"uv");
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -395,7 +396,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
 
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -474,7 +475,7 @@ public class MapDataGradientHorizontal3D extends AbstractMapDataScalar3D impleme
 
         gf = new GeometryFactory();
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;

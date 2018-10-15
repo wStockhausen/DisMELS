@@ -35,6 +35,7 @@ import wts.GIS.shapefile.ShapefileCreator;
 import wts.GIS.styling.VectorStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator2D;
 import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
@@ -63,9 +64,9 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         super();
         this.date  = null;
         this.field = md;
-        String maskField = romsGI.getMaskForField(md.getName());
+        String maskField = GlobalInfo.getInstance().getMaskForField(md.getName());
         logger.info("maskField for "+md.getName()+" is "+maskField);
-        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        this.mask  = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
         if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
@@ -83,9 +84,9 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         super();
         this.date  = date;
         this.field = md;
-        String maskField = romsGI.getMaskForField(md.getName());
+        String maskField = GlobalInfo.getInstance().getMaskForField(md.getName());
         logger.info("maskField for "+md.getName()+" is "+maskField);
-        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        this.mask  = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
         if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
@@ -198,8 +199,8 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         //@TODO: implement horizontal grdaient calculations
         gf = new GeometryFactory();
 
-        ModelGrid2D grid = romsGI.getGrid2D();
-        Interpolator2D i2d = romsGI.getInterpolator();
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid2D();
+        Interpolator2D i2d = GlobalInfo.getInstance().getInterpolator();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -277,8 +278,8 @@ public class MapDataGradientHorizontal2D extends AbstractMapDataScalar2D impleme
         //Create the mask features and add them to the feature collection
         gf = new GeometryFactory();
 
-        ModelGrid2D grid = romsGI.getGrid2D();
-        Interpolator2D i2d = romsGI.getInterpolator();
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid2D();
+        Interpolator2D i2d = GlobalInfo.getInstance().getInterpolator();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;

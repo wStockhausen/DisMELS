@@ -63,7 +63,7 @@ public class Interpolator3D extends Interpolator2D {
      */
     @Override
     public ModelGrid3D getGrid(){
-        return globalInfo.getGrid3D();
+        return GlobalInfo.getInstance().getGrid3D();
     }
 
     /**
@@ -154,7 +154,7 @@ public class Interpolator3D extends Interpolator2D {
             return v;
         }
         
-        MaskData  mkp = (MaskData) globalInfo.getGrid2D().getGridField(maskField);
+        MaskData  mkp = (MaskData) GlobalInfo.getInstance().getGrid2D().getGridField(maskField);
                   
         //interpolate field
         v = interpolateValue3D(pos,mdp,mkp,interpType);
@@ -226,11 +226,11 @@ public class Interpolator3D extends Interpolator2D {
         Mm = md.getMm();
         //interpolate value using appropriate grid
         if (md.getHorzPosType()==ModelTypes.HORZ_POSTYPE_RHO) 
-            {interpOnRhoColumns(globalInfo.getGrid3D());} else
+            {interpOnRhoColumns(GlobalInfo.getInstance().getGrid3D());} else
         if (md.getHorzPosType()==ModelTypes.HORZ_POSTYPE_U)   
-            {interpOnUColumns(globalInfo.getGrid3D());} else
+            {interpOnUColumns(GlobalInfo.getInstance().getGrid3D());} else
         if (md.getHorzPosType()==ModelTypes.HORZ_POSTYPE_V)   
-            {interpOnVColumns(globalInfo.getGrid3D());} 
+            {interpOnVColumns(GlobalInfo.getInstance().getGrid3D());} 
             
 //        if (debug && halo) debug();
         
@@ -414,6 +414,7 @@ public class Interpolator3D extends Interpolator2D {
         }
         if (Double.isNaN(v)) {
             logger.info("Interpolator3D: interpolated U-cell NaN value for field "+md.getName()+"\n"
+                              +"\txPos = "+xPos+", yPos = "+yPos+", zPos = "+zPos+"\n"
                               +"\tp1 = "+p1+", q1 = "+q1+", r1 = "+r1+"\n"
                               +"\tp2 = "+p2+", q2 = "+q2+", r2 = "+r2+"\n"
                               +"\tmask was "+m12+", "+m22+"\n"
@@ -494,6 +495,7 @@ public class Interpolator3D extends Interpolator2D {
 
         if (Double.isNaN(v)) {
             logger.info("Interpolator3D: interpolated V-cell NaN value for field "+md.getName()+"\n"
+                              +"\txPos = "+xPos+", yPos = "+yPos+", zPos = "+zPos+"\n"
                               +"\tp1 = "+p1+", q1 = "+q1+", r1 = "+r1+"\n"
                               +"\tp2 = "+p2+", q2 = "+q2+", r2 = "+r2+"\n"
                               +"\tmask was "+m12+", "+m22+"\n"
@@ -523,7 +525,7 @@ public class Interpolator3D extends Interpolator2D {
      *@return K--vertical grid corrdinate (0<=K<=N; if z<-Bathymetric Depth or z>Sea Surface Height, K = NaN)
      */
     public double calcKfromZ(double I, double J, double z) throws ArrayIndexOutOfBoundsException {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double K = -1;
         int N = grid.getN();
         double[] pos = new double[] {I,J};
@@ -552,7 +554,7 @@ public class Interpolator3D extends Interpolator2D {
      *@param K--vertical grid position.
      */
     public double calcZfromK(double I, double J, double K) throws ArrayIndexOutOfBoundsException {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double z = 0;
         double[] pos = new double[] {I,J};
         double bd = interpolateBathymetricDepth(pos);
@@ -606,7 +608,7 @@ public class Interpolator3D extends Interpolator2D {
         //initialize values
         initializeParameters();
         
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         N = grid.getN();
         K = (int) Math.floor(pos[2]);
         k2 = Math.min(Math.max(K+1,0),N);
@@ -694,19 +696,19 @@ public class Interpolator3D extends Interpolator2D {
    }
 
     public double interpolateTemperature(double[] pos) throws ArrayIndexOutOfBoundsException {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double t = interpolateValue3D(pos,pe.getField("temp"),grid.mask_rho,INTERP_VAL);
         return t;
     }
 
     public double interpolateSalinity(double[] pos) throws ArrayIndexOutOfBoundsException {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double s = interpolateValue3D(pos,pe.getField("salt"),grid.mask_rho,INTERP_VAL);
         return s;
     }
 
     public double interpolateSSH(double[] pos) throws ArrayIndexOutOfBoundsException {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double s = interpolateValue2D(pos,pe.getField("zeta"),grid.mask_rho,INTERP_VAL);
         return s;
     }
@@ -724,9 +726,9 @@ public class Interpolator3D extends Interpolator2D {
     @Override
     public double[] calcHorizGradient(double[] pos, String modelField, int interpType){
         ModelData md = pe.getField(modelField);
-        if (md==null) md = globalInfo.getGrid3D().getGridField(modelField);
-        String maskField = globalInfo.getMaskForField(modelField);
-        MaskData mk = (MaskData) globalInfo.getGrid3D().getGridField(maskField);
+        if (md==null) md = GlobalInfo.getInstance().getGrid3D().getGridField(modelField);
+        String maskField = GlobalInfo.getInstance().getMaskForField(modelField);
+        MaskData mk = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
         return calcHorizGradient(pos,md,mk,interpType);
     }
     
@@ -740,7 +742,7 @@ public class Interpolator3D extends Interpolator2D {
      * @return            - true or false
      */
     public boolean isAtGridEdge(double[] pos, double tolGridEdge) {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         return ((pos[0]<tolGridEdge)||((grid.getLm()-tolGridEdge)<pos[0])||(pos[1]<tolGridEdge)||((grid.getMm()-tolGridEdge)<pos[1]));
     }
 
@@ -753,7 +755,7 @@ public class Interpolator3D extends Interpolator2D {
      * @return            - grid cell id string
      */
     public String getGridCellID(double[] pos, double tolGridEdge) {
-        ModelGrid3D grid = globalInfo.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         
         String gx = ""+Math.round(pos[0]);
         if ((pos[0]<tolGridEdge)) gx = "-0";

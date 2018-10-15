@@ -442,7 +442,7 @@ public class GlobalInfo implements PropertyChangeListener {
             }
         }
         String type = avi.getMaskType();
-        logger.info("ModelData "+fieldName+" has mask type "+type);
+        //logger.info("ModelData "+fieldName+" has mask type "+type);
         if (type.equals(ModelTypes.MASKTYPE_NONE)) return null;
         return "mask_"+type;
     }

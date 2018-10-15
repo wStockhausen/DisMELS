@@ -14,7 +14,6 @@ import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureType;
 import wts.GIS.shapefile.ShapefileCreator;
 import wts.models.utilities.DateTime;
-import wts.roms.model.GlobalInfo;
 import wts.roms.model.ModelData;
 
 /**
@@ -23,7 +22,6 @@ import wts.roms.model.ModelData;
  */
 public abstract class AbstractMapDataScalar2D implements MapDataInterfaceScalar2D {
     
-    protected GlobalInfo romsGI;
     protected ModelData mask = null;
     
     protected DateTime date = null;
@@ -35,7 +33,6 @@ public abstract class AbstractMapDataScalar2D implements MapDataInterfaceScalar2
     protected MathTransform mt = null; //gt2.1-
 
     protected AbstractMapDataScalar2D() {
-        romsGI = GlobalInfo.getInstance();
     }
 
     /**

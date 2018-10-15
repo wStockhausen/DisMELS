@@ -41,7 +41,6 @@ import wts.GIS.styling.ColorBarStyle;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
 import wts.roms.model.GlobalInfo;
-import wts.roms.model.Interpolator2D;
 import wts.roms.model.MaskData;
 import wts.roms.model.ModelData;
 import wts.roms.model.ModelGrid2D;
@@ -70,9 +69,9 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
         super();
         this.date = null;
         this.field = md;
-        String maskField = romsGI.getMaskForField(md.getName());
+        String maskField = GlobalInfo.getInstance().getMaskForField(md.getName());
         logger.info("maskField for "+md.getName()+" is "+maskField);
-        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        this.mask  = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
         if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
@@ -90,9 +89,9 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
         super();
         this.date = date;
         this.field = md;
-        String maskField = romsGI.getMaskForField(md.getName());
+        String maskField = GlobalInfo.getInstance().getMaskForField(md.getName());
         logger.info("maskField for "+md.getName()+" is "+maskField);
-        this.mask  = (MaskData) romsGI.getGrid3D().getGridField(maskField);
+        this.mask  = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
         if (this.mask == null) logger.info("--mask field not found!");
         this.fc    = FeatureCollections.newCollection();
         initialize();
@@ -143,7 +142,7 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
     @Override
     public FeatureCollection createFeatureCollection()
             throws SchemaException, IllegalAttributeException, TransformException {
-        ModelGrid2D grid = romsGI.getGrid2D();
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid2D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -189,7 +188,7 @@ public class MapDataScalar2D extends AbstractMapDataScalar2D {
      */
     private FeatureCollection createFeatureCollection1()
             throws SchemaException, IllegalAttributeException, TransformException {
-        ModelGrid2D grid = romsGI.getGrid2D();
+        ModelGrid2D grid = GlobalInfo.getInstance().getGrid2D();
         int nf = 0;
         String sDate = date.getDateTimeString();
         logger.info("Creating export FeatureCollection for date = "+sDate);

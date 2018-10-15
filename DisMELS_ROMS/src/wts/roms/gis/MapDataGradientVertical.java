@@ -35,6 +35,7 @@ import org.opengis.referencing.operation.TransformException;
 import wts.GIS.shapefile.ShapefileCreator;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.ModelData;
 import wts.roms.model.ModelGrid3D;
@@ -72,7 +73,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
     public FeatureCollection createFeatureCollection(int k)
             throws SchemaException, IllegalAttributeException, TransformException {       
         
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -126,7 +127,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
     @Override
     public FeatureCollection createFeatureCollection(double z)
             throws SchemaException, IllegalAttributeException, TransformException {
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -213,7 +214,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,field.getName());
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
@@ -289,7 +290,7 @@ public class MapDataGradientVertical extends MapDataScalar3D {
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,field.getName());
 
-        ModelGrid3D grid = romsGI.getGrid3D();
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;

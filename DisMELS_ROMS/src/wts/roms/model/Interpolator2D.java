@@ -24,8 +24,6 @@ public class Interpolator2D {
     /** flag to interpolate slopes */
     public static int INTERP_SLOPE = 1;
 
-    GlobalInfo globalInfo;
-    
     ModelData md;
     ModelData mask;
     
@@ -50,7 +48,6 @@ public class Interpolator2D {
      * Creates a new instance of Interpolator2D 
      */
     protected Interpolator2D() {
-        globalInfo = GlobalInfo.getInstance();
     }
     
     /**
@@ -59,7 +56,7 @@ public class Interpolator2D {
      * @return -- ModelGrid2D object
      */
     public ModelGrid2D getGrid(){
-        return globalInfo.getGrid2D();
+        return GlobalInfo.getInstance().getGrid2D();
     }
     
     protected void initializeParameters() {
