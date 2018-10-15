@@ -16,7 +16,6 @@ import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHS;
 import wts.models.DisMELS.framework.*;
 import wts.models.utilities.CalendarIF;
 import wts.models.utilities.DateTimeFunctions;
-import wts.models.utilities.ModelCalendar;
 import wts.roms.model.LagrangianParticle;
 
 
@@ -575,7 +574,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
      */
     private void initializeTimedependentVariables() {
         //temporarily set calendar time to variable time
-        CalendarIF cal = ModelCalendar.getCalendar();
+        CalendarIF cal = GlobalInfo.getInstance().getCalendar();
         long modTime = cal.getTimeOffset();
         cal.setTimeOffset((long) time);
         dayOfYear = cal.getYearDay();
@@ -676,7 +675,8 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
     @Override
     public void step(double dt) throws ArrayIndexOutOfBoundsException {
         //determine daytime/nighttime for vertical migration & calc indiv. W
-        dayOfYear = ModelCalendar.getCalendar().getYearDay();
+        CalendarIF cal = GlobalInfo.getInstance().getCalendar();
+        dayOfYear = cal.getYearDay();
         isSpawningSeason = DateTimeFunctions.isBetweenDOY(dayOfYear,firstDayOfSpawning,firstDayOfSpawning+lengthOfSpawningSeason);
         if (isSpawningSeason) {
             elapsedTimeToSpawn = elapsedTimeToSpawn-dt;
