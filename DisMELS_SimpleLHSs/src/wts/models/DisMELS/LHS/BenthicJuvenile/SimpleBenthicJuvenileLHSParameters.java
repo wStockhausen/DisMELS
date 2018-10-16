@@ -11,9 +11,7 @@ package wts.models.DisMELS.LHS.BenthicJuvenile;
 
 import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
-import java.util.Set;
 import org.openide.util.lookup.ServiceProvider;
-import wts.models.DisMELS.framework.IBMFunctions.IBMParameter;
 import wts.models.DisMELS.framework.IBMFunctions.IBMParameterBoolean;
 import wts.models.DisMELS.framework.IBMFunctions.IBMParameterDouble;
 
@@ -64,7 +62,7 @@ public class SimpleBenthicJuvenileLHSParameters extends wts.models.DisMELS.frame
      */
     public SimpleBenthicJuvenileLHSParameters() {
         super("");
-        createMapToValues();
+        createMapToParameters();
         propertySupport =  new PropertyChangeSupport(this);
     }
     
@@ -73,7 +71,7 @@ public class SimpleBenthicJuvenileLHSParameters extends wts.models.DisMELS.frame
      */
     public SimpleBenthicJuvenileLHSParameters(String typeName) {
         super(typeName);
-        createMapToValues();
+        createMapToParameters();
         propertySupport =  new PropertyChangeSupport(this);
     }
 
@@ -129,7 +127,7 @@ public class SimpleBenthicJuvenileLHSParameters extends wts.models.DisMELS.frame
      * This creates the basic parameters mapParams.
      */
     @Override
-    protected void createMapToValues() {
+    protected void createMapToParameters() {
         mapParams = new HashMap<>();
         mapParams.put(PROP_isSuperIndividual,     new IBMParameterBoolean(PROP_isSuperIndividual,PROP_isSuperIndividual,false));
         mapParams.put(PROP_horizDiffusion,        new IBMParameterDouble(PROP_horizDiffusion,PROP_horizDiffusion,new Double(0)));
@@ -203,58 +201,10 @@ public class SimpleBenthicJuvenileLHSParameters extends wts.models.DisMELS.frame
     }
 
     /**
-     * Gets the parameter keys.
-     * 
-     * @return - keys as String array.
+     * This function does nothing because this class does not use IBMFunctions.
      */
     @Override
-    public String[] getKeys(){
-        return keys;
-    }
-    
-    /**
-     * Sets parameter value identified by the key and fires a property change.
-     * @param key   - key identifying attribute to be set
-     * @param value - value to set
-     */
-    @Override
-    public void setValue(String key, Object value) {
-        if (mapParams.containsKey(key)) {
-            IBMParameter p = mapParams.get(key);
-            Object old = p.getValue();
-            p.setValue(value);
-            propertySupport.firePropertyChange(key,old,value);
-        }
-    }
-
-    /**
-     * Adds a PropertyChangeListener to the listener list.
-     * @param l The listener to add.
-     */
-    public void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
-        propertySupport.addPropertyChangeListener(l);
-    }
-
-    /**
-     * Removes a PropertyChangeListener from the listener list.
-     * @param l The listener to remove.
-     */
-    public void removePropertyChangeListener(java.beans.PropertyChangeListener l) {
-        propertySupport.removePropertyChangeListener(l);
-    }
-
-    @Override
-    protected void createMapToSelectedFunctions() {
+    protected void createMapToPotentialFunctions() {
         //do nothing
-    }
-
-    @Override
-    public Set<String> getIBMFunctionNamesByCategory(String cat) {
-        return mapOfSelectedFunctionsByCategory.keySet();
-    }
-
-    @Override
-    public Set<String> getIBMParameterNames() {
-        return mapParams.keySet();
     }
 }
