@@ -9,6 +9,7 @@
 
 package wts.models.DisMELS.framework;
 
+import java.beans.PropertyChangeSupport;
 import java.util.*;
 import java.util.logging.Logger;
 import wts.models.DisMELS.framework.IBMFunctions.IBMFunctionInterface;
@@ -22,22 +23,27 @@ public abstract class AbstractLHSParameters implements LifeStageParametersInterf
     
     /** provides an empty set for subclasses to return when not supporting IBM parameters or functions */
     private static final Set<String> emptySet = new HashSet<>(1);
-    
+    /** class logger */
     private static final Logger logger = Logger.getLogger(AbstractLHSParameters.class.getName());
     
     /* LHS type name assigned to the instance. (Serialized)*/
     protected String typeName = null;    
     /* map of IBM parameters by parameter name. (Serialized) */
     protected Map<String,IBMParameter> mapParams = null;
-    /** map of IBMFunctions within categories. (Serialized) */
+    /** map of maps of IBMFunctions within each category. (Serialized) */
     protected Map<String,Map<String,IBMFunctionInterface>> mapOfPotentialFunctionsByCategory = null;
     /* map of selected IBM functions by category name. (Serialized) */
     protected Map<String,IBMFunctionInterface> mapOfSelectedFunctionsByCategory = null;
     
+    /** Utility field used by bound properties.  */
+    protected transient PropertyChangeSupport propertySupport;
+    
     /** 
      * Assigns the LHS type name to the constructed subclass instance.
-     * Subclasses should call this constructor with a valid LHS type name from
-     * all constructors to set the type name.
+     * 
+     * NOTE: use this constructor when instantiating mapParams, 
+     * mapOfPotentialFunctionsByCategory, and mapOfSelectedFunctionsByCategory in
+     * a subclass's own constructor.
      * 
      *@param typeName - the LHS type name as a String.
      */
@@ -45,6 +51,16 @@ public abstract class AbstractLHSParameters implements LifeStageParametersInterf
         this.typeName = typeName;
     }
     
+    /**
+     * Assigns the LHS type name to the constructed subclass instance and sets
+     * the initial sizes for the IBM parameters (mapParams), potential functions by
+     * category (mapOfPotentialFunctionsByCategory), and selected functions by
+     * category (mapOfSelectedFunctionsByCategory) maps.
+     * 
+     * @param typeName - the LHS type name as a String.
+     * @param numParams - the number of IBMParameters to be defined
+     * @param numFunctionCats - the number of function categories to be defined
+     */
     protected AbstractLHSParameters(String typeName, int numParams, int numFunctionCats){
         this.typeName = typeName;
         mapParams = new LinkedHashMap<>(2*numParams);
@@ -53,41 +69,230 @@ public abstract class AbstractLHSParameters implements LifeStageParametersInterf
     }
 
     /**
-     *  Creates an instance of a subclass.
+     *  ABSTRACT METHOD: This method should create and return instance of the subclass it
+     * is called on.
      *
-     *@param strv - array of values (as Strings) used to create the new instance. 
+     * @param strv - array of Strings used to create the new instance. 
+     * 
+     * @return  a new instance of the implementing class based on array of Strings.
      */
     @Override
     public abstract LifeStageParametersInterface createInstance(final String[] strv);
      
     /**
-     * This method should create the Map, mapParams, to the IBMParameters incorporated
+     * This method should fill in mapParams with the IBMParameters incorporated
      * in the life stage.
      * 
-     * The DEFAULT IMPLEMENTATION is to throw an UnsupportedOperationException.
+     * Implementing classes that don't use IBMParameters should throw an UnsupportedOperationException.
      * 
-     * Subclasses using IBMParameters should override this method to create the
-     * mapParams Map object.
+     * Subclasses defining IBMParameters should override this method to create the
+     * Map &lt String,IBMParameters &gt mapParams object.
      */
-    protected void createMapToValues(){
-        throw new UnsupportedOperationException("Not supported yet.");    
-    }
+    protected abstract void createMapToParameters();
      
     /**
-     * This method should create the Map, mapSelectedFunctions, to the selected 
-     * IBMFunctions by category incorporated in the life stage. 
+     * This method should create the Map &lt String, &lt String,IBMFunctionInterface &gt &gt
+     * mapOfPotentialFunctionsByCategory, to the IBMFunctions incorporated in the life stage,
+     * by category.
      * 
-     * The DEFAULT IMPLEMENTATION is to throw an UnsupportedOperationException.
+     * Implementing classes that don't use IBMFunctions should throw an UnsupportedOperationException.
      * 
      * Subclasses using IBMFunctions should override this method to create the
-     * mapSelectedFunctions Map object.
+     * mapOfPotentialFunctionsByCategory object.
      */
-    protected void createMapToSelectedFunctions(){
-        throw new UnsupportedOperationException("Not supported yet.");    
+    protected abstract void createMapToPotentialFunctions();
+    
+    /**
+     * Adds a PropertyChangeListener to the listener list.
+     * @param l The listener to add.
+     */
+    public void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
+        propertySupport.addPropertyChangeListener(l);
+    }
+
+    /**
+     * Removes a PropertyChangeListener from the listener list.
+     * @param l The listener to remove.
+     */
+    public void removePropertyChangeListener(java.beans.PropertyChangeListener l) {
+        propertySupport.removePropertyChangeListener(l);
+    }
+
+    /**
+     * Sets the LHS type name for the instance.
+     * 
+     * @param name 
+     */
+    @Override
+    public void setTypeName(String name){
+        typeName = name;
     }
     
+    /**
+     * Returns the unique names (keys) associated with the IBM parameters used in the 
+     * life stage (or an empty set if no IBMParamters are defined).
+     * 
+     * @return - the set of parameter names (keys)
+     */
+    @Override
+    public Set<String> getIBMParameterKeys(){
+        if (mapParams==null) return emptySet;
+        return mapParams.keySet();
+    }
+    
+    /**
+     * Returns the IBMParameter object corresponding to the name.
+     * 
+     * This method DOES NOT need to be overridden by subclasses (but can be).
+     * 
+     * @param name - name associated with the IBM parameter
+     * 
+     * @return     - the IBM parameter instance
+     */
+    @Override
+    public IBMParameter getIBMParameter(String name){
+        return mapParams.get(name);
+    }
+    
+    /**
+     * Returns the set of function categories.
+     * 
+     * This method throws an UnsupportedOperationException if IBMFunctions are
+     * not used by the implementing class.
+     * 
+     * @return   - the function categories, as a Set<String>
+     */
+    @Override
+    public Set<String> getIBMFunctionCategories(){
+        if (mapOfPotentialFunctionsByCategory==null)
+            throw new UnsupportedOperationException("Not supported yet.");
+        return mapOfPotentialFunctionsByCategory.keySet();
+    }
+    
+    /**
+     * Returns the unique names (keys) associated with the IBM functions used in the
+     * life stage for the given category (cat).
+     * 
+     * This method returns an empty Set if IBMFunctions are not used by the implementing class,
+     * or if the category identified by cat is not defined.
+     * 
+     * @param cat the function category
+     * 
+     * @return - the set of function names (keys) defined for the category
+     */
+    @Override
+    public Set<String> getIBMFunctionKeysByCategory(String cat){
+        if (mapOfPotentialFunctionsByCategory==null) 
+             throw new UnsupportedOperationException("Not supported yet.");    
+        if (mapOfPotentialFunctionsByCategory.get(cat)==null) return emptySet;
+        return mapOfPotentialFunctionsByCategory.get(cat).keySet();
+    }
+    
+    /**
+     * Returns the IBMFunctionInterface object corresponding to the 
+     * given category and key (function name) identifying the function within the category.
+     * 
+     * NOTE: This method throws an UnsupportedOperationException if IBMFunctions are
+     * not used by the implementing class.
+     * 
+     * @param cat  - usage category as String
+     * @param key - key (function name) identifying function within the category
+     * 
+     * @return   - the corresponding IBMFunction, or null if the category or key is not defined
+     */
+    @Override
+    public IBMFunctionInterface getIBMFunction(String cat, String key){
+        if (mapOfPotentialFunctionsByCategory==null)
+            throw new UnsupportedOperationException("Not supported yet.");
+        if (mapOfPotentialFunctionsByCategory.containsKey(cat)){
+            return mapOfPotentialFunctionsByCategory.get(cat).get(key);
+        }
+        return null;
+    }
+    
+    /**
+     * Sets the IBMFunctionInterface object corresponding to the 
+     * given category and key (function name).
+     * 
+     * This method throws an UnsupportedOperationException if IBMFunctions are
+     * not used by the implementing class.
+     * 
+     * @param cat  - usage category 
+     * @param key - the key (function name) identifying the function with the category
+     * @param f    - the function to set
+     * 
+     * @return     - true if successful, false if the category or key is invalid
+     */
+    @Override
+    public boolean setIBMFunction(String cat, String key, IBMFunctionInterface f){
+        if (mapOfPotentialFunctionsByCategory==null)
+            throw new UnsupportedOperationException("Not supported yet.");
+        if (mapOfPotentialFunctionsByCategory.containsKey(cat)){
+            if (mapOfPotentialFunctionsByCategory.get(cat).containsKey(key)){
+                mapOfPotentialFunctionsByCategory.get(cat).put(key,f);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Returns the "selected" ModelFunctionInterface object corresponding to the category 
+     * associated with input "cat".
+     * 
+     * @param cat - name of the function category
+     * 
+     * @return   - the "selected" model function
+     */
+    @Override
+    public IBMFunctionInterface getSelectedIBMFunctionForCategory(String cat){
+         if (mapOfPotentialFunctionsByCategory==null) 
+             throw new UnsupportedOperationException("Not supported yet.");    
+        logger.info("Getting selected IBM parameter function for category '"+cat+"'");
+        IBMFunctionInterface f = mapOfSelectedFunctionsByCategory.get(cat);
+        if (f==null){
+            logger.info("--No selected IBM parameter function found for category '"+cat+"'");
+            logger.info("----Available functions are:");
+            Map<String,IBMFunctionInterface> mapOfPotentialFunctions = mapOfPotentialFunctionsByCategory.get(cat);
+            for (String key: mapOfPotentialFunctions.keySet()) logger.info("------'"+key+"'.");
+            String key = mapOfPotentialFunctions.keySet().iterator().next();
+            logger.info("----Selected function set to '"+key+"'.");
+            f = mapOfPotentialFunctions.get(key);
+            mapOfSelectedFunctionsByCategory.put(cat, f);
+        } else {
+            logger.info("----Found selected function '"+f.getFunctionName()+"'.");
+        }
+            logger.info("--Selected function is '"+f.getFunctionName()+"'.");
+        logger.info("Finished getting selected IBM parameter function for category '"+cat+"'");
+        return f;
+    }
+    
+    /**
+     * Sets the selected IBMFunction to use for a given function category.
+     * 
+     * This method throws an UnsupportedOperationException if IBMFunctions have
+     * not been defined.
+     * 
+     * @param cat - String identifying function category
+     * @param key - String identifying function within category to select
+     * 
+     * @return true if the identified function has been selected.
+     */
+    @Override
+    public boolean setSelectedIBMFunctionForCategory(String cat, String key){
+        if (mapOfPotentialFunctionsByCategory==null) 
+            throw new UnsupportedOperationException("Not supported yet.");
+        boolean res = false;
+        if (mapOfPotentialFunctionsByCategory.containsKey(cat)){
+            IBMFunctionInterface ifi = mapOfPotentialFunctionsByCategory.get(cat).get(key);
+            mapOfSelectedFunctionsByCategory.put(cat,ifi);
+            res = (ifi!=null);
+        }
+        return res;
+    }
+       
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//      The following are implemented to extend LifeStageParametersInterface
+//      The following are implemented to extend LifeStageDataInterface
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     /**
@@ -129,21 +334,60 @@ public abstract class AbstractLHSParameters implements LifeStageParametersInterf
      */
     @Override
     public String getTypeName() {return typeName;}
-       
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//      The following are implemented to extend ParamMapIF
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+    
     /**
-     * Gets the parameter keys.
-     * This method is abstract to force dispatch of method to overriding method
-     * in subclasses.
-     * 
-     * @return - keys as String array.
+     * Sets parameter value identified by the key and fires a property change.
+     * @param key   - key identifying parameter to be set
+     * @param value - value to set
      */
     @Override
-    public abstract String[] getKeys();
+    public void setValue(String key, Object value) {
+        if (mapParams.containsKey(key)) {
+            IBMParameter p = mapParams.get(key);
+            Object old = p.getValue();
+            p.setValue(value);
+            propertySupport.firePropertyChange(key,old,value);
+        }
+    }
     
+    @Override
+    public void setValue(String key, double value) {
+        setValue(key,new Double(value));
+    }
+    
+    @Override
+    public void setValue(String key, float value) {
+        setValue(key,new Float(value));
+    }
+    
+    @Override
+    public void setValue(String key,int value) {
+        setValue(key,new Integer(value));
+    }
+    
+    @Override
+    public void setValue(String key, long value) {
+        setValue(key,new Long(value));
+    }
+    
+    /**
+     * Gets the keys to the IBMParameters.
+     * 
+     * @return - keys to the map of parameters as a String array.
+     */
+    @Override
+    public String[] getKeys(){
+        String[] a = null;
+        return mapParams.keySet().toArray(a);
+    }
+    
+    /**
+     * Gets the value of the parameter identified by the key as a Boolean.
+     * 
+     * @param key - String identifying parameter
+     * @param b - dummy boolean value
+     * @return 
+     */
     @Override
     public Boolean getValue(String key, Boolean b) {
         Boolean v = null;
@@ -221,178 +465,5 @@ public abstract class AbstractLHSParameters implements LifeStageParametersInterf
     @Override
     public Object getValue(String key) {
         return mapParams.get(key).getValue();
-    }
-    
-    /**
-     * Sets parameter identified by key to input value.
-     * This method is abstract to ensure that subclasses that wish to provide
-     * property change support can do so even on instances that are cast
-     * to AbstractLHSParameters.
-     * 
-     * @param key   - key identifying parameter to be set
-     * @param value - value to set
-     */
-    @Override
-    public abstract void setValue(String key, Object value);
-    
-//    @Override
-//    public void setValue(String key, boolean value) {
-//        setValue(key, value);
-//    }
-//    
-    @Override
-    public void setValue(String key, double value) {
-        setValue(key,new Double(value));
-    }
-    
-    @Override
-    public void setValue(String key, float value) {
-        setValue(key,new Float(value));
-    }
-    
-    @Override
-    public void setValue(String key,int value) {
-        setValue(key,new Integer(value));
-    }
-    
-    @Override
-    public void setValue(String key, long value) {
-        setValue(key,new Long(value));
-    }
-    
-    /**
-     * Returns the IBMParameter object corresponding to the name.
-     * 
-     * This method DOES NOT need to be overridden by subclasses (but can be).
-     * 
-     * @param name - name associated with the IBM parameter
-     * @return     - the IBM parameter instance
-     */
-    @Override
-    public IBMParameter getIBMParameter(String name){
-        return mapParams.get(name);
-    }
-    
-    /**
-     * Returns the unique names (keys) associated with the IBM parameters used in the 
-     * life stage. 
-     * 
-     * As a DEFAULT IMPLEMENTATION, this method returns an empty Set; 
-     * 
-     * This method SHOULD BE OVERRIDDEN by subclasses that use IBMParameters.
-     * 
-     * @return - the set of parameter names
-     */
-    @Override
-    public Set<String> getIBMParameterNames(){return emptySet;}
-    
-    /**
-     * Returns the IBMFunctionInterface object corresponding to the 
-     * given category and function key. 
-     * 
-     * As a DEFAULT IMPLEMENTATION, this method throws an UnsupportedOperationException 
-     * 
-     * This method SHOULD BE OVERRIDDEN by subclasses that use IBMFunctions.
-     * 
-     * @param cat  - usage category 
-     * @param name - function name
-     * @return   - the model function
-     */
-    @Override
-    public IBMFunctionInterface getIBMFunction(String cat, String key){
-        throw new UnsupportedOperationException("Not supported yet.");    
-    }
-    
-    /**
-     * Returns the IBMFunctionInterface object corresponding to the 
-     * given category and name.
-     * 
-     * @param cat  - usage category 
-     * @param name - function name
-     * @param f    - the function to set
-     * @return     - true if successful
-     */
-    @Override
-    public boolean setIBMFunction(String cat, String name, IBMFunctionInterface f){
-        if (mapOfPotentialFunctionsByCategory.containsKey(cat)){
-            if (mapOfPotentialFunctionsByCategory.get(cat).containsKey(name)){
-                mapOfPotentialFunctionsByCategory.get(cat).put(name,f);
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * Returns the IBMFunctionInterface object corresponding to the given category.
-     * 
-     * As a DEFAULT IMPLEMENTATION, this method returns an empty Set. 
-     * 
-     * This method SHOULD BE OVERRIDDEN by subclasses that use IBMFunctions.
-     * 
-     * @param cat - usage category 
-     * @return   - the model function
-     */
-    @Override
-    public Set<String> getIBMFunctionCategories(){return emptySet;}
-    
-    /**
-     * Returns the unique names (keys) associated with the IBM functions used in the
-     * life stage.
-     * 
-     * As a DEFAULT IMPLEMENTATION, this method returns an empty Set. 
-     * 
-     * This method SHOULD BE OVERRIDDEN by subclasses that use IBMFunctions.
-     * 
-     * @param cat the value of cat
-     * @return - the
-     */
-    @Override
-    public Set<String> getIBMFunctionNamesByCategory(String cat){return emptySet;}
-    
-    /**
-     * Returns the ModelFunctionInterface object corresponding to the category 
-     * associated with input "cat".
-     * 
-     * @param cat - name of the function category
-     * @return   - the model function
-     */
-    @Override
-    public IBMFunctionInterface getSelectedIBMFunctionForCategory(String cat){
-        IBMFunctionInterface f = mapOfSelectedFunctionsByCategory.get(cat);
-        if (f==null){
-            logger.info("No selected IBM parameter function found for category '"+cat+"'");
-            logger.info("Available categories are:");
-            for (String key: mapOfSelectedFunctionsByCategory.keySet()){
-                logger.info("\tcategory '"+key+"'");
-                IBMFunctionInterface sf = mapOfSelectedFunctionsByCategory.get(key);
-                logger.info("\t\tselected function is of type "+sf.getClass().getName());
-                if (key.equals(cat)) {
-                    logger.info("\tsetting selected fcuntion for category");
-                    f = sf;
-                }
-            }
-        }
-        return f;
-    }
-    
-    /**
-     * Selects the IBMFunction to use for a given function category.
-     * 
-     * As a DEFAULT IMPLEMENTATION, this method throws an UnsupportedOperationException. 
-     * 
-     * This method SHOULD BE OVERRIDDEN by subclasses that use IBMFunctions.
-     * 
-     * @param cat
-     * @param key 
-     */
-    @Override
-    public void selectIBMFunctionForCategory(String cat, String key){
-        throw new UnsupportedOperationException("Not supported yet.");    
-    }
-    
-    @Override
-    public void setTypeName(String name){
-        typeName = name;
     }
 }

@@ -56,7 +56,7 @@ public interface LifeStageDataInterface extends Cloneable, Serializable {
     public String getTypeName();
         
     /**
-     * Gets the property keys corresponding to the param map.
+     * Gets the property keys corresponding to the map of "values".
      *
      * @return - String array containing the keys.
      */

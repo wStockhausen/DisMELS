@@ -36,7 +36,7 @@ public class IBMFunctionsCustomizer extends javax.swing.JPanel {
     public void setObject(LifeStageParametersInterface obj, String cat){
         this.obj = obj;
         this.cat = cat;
-        Set<String> funcNames = obj.getIBMFunctionNamesByCategory(cat);
+        Set<String> funcNames = obj.getIBMFunctionKeysByCategory(cat);
         if (funcNames.isEmpty()){
             logger.info("No functions defined for category '"+cat+"'");
             doEvents=false;         //no response to events
@@ -111,7 +111,7 @@ public class IBMFunctionsCustomizer extends javax.swing.JPanel {
             jpFV.add(czr,BorderLayout.CENTER);
             validate();
             repaint();
-            obj.selectIBMFunctionForCategory(cat, name);
+            obj.setSelectedIBMFunctionForCategory(cat, name);
         }
     }//GEN-LAST:event_jcbFunctionsActionPerformed
 

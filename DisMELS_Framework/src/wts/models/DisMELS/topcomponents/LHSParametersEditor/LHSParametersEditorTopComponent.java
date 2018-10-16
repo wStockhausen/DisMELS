@@ -113,11 +113,6 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
         return getDefault();
     }
     
-    /** GlobalInfo singleton */
-    private GlobalInfo globalInfo;
-    /** LHS_Factory singleton */
-    private LHS_Factory lhsFactory;
-
     private LHSSelector_JPanel lhsSelector;
     private Map<String,LifeStageParametersInterface> paramsMap;
     private LifeStageParametersCustomizer paramsCustomizer;
@@ -181,7 +176,7 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
     @Override
     public void componentOpened() {
 //        logger.info("starting compnonentOpened()");
-        String wdFN = globalInfo.getWorkingDir();
+        String wdFN = GlobalInfo.getInstance().getWorkingDir();
         File wdF = new File(wdFN);
         jfcIO.setCurrentDirectory(wdF);
         createParamsMap();//do this to "reset" parameters
@@ -206,13 +201,12 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
 
     @Override
     public void componentClosed() {
-//        globalInfo.removePropertyChangeListener(this);
+//        GlobalInfo.getInstance().removePropertyChangeListener(this);
 //        LHS_Factory.removePropertyChangeListener(this);
     }
     
     private void initComponents1() {
-        globalInfo = GlobalInfo.getInstance();
-        globalInfo.addPropertyChangeListener(this);
+        GlobalInfo.getInstance().addPropertyChangeListener(this);
         LHS_Factory.addPropertyChangeListener(this);
 
         fileSaver = new FileSaver();
@@ -345,7 +339,7 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals(GlobalInfo.PROP_WorkingDirFN)){
             logger.info("PropertyChange detected: GlobalInfo.PROP_WorkingDirFN");
-            String wdFN = globalInfo.getWorkingDir();
+            String wdFN = GlobalInfo.getInstance().getWorkingDir();
             File wdF = new File(wdFN);
             fnIO = "";
             jfcIO.setCurrentDirectory(wdF);
@@ -428,7 +422,10 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
         }
 
         private void openXML(File f) throws InstantiationException, IllegalAccessException, IOException{
+            logger.info("Reading parameters from XML. Keys = ");
             paramsMap = LHS_Factory.createParametersFromXML(f);
+            for (String key: paramsMap.keySet()) logger.info("--'"+key+"'.");
+            logger.info("--Finished reading parameters from XML.");
             setParametersCustomizer();
             fnIO = f.getPath();
             rlmIO.addElement(fnIO);
@@ -488,9 +485,10 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
                 java.beans.XMLEncoder xe = new java.beans.XMLEncoder(bos);
                 xe.setOwner(this);
                 xe.setExceptionListener(this);
-//                logger.info("Saving life stage parameters to xml");
+                logger.info("Saving life stage parameters to xml");
+                for (String key: paramsMap.keySet()) logger.info("--"+key+".");
                 xe.writeObject(paramsMap);
-//                logger.info("SaveAs -- Done");
+                logger.info("SaveAs -- Done");
                 //int i = egp.getComponentCount();
                 xe.close();
                 if (!f.getPath().equals(fnIO)) {

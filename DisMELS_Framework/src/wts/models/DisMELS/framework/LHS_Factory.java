@@ -387,15 +387,20 @@ public class LHS_Factory implements PropertyChangeListener {
             xd.setOwner(instance);
 //            xd.setExceptionListener(instance);
             Map<String,LifeStageParametersInterface> map = null;
-            logger.info("loading paramsMap");
+            logger.info("--reading paramsMap object from XML");
             map = (Map<String,LifeStageParametersInterface>) xd.readObject();
-            logger.info("done loading paramsMap");
+            logger.info("--done reading paramsMap object from XML");
             xd.close();
             
             //update instance.paramsMap with new info
-            for (String key: map.keySet()) instance.paramsMap.put(key,map.get(key));
+            logger.info("--updating LHS_Factory.paramsMap");
+            for (String key: map.keySet()) {
+                logger.info("----updating '"+key+"'.");
+                instance.paramsMap.put(key,map.get(key));
+            }
+            logger.info("--finished updating LHS_Factory.paramsMap");
 
-            logger.info("finished createParametersFromXML("+file.getName()+")");
+            logger.info("--finished createParametersFromXML("+file.getName()+")");
             //return COPY of instance.paramsMap (same parameters objects, but different map object)
             map = new LinkedHashMap<>(instance.paramsMap);
         return map;
