@@ -767,6 +767,7 @@ public class SimpleBenthicAdultLHS extends AbstractSimpleLHS {
     }
 
     private void updatePosition(double[] pos) {
+        bathym = i3d.interpolateBathymetricDepth(pos);
         depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
         lat   = i3d.interpolateLat(pos);
         lon   = i3d.interpolateLon(pos);

@@ -248,22 +248,22 @@ public abstract class AbstractLHSParameters implements LifeStageParametersInterf
     public IBMFunctionInterface getSelectedIBMFunctionForCategory(String cat){
          if (mapOfPotentialFunctionsByCategory==null) 
              throw new UnsupportedOperationException("Not supported yet.");    
-        logger.info("Getting selected IBM parameter function for category '"+cat+"'");
+        //logger.info("Getting selected IBM parameter function for category '"+cat+"'");
         IBMFunctionInterface f = mapOfSelectedFunctionsByCategory.get(cat);
         if (f==null){
-            logger.info("--No selected IBM parameter function found for category '"+cat+"'");
-            logger.info("----Available functions are:");
+            //logger.info("--No selected IBM parameter function found for category '"+cat+"'");
+            //logger.info("----Available functions are:");
             Map<String,IBMFunctionInterface> mapOfPotentialFunctions = mapOfPotentialFunctionsByCategory.get(cat);
-            for (String key: mapOfPotentialFunctions.keySet()) logger.info("------'"+key+"'.");
+            //for (String key: mapOfPotentialFunctions.keySet()) logger.info("------'"+key+"'.");
             String key = mapOfPotentialFunctions.keySet().iterator().next();
-            logger.info("----Selected function set to '"+key+"'.");
+            //logger.info("----Selected function set to '"+key+"'.");
             f = mapOfPotentialFunctions.get(key);
             mapOfSelectedFunctionsByCategory.put(cat, f);
         } else {
-            logger.info("----Found selected function '"+f.getFunctionName()+"'.");
+            //logger.info("----Found selected function '"+f.getFunctionName()+"'.");
         }
-            logger.info("--Selected function is '"+f.getFunctionName()+"'.");
-        logger.info("Finished getting selected IBM parameter function for category '"+cat+"'");
+        //logger.info("--Selected function is '"+f.getFunctionName()+"'.");
+        //logger.info("Finished getting selected IBM parameter function for category '"+cat+"'");
         return f;
     }
     

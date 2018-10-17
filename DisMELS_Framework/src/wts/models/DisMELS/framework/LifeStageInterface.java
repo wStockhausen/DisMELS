@@ -1,6 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * LifeStageInterface.java
  */
 package wts.models.DisMELS.framework;
 
@@ -10,7 +9,8 @@ import java.util.List;
 import wts.roms.model.LagrangianParticle;
 
 /**
- *
+ * Interface implemented by all life stage classes.
+ * 
  * @author William.Stockhausen
  */
 public interface LifeStageInterface extends Cloneable, Serializable {
@@ -25,16 +25,20 @@ public interface LifeStageInterface extends Cloneable, Serializable {
 
     /**
      * This method should be overridden by extending classes.
+     * 
      * @return - a deep clone
      * @throws java.lang.CloneNotSupportedException
      */
     Object clone() throws CloneNotSupportedException;
 
     /**
-     * Creates LHS instance using values in String[].  The resulting instance
+     * Creates life stage instance using values in String[].  The resulting instance
      * should have the input typeName (String[0]).
+     * 
      * @param strv
-     * @return instance of new LHS
+     * 
+     * @return instance of new life stage
+     * 
      * @throws java.lang.InstantiationException
      * @throws java.lang.IllegalAccessException
      */
@@ -166,43 +170,54 @@ public interface LifeStageInterface extends Cloneable, Serializable {
 
     /**
      * Returns the life stage type for the instance.
+     * @return the life stage type name
      */
-    String getTypeName();
+    public String getTypeName();
     
     /**
      * Gets the flag indicating whether or not to write the full track to output.
-     * @return 
+     * @return true/false whether full track will be written to output
      */
     public boolean getWriteTracksFlag();
     
     /**
      * Sets the flag indicating whether or not to write the full track to output.
-     * @return 
+     * @param b - flag to write full track output 
      */
     public void setWriteTracksFlag(boolean b);
 
     /**
      * Returns whether the individual is active (true) or not. 
+     * 
+     * @return true/false whether individual is "active"
      */
     boolean isActive();
 
     /**
      * Returns whether the individual is alive (true) or not. 
+     * 
+     * @return true/false whether individual is "alive"
      */
     boolean isAlive();
 
     /**
      * Returns whether the instance represents a super individual (true) or not. 
+     * 
+     * @return true/false whether individual is a "superindividual"
      */
     boolean isSuperIndividual();
 
     /**
      * Sets the "active" status for the individual. 
+     * 
+     * @param b flag indicating whether or not individual is "active"
      */
     void setActive(boolean b);
 
     /**
      * Sets the "alive" status for the individual. 
+     * 
+     * @param b flag indicating whether or not individual is "alive"
      */
     void setAlive(boolean b);
 
@@ -210,6 +225,8 @@ public interface LifeStageInterface extends Cloneable, Serializable {
      * Sets the associated attributes object.  This should NOT change the
      * typeNameof the LHS instance (or the associated LHSAttributes instance)
      * on which the method is called.
+     * 
+     * @param newAtts - the attributes object to set
      */
     void setAttributes(LifeStageAttributesInterface newAtts);
 
@@ -217,6 +234,8 @@ public interface LifeStageInterface extends Cloneable, Serializable {
      * Sets the values of the associated attributes object.  This should NOT change the
      * typeNameof the LHS instance (or the associated LHSAttributes instance)
      * on which the method is called.
+     * 
+     * @param strv String array with attribute values as Strings
      */
     void setAttributes(String[] strv);
 
@@ -225,7 +244,9 @@ public interface LifeStageInterface extends Cloneable, Serializable {
      * Use this after creating an LHS instance as "output" from another LHS that
      * is functioning as an ordinary individual.
      * Note that the typeName for the instance on which the method is called
-     * shoud NOT be changed.
+     * should NOT be changed.
+     * 
+     * @param oldLHS - the "old" individual from which information will be transferred
      */
     void setInfoFromIndividual(LifeStageInterface oldLHS);
 
@@ -235,24 +256,31 @@ public interface LifeStageInterface extends Cloneable, Serializable {
      * is functioning as a super-individual.
      * Note that the typeName for the instance on which the method is called
      * shoud NOT be changed.
+     * 
+     * @param oldLHS - the "old" (super) individual from which information will be transferred
+     * @param numTrans - the number of individuals making the stage transition 
      */
     void setInfoFromSuperIndividual(LifeStageInterface oldLHS, double numTrans);
 
     /**
      * Sets the lagrangian particle representation for the instance to a clone
      * of newLP.
+     * 
      * @param newLP - LagrangianParticle instance to be cloned.
      */
     void setLagrangianParticle(LagrangianParticle newLP);
 
     /**
      * This method should be overriden by inheriting classes!
+     * 
+     * @param newParams - the new Parameters object to use
      */
     void setParameters(LifeStageParametersInterface newParams);
 
     /**
      * Sets the start time (in s from model reference date) for the individual
      * to be "activated" in the simulation.
+     * 
      * @param newTime 
      */
     void setStartTime(double newTime);
@@ -261,6 +289,7 @@ public interface LifeStageInterface extends Cloneable, Serializable {
      * Sets the tolerance (in grid coordinates) for individuals to the edge of 
      * the model grid. Individuals closer to the grid edge than the tolerance
      * should be removed from the simulation.
+     * 
      * @param newTol 
      */
     void setGridEdgeTolerance(double newTol);
@@ -274,7 +303,7 @@ public interface LifeStageInterface extends Cloneable, Serializable {
     void startTrack(Coordinate initPos, int coordType);
 
     /**
-     * Steps the individual forward (dt>0) or backward (dt<0) in time.  This is 
+     * Steps the individual forward (dt &gt 0) or backward (dt &lt 0) in time.  This is 
      * the heart of the IBM for the individuals represented by the class that
      * implements this interface.
      * 

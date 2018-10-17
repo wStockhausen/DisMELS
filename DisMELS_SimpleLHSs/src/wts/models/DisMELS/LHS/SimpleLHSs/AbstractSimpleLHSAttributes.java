@@ -58,6 +58,7 @@ public abstract class AbstractSimpleLHSAttributes
                                                         PROP_horizPos1,
                                                         PROP_horizPos2,
                                                         PROP_vertPos,
+                                                        PROP_bathym,
                                                         PROP_temp,
                                                         PROP_salinity,
                                                         PROP_gridCellID};
@@ -80,6 +81,7 @@ public abstract class AbstractSimpleLHSAttributes
                                                                 "horizPos1",
                                                                 "horizPos2",
                                                                 "vertPos",
+                                                                "bathym",
                                                                 "temp",
                                                                 "salinity",
                                                                 "gridCellID"};
@@ -93,6 +95,7 @@ public abstract class AbstractSimpleLHSAttributes
                                                         Boolean.class,
                                                         Boolean.class,
                                                         Boolean.class,
+                                                        Double.class,
                                                         Double.class,
                                                         Double.class,
                                                         Double.class,
@@ -181,6 +184,7 @@ public abstract class AbstractSimpleLHSAttributes
             setValue(PROP_horizPos1,Double.valueOf(strv[j++]));
             setValue(PROP_horizPos2,Double.valueOf(strv[j++]));
             setValue(PROP_vertPos,  Double.valueOf(strv[j++]));
+            setValue(PROP_bathym,   Double.valueOf(strv[j++]));
             setValue(PROP_temp,     Double.valueOf(strv[j++]));
             setValue(PROP_salinity, Double.valueOf(strv[j++]));
             setValue(PROP_gridCellID, strv[j++]);
@@ -262,6 +266,7 @@ public abstract class AbstractSimpleLHSAttributes
         map.put(PROP_horizPos1, new Double(0));
         map.put(PROP_horizPos2, new Double(0));
         map.put(PROP_vertPos,   new Double(0));
+        map.put(PROP_bathym,    new Double(0));
         map.put(PROP_temp,      new Double(-1));
         map.put(PROP_salinity,  new Double(-1));
         map.put(PROP_gridCellID,"");
@@ -437,6 +442,7 @@ public abstract class AbstractSimpleLHSAttributes
                     +decFormat.format(this.getValue(PROP_horizPos1,d))+cc
                     +decFormat.format(this.getValue(PROP_horizPos2,d))+cc
                     +decFormat.format(this.getValue(PROP_vertPos,d))+cc
+                    +decFormat.format(this.getValue(PROP_bathym,d))+cc
                     +decFormat.format(this.getValue(PROP_temp,d))+cc
                     +decFormat.format(this.getValue(PROP_salinity,d))+cc
                     +this.getValue(PROP_gridCellID,s);

@@ -84,8 +84,6 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     private boolean isDaytime;
     /** number of individuals transitioning to next stage */
     private double numTrans;  
-    /** total depth (m) at individual's position */
-    private double totalDepth;
     
     /**
      * This constructor is provided only to facilitate the ServiceProvider functionality.
@@ -427,9 +425,9 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         List<LifeStageInterface> nLHSs = null;
         //if total depth is appropriate for settlement and 
         //indiv is near the bottom, then settle and transform to next stage.
-        if ((totalDepth>=minSettlementDepth)&&
-                (totalDepth<=maxSettlementDepth)&&
-                (depth>(totalDepth-5))) {
+        if ((bathym>=minSettlementDepth)&&
+                (bathym<=maxSettlementDepth)&&
+                (depth>(bathym-5))) {
             if ((numTrans>0)||!isSuperIndividual){
                 nLHSs = createNextLHSs();
                 if (nLHSs!=null) output.addAll(nLHSs);
@@ -542,13 +540,13 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         double[] pos = null;
         //determine daytime/nighttime for vertical migration & calc indiv. W
         isDaytime = DateTimeFunctions.isDaylight(lon,lat,GlobalInfo.getInstance().getCalendar().getYearDay());
-        if (isDaytime&&willAttachDay&&(depth>(totalDepth-1))) {
+        if (isDaytime&&willAttachDay&&(depth>(bathym-1))) {
             //set indiv on bottom and don't let it move
             attached = true;
             pos = lp.getIJK();
             pos[2] = 0;
         } else 
-        if (!isDaytime&&willAttachNight&&(depth>(totalDepth-1))) {
+        if (!isDaytime&&willAttachNight&&(depth>(bathym-1))) {
             //set indiv on bottom and don't let it move
             attached = true;
             pos = lp.getIJK();
@@ -577,8 +575,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             lp.doCorrectorStep();
             pos = lp.getIJK();
         }
-//        logger.info("id: "+id+cc+isDaytime+cc+depth+cc+totalDepth+cc+attached);
-        time = time+dt;
+//        logger.info("id: "+id+cc+isDaytime+cc+depth+cc+bathym+cc+attached);
+        time += dt;
         updateSize(dt);
         updateNum(dt);
         updateAge(dt);
@@ -603,8 +601,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     protected double calcW(double dt) {
 //        String str = "";
         double w = 0;
-        if ((minSettlementDepth<=totalDepth)&&(totalDepth<=maxSettlementDepth)){
-            w =  -vertSwimmingSpeed*(1.0-Math.exp(-(totalDepth-depth)/5.0));//swim towards bottom
+        if ((minSettlementDepth<=bathym)&&(bathym<=maxSettlementDepth)){
+            w =  -vertSwimmingSpeed*(1.0-Math.exp(-(bathym-depth)/5.0));//swim towards bottom
         } else
         if (isDaytime) {
             if (depth<minDepthDay) {
@@ -667,9 +665,9 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         double totRate = mortalityRate;
         //if total depth is appropriate for settlement and 
         //indiv is near the bottom, then settle and transform to next stage.
-        if ((totalDepth>=minSettlementDepth)&&
-                (totalDepth<=maxSettlementDepth)&&
-                (depth>(totalDepth-5))) {
+        if ((bathym>=minSettlementDepth)&&
+                (bathym<=maxSettlementDepth)&&
+                (depth>(bathym-5))) {
             totRate += stageTransRate;
             //apply mortality rate to previous number transitioning and
             //add in new transitioners
@@ -680,7 +678,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     }
     
     private void updatePosition(double[] pos) {
-        totalDepth = i3d.interpolateBathymetricDepth(pos);
+        bathym = i3d.interpolateBathymetricDepth(pos);
         depth      = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
         lat        = i3d.interpolateLat(pos);
         lon        = i3d.interpolateLon(pos);

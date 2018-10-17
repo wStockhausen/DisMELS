@@ -578,9 +578,10 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
     }
 
     private void updatePosition(double[] pos) {
-        depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-        lat   = i3d.interpolateLat(pos);
-        lon   = i3d.interpolateLon(pos);
+        bathym = i3d.interpolateBathymetricDepth(pos);
+        depth  = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
+        lat    = i3d.interpolateLat(pos);
+        lon    = i3d.interpolateLon(pos);
         gridCellID = ""+Math.round(pos[0])+"_"+Math.round(pos[1]);
         updateTrack();
     }

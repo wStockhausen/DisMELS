@@ -17,7 +17,7 @@ import wts.models.DisMELS.framework.IBMAttributes.*;
 public abstract class AbstractLHSAttributes implements LifeStageAttributesInterface {
     
     /** static number of attributes defined by this class (including typeName) */
-    public static final int numAttributes = 18;
+    public static final int numAttributes = LifeStageAttributesInterface.PROP_NumAtts;
     
     /** static set of keys (as Strings) to the map of attribute values */
     protected static final Set<String> keys = new LinkedHashSet<>(32);
@@ -63,6 +63,7 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
             key = PROP_horizPos1;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"horizPos1"));
             key = PROP_horizPos2;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"horizPos2"));
             key = PROP_vertPos;    keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"vertPos"));
+            key = PROP_bathym;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"bathym"));
             key = PROP_gridCellID; keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"gridCellID"));
             key = PROP_track;      keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"track"));
             key = PROP_active;     keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key,"active"));
@@ -83,6 +84,7 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
         mapValues.put(PROP_horizPos1, new Double(0));
         mapValues.put(PROP_horizPos2, new Double(0));
         mapValues.put(PROP_vertPos,   new Double(0));
+        mapValues.put(PROP_bathym,    new Double(0));
         mapValues.put(PROP_gridCellID,"");
         mapValues.put(PROP_track,     "");
         mapValues.put(PROP_active,    false);
@@ -159,6 +161,7 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
      *  horizPos1
      *  horizPos2
      *  vertPos
+     *  bathym
      *  gridCellID
      *  track
      *  startTime
@@ -509,12 +512,6 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
     public Object getValue(String key) {
         return mapValues.get(key);
     }
-//    
-//    @Override
-//    public void setValue(String key, boolean value) {
-//        Boolean v = value;
-//        setValue(key, v);
-//    }
     
     @Override
     public void setValue(String key, double value) {

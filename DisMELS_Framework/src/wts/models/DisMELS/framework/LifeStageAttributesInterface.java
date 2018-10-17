@@ -23,6 +23,7 @@ import java.util.ArrayList;
  *  <li> horizPos1 - "Horiz. position 1"
  *  <li> horizPos2 - "Horiz. position 2"
  *  <li> vertPos - "Vert. position"
+ *  <li> bathym - "bathymetric depth"
  *  <li> gridCellID - "Grid Cell ID"
  *  <li> track - "track"
  *  <li> active - "Active status"
@@ -35,7 +36,7 @@ import java.util.ArrayList;
 public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     
     /** the number of life stage attributes defined in this interface */
-    public static final int PROP_NumAtts = 18;
+    public static final int PROP_NumAtts = 19;
     
     /** property key for the life stage type name of the individual */
     public static final String PROP_typeName   = "Life stage type name";
@@ -59,6 +60,8 @@ public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     public static final String PROP_horizPos2  = "Horiz. position 2";
     /** property key for the current value of the individual's vertical position */
     public static final String PROP_vertPos    = "Vert. position";
+    /** property key for the current value of thebathymetric depth at the individual's location */
+    public static final String PROP_bathym     = "bathymetric depth";
     /** property key for the ROMS grid cell ID the individual is currently in */
     public static final String PROP_gridCellID = "Grid Cell ID";
     /** property key for the current track of the individual's location */

@@ -78,16 +78,29 @@ public abstract class AbstractLHS implements LifeStageInterface {
     protected long id = 0;
     
     //fields that reflect attribute values
+    /* active status (individuals have not yet been activated if active=fale and alive=true) */
     protected boolean active=false;
+    /* alive status */
     protected boolean alive=true;
+    /* time at which individual was "released" in simulation */
     protected double  startTime=0;
+    /* "current" time */
     protected double  time=0;
+    /* current (cumulative) age (days) */
     protected double  age=0;
+    /* time within current life stage (days) */
     protected double  ageInStage=0;
+    /* number of individual's associated with this instance */
     protected double  number=0;
+    /* latitude for individual's location */
     protected double  lat=0;
+    /* longitude for individual's location */
     protected double  lon=0;
+    /* depth at individual's location */
     protected double  depth=0;
+    /* bathymetric depth at individual's location */
+    protected double  bathym=0;
+    /* grid cell id corresponding to individual's location */
     protected String  gridCellID="";
     
     /**
@@ -329,6 +342,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
         key = LifeStageAttributesInterface.PROP_time;       atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_vertPos;    atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_vertType;   atts.setValue(key,newAtts.getValue(key));
+        key = LifeStageAttributesInterface.PROP_bathym;     atts.setValue(key,newAtts.getValue(key));
         id = atts.getValue(LifeStageAttributesInterface.PROP_id, id);
         updateVariables();
     }
@@ -346,6 +360,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos2,lat);
         atts.setValue(LifeStageAttributesInterface.PROP_vertPos,depth);
+        atts.setValue(LifeStageAttributesInterface.PROP_bathym,bathym);
         atts.setValue(LifeStageAttributesInterface.PROP_age,age);
         atts.setValue(LifeStageAttributesInterface.PROP_ageInStage,ageInStage);
         atts.setValue(LifeStageAttributesInterface.PROP_number,number);
@@ -365,6 +380,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
         lon        = atts.getValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
         lat        = atts.getValue(LifeStageAttributesInterface.PROP_horizPos2,lat);
         depth      = atts.getValue(LifeStageAttributesInterface.PROP_vertPos,depth);
+        bathym     = atts.getValue(LifeStageAttributesInterface.PROP_bathym,bathym);
         age        = atts.getValue(LifeStageAttributesInterface.PROP_age,age);
         ageInStage = atts.getValue(LifeStageAttributesInterface.PROP_ageInStage,ageInStage);
         number     = atts.getValue(LifeStageAttributesInterface.PROP_number,number);
