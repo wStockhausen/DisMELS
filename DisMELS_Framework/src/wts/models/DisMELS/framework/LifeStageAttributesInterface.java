@@ -60,7 +60,7 @@ public interface LifeStageAttributesInterface extends LifeStageDataInterface {
     public static final String PROP_horizPos2  = "Horiz. position 2";
     /** property key for the current value of the individual's vertical position */
     public static final String PROP_vertPos    = "Vert. position";
-    /** property key for the current value of thebathymetric depth at the individual's location */
+    /** property key for the current value of the bathymetric depth at the individual's location */
     public static final String PROP_bathym     = "bathymetric depth";
     /** property key for the ROMS grid cell ID the individual is currently in */
     public static final String PROP_gridCellID = "Grid Cell ID";

@@ -321,6 +321,9 @@ public abstract class AbstractLHS implements LifeStageInterface {
      * as well. 
      *  As a side effect, updateVariables() is called to update instance variables.
      *  Instance field "id" is also updated.
+     * 
+     * Subclasses that define new attributes should override this method.
+     * 
      * @param newAtts - should be instance of SimplePelagicLHSAttributes
      */
     @Override
@@ -348,8 +351,11 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
     
     /**
-     * Updates attribute values defined for this abstract class. Subclasses should
-     * override this method, possibly calling super.updateAttributes().
+     * Updates attribute values defined for this abstract class. 
+     * 
+     * Subclasses that define new attributes should override this method, 
+     * possibly calling super.updateAttributes().
+     * 
      */
     protected void updateAttributes() {
         //note that the following do not need to be updated
@@ -368,9 +374,15 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
 
     /**
-     * Updates local variables from the attributes.  
+     * Updates the following variables from the attributes:
+     *   active, alive, startTime, time, lon, lat, depth, bathym,
+     *   age, ageInStage, number, gridCellID
+     * 
      * The following are NOT updated here:
      *  id, parentID, origID, hType, vType
+     * 
+     * Subclasses that define new variables should override this class.
+     * 
      */
     protected void updateVariables() {
         active     = atts.getValue(LifeStageAttributesInterface.PROP_active,active);
@@ -386,5 +398,39 @@ public abstract class AbstractLHS implements LifeStageInterface {
         number     = atts.getValue(LifeStageAttributesInterface.PROP_number,number);
         gridCellID = atts.getValue(LifeStageAttributesInterface.PROP_gridCellID,gridCellID);
     }
-    
+
+    @Override
+    public double getStartTime() {
+        return startTime;
+    }
+
+    @Override
+    public void setStartTime(double newTime) {
+        startTime = newTime;
+        time      = startTime;
+        atts.setValue(LifeStageAttributesInterface.PROP_startTime,startTime);
+        atts.setValue(LifeStageAttributesInterface.PROP_time,time);
+    }
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+
+    @Override
+    public void setActive(boolean b) {
+        active = b;
+        atts.setActive(b);
+    }
+
+    @Override
+    public boolean isAlive() {
+        return alive;
+    }
+
+    @Override
+    public void setAlive(boolean b) {
+        alive = b;
+        atts.setAlive(b);
+    }
 }

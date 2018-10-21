@@ -52,25 +52,25 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
         if (mapAttributes.isEmpty()){
             //assign static-level attributes information for this class
             String key;
-            key = PROP_typeName;   keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"typeName"));
-            key = PROP_id;         keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,"id"));
-            key = PROP_parentID;   keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,"parentID"));
-            key = PROP_origID;     keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,"origID"));
+            key = PROP_typeName;   keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,  "typeName"));
+            key = PROP_id;         keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key ,   "id"));
+            key = PROP_parentID;   keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,    "parentID"));
+            key = PROP_origID;     keys.add(key); mapAttributes.put(key,new IBMAttributeLong(key,    "origID"));
             key = PROP_startTime;  keys.add(key); mapAttributes.put(key,new IBMAttributeROMSDate(key,"startTime"));
             key = PROP_time;       keys.add(key); mapAttributes.put(key,new IBMAttributeROMSDate(key,"time"));
-            key = PROP_horizType;  keys.add(key); mapAttributes.put(key,new IBMAttributeInteger(key,"horizType"));
-            key = PROP_vertType;   keys.add(key); mapAttributes.put(key,new IBMAttributeInteger(key,"vertType"));
-            key = PROP_horizPos1;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"horizPos1"));
-            key = PROP_horizPos2;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"horizPos2"));
-            key = PROP_vertPos;    keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"vertPos"));
-            key = PROP_bathym;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"bathym"));
-            key = PROP_gridCellID; keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"gridCellID"));
-            key = PROP_track;      keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,"track"));
-            key = PROP_active;     keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key,"active"));
-            key = PROP_alive;      keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key,"alive"));
-            key = PROP_age;        keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"age"));
-            key = PROP_ageInStage; keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"ageInStage"));
-            key = PROP_number;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,"number"));
+            key = PROP_horizType;  keys.add(key); mapAttributes.put(key,new IBMAttributeInteger(key, "horizType"));
+            key = PROP_vertType;   keys.add(key); mapAttributes.put(key,new IBMAttributeInteger(key, "vertType"));
+            key = PROP_horizPos1;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "horizPos1"));
+            key = PROP_horizPos2;  keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "horizPos2"));
+            key = PROP_vertPos;    keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "vertPos"));
+            key = PROP_bathym;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "bathym"));
+            key = PROP_gridCellID; keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,  "gridCellID"));
+            key = PROP_track;      keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,  "track"));
+            key = PROP_active;     keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key, "active"));
+            key = PROP_alive;      keys.add(key); mapAttributes.put(key,new IBMAttributeBoolean(key, "alive"));
+            key = PROP_age;        keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "age"));
+            key = PROP_ageInStage; keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "ageInStage"));
+            key = PROP_number;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "number"));
         }
         //assign default instance-level attributes values for this class
         mapValues = new HashMap<>(2*numAttributes);

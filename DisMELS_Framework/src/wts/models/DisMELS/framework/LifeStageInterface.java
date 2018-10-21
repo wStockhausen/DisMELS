@@ -100,6 +100,8 @@ public interface LifeStageInterface extends Cloneable, Serializable {
 
     /**
      * This method should be overriden by inheriting classes!
+     * 
+     * @return the associated parameters instance
      */
     LifeStageParametersInterface getParameters();
 
