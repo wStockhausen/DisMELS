@@ -38,6 +38,8 @@ import wts.models.DisMELS.framework.LHS_Factory;
 import wts.models.DisMELS.framework.ModelControllerBean;
 import wts.models.DisMELS.framework.ModelTaskIF;
 import wts.models.DisMELS.topcomponents.ModelRunner.ModelRunnerTopComponent;
+import wts.models.utilities.CalendarIF;
+import wts.models.utilities.ObjectConverter;
 
 /**
  * Top component which displays something.
@@ -117,6 +119,8 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
     private FileLoader fileLoader;
     /** instance of the private class for running the models */
     private ModelRunner modelRunner;
+    /** instance of the private class for testing the batch run */
+    private BatchRunTester modelTester;
     
     private boolean isBatchFileLoaded = false;
     private boolean isMCBFileLoaded   = false;
@@ -148,6 +152,7 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
         
         fileLoader = new FileLoader();
         modelRunner = new ModelRunner();
+        modelTester = new BatchRunTester();
     }
 
     /**
@@ -216,12 +221,14 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
     public void componentOpened() {
         content.add(fileLoader);
         canEnableRunner();
+        canEnableTester();
     }
 
     @Override
     public void componentClosed() {
         content.remove(fileLoader);
         content.remove(modelRunner);
+        content.remove(modelTester);
     }
 
     void writeProperties(java.util.Properties p) {
@@ -236,6 +243,14 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
         // TODO read your settings according to their version
     }
 
+    private void canEnableTester(){
+        if (isBatchFileLoaded&&isMCBFileLoaded) {
+            content.add(modelTester);
+        } else {
+            content.remove(modelTester);
+        }
+    }
+    
     private void canEnableRunner(){
         if (isBatchFileLoaded&&isMCBFileLoaded) {
             content.add(modelRunner);
@@ -244,6 +259,117 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
         }
     }
     
+    /**
+     * Method to test the batch loop.
+     */
+    public void testBatchLoop() {
+        mcb.setGUIMode(false);//really only need to do this once
+        if (currRow<rowCnt) {
+            String colName = "";
+            String type = "";
+            String str = "";
+            ObjectConverter oc = ObjectConverter.getInstance();
+            String subDirFN = (String) csvDS.getValueAt(currRow, 0);
+            str = "\nModel "+(currRow+1)+". Results in subfolder '"+subDirFN+"'.\n";
+            jTextArea.append(str);
+            boolean setResFN = true;
+            for (int i=1;i<csvDS.getColumnCount();i++) {
+                colName = csvDS.getColumnName(i);
+                type = csvDS.getValueAt(currRow, i).toString();
+                try {
+                    if (colName.equalsIgnoreCase("startTime")) {
+                        long strt = oc.to_long(csvDS.getValueAt(currRow, i));
+                        mcb.setStartTime(strt);
+                        CalendarIF cal = GlobalInfo.getInstance().getCalendar();
+                        cal.setTimeOffset(strt);
+                        str = "\t Start time = "+strt+" ("+cal.getDateTimeString()+")\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_ROMSDataset")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_ROMSDataset(fn);
+                        str = "\t ROMS dataset      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_Results")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_Results(fn);
+                        setResFN = false;
+                        str = "\t Results file      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_ConnResults")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_ConnResults(fn);
+                        setResFN = false;
+                        str = "\t Connectivity file = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_Parameters")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_Params(fn);
+                        str = "\t Parameters file   = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_InitialAttributes")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_InitialAttributes(fn);
+                        str = "\t Init atts file    = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("ntEnvironModel")) {
+                        int nt = oc.to_int(csvDS.getValueAt(currRow, i));
+                        mcb.setNtEnvironModel(nt);
+                        str = "\t Env model time steps = "+nt+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("ntBioModel")) {
+                        int nt = oc.to_int(csvDS.getValueAt(currRow, i));
+                        mcb.setNtBioModel(nt);
+                        str = "\t Bio model time steps = "+nt+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("randomNumberSeed")) {
+                        long rns = oc.to_long(csvDS.getValueAt(currRow, i));
+                        mcb.setRandomNumberSeed(rns);
+                        str = "\t Random number seed   = "+rns+"\n";
+                        jTextArea.append(str);
+                    }
+                } catch (java.lang.NumberFormatException ex){
+                    logger.info("Error formatting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
+                    throw ex;
+                } catch (java.lang.ClassCastException ex){
+                    logger.info("Error casting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
+                    throw ex;
+                }
+            }
+            if (setResFN) {
+                //results file NOT set in batch file, so create one in a NEW subdirectory using the base name                
+                str = "\t Results file      = "+mcb.getFile_Results()+"\n";
+                jTextArea.append(str);
+                str = "\t Connectivity file = "+mcb.getFile_ConnResults()+"\n";
+                jTextArea.append(str);
+            }
+            logger.info("\nModel "+(currRow+1)+". Results in "+subDirFN);
+            logger.info("\tmcb.ocean_time start        = "+mcb.getStartTime());
+            logger.info("\tmcb.ROMSDataset file        = "+mcb.getFile_ROMSDataset());
+            logger.info("\tmcb.Parameters file         = "+mcb.getFile_Params());
+            logger.info("\tmcb.Initial Attributes file = "+mcb.getFile_InitialAttributes());
+            logger.info("\tmcb.Results file            = "+mcb.getFile_Results());
+            logger.info("\tmcb.Connectivity file       = "+mcb.getFile_ConnResults());
+            logger.info("\tmcb.num steps env. model    = "+mcb.getNtEnvironModel());
+            logger.info("\tmcb.num steps bio model     = "+mcb.getNtBioModel());
+            logger.info("\tmcb.Random number seed      = "+mcb.getRandomNumberSeed());
+            currRow++;
+            testBatchLoop();//recurse to pick up next row
+        } else {
+            JOptionPane.showMessageDialog(this, "Testing Batch run finished!!", "Good news!", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
+    /**
+     * Method to run the batch loop.
+     */
     public void doBatchLoop() {
         mcb.setGUIMode(false);//really only need to do this once
         if (currRow<rowCnt) {
@@ -261,33 +387,48 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
                     str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
                     Long strt = (Long) csvDS.getValueAt(currRow, i);
                     mcb.setStartTime(strt.doubleValue());
-                }
+                } else
                 if (colName.equalsIgnoreCase("file_ROMSDataset")) {
                     str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
                     String fn = (String) csvDS.getValueAt(currRow, i);
                     mcb.setFile_ROMSDataset(fn);
-                }
+                } else
                 if (colName.equalsIgnoreCase("file_Results")) {
                     str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
                     String fn = (String) csvDS.getValueAt(currRow, i);
                     mcb.setFile_Results(fn);
                     setResFN = false;
-                }
+                } else
                 if (colName.equalsIgnoreCase("file_ConnResults")) {
                     str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
                     String fn = (String) csvDS.getValueAt(currRow, i);
                     mcb.setFile_ConnResults(fn);
                     setResFN = false;
-                }
+                } else
                 if (colName.equalsIgnoreCase("file_Parameters")) {
                     str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
                     String fn = (String) csvDS.getValueAt(currRow, i);
                     mcb.setFile_Params(fn);
-                }
+                } else
                 if (colName.equalsIgnoreCase("file_InitialAttributes")) {
                     str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
                     String fn = (String) csvDS.getValueAt(currRow, i);
                     mcb.setFile_InitialAttributes(fn);
+                } else
+                if (colName.equalsIgnoreCase("ntEnvironModel")) {
+                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
+                    Integer nt = (Integer) csvDS.getValueAt(currRow, i);
+                    mcb.setNtEnvironModel(nt);
+                } else
+                if (colName.equalsIgnoreCase("ntBioModel")) {
+                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
+                    Integer nt = (Integer) csvDS.getValueAt(currRow, i);
+                    mcb.setNtBioModel(nt);
+                } else
+                if (colName.equalsIgnoreCase("randomNumberSeed")) {
+                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
+                    Long rns = (Long) csvDS.getValueAt(currRow, i);
+                    mcb.setRandomNumberSeed(rns);
                 }
             }
             if (setResFN) {
@@ -296,14 +437,10 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
                 new File(subDir).mkdir();//create subdirectory
                 File f = new File(mcb.getFile_Results());
                 String resFN = f.getName();//take only the file name as the base
-//                str = "Results file = "+subDirFN+File.separator+resFN+"; ";
-//                logger.info(str);
                 mcb.setFile_Results(subDirFN+File.separator+resFN);
                 //and same for connectivity results file                
                 File fc = new File(mcb.getFile_ConnResults());
                 String resFNC = fc.getName();//take only the file name as the base
-//                str = "Connectivity file = "+subDirFN+File.separator+resFNC;
-//                logger.info(str);
                 mcb.setFile_ConnResults(subDirFN+File.separator+resFNC);
             }
             logger.info("\nModel "+(currRow+1)+". Results in "+subDirFN);
@@ -313,6 +450,9 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             logger.info("\tmcb.Initial Attributes file = "+mcb.getFile_InitialAttributes());
             logger.info("\tmcb.Results file            = "+mcb.getFile_Results());
             logger.info("\tmcb.Connectivity file       = "+mcb.getFile_ConnResults());
+            logger.info("\tmcb.num steps env. model    = "+mcb.getNtEnvironModel());
+            logger.info("\tmcb.num steps bio model     = "+mcb.getNtBioModel());
+            logger.info("\tmcb.Random number seed      = "+mcb.getRandomNumberSeed());
             jTextArea.append(str);
             currRow++;
             initializeModel();
@@ -426,6 +566,7 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             jTabbedPane1.setSelectedIndex(0);
             isBatchFileLoaded = true;
             canEnableRunner();
+            canEnableTester();
         }
 
         private void openXML(File f) throws InstantiationException, IllegalAccessException, IOException{
@@ -445,6 +586,7 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             jTabbedPane1.setSelectedIndex(1);
             isMCBFileLoaded = true;
             canEnableRunner();
+            canEnableTester();
         }
 
         /**
@@ -471,6 +613,21 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             currRow = 0;
             jTextArea.setText("");
             doBatchLoop();
+        }
+    }
+
+    //------------------------------------------------------------------------//
+    /**
+     * Private class to test the batch run.
+     */
+    private class BatchRunTester implements wts.models.DisMELS.actions.Testable {
+
+        @Override
+        public void test() {
+            logger.info("test()");
+            currRow = 0;
+            jTextArea.setText("");
+            testBatchLoop();
         }
     }
 

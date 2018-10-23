@@ -81,6 +81,16 @@
                 <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
+            <file name="wts-models-DisMELS-actions-TestAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.models.DisMELS.actions.Testable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.models.DisMELS.actions.TestAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#TestAction.CTL_TestAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
         </folder>
     </folder>
     <folder name="Menu">
@@ -135,6 +145,10 @@
             <file name="wts-models-DisMELS-actions-ExportAnimationAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-ExportAnimationAction.instance"/>
                 <attr name="position" intvalue="480"/>
+            </file>
+            <file name="wts-models-DisMELS-actions-TestAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-TestAction.instance"/>
+                <attr name="position" intvalue="980"/>
             </file>
             <file name="wts-models-DisMELS-actions-RunAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-RunAction.instance"/>
