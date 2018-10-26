@@ -375,60 +375,82 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
         if (currRow<rowCnt) {
             LHS_Factory.resetID(0);
             String colName = "";
+            String type = "";
             String str = "";
+            ObjectConverter oc = ObjectConverter.getInstance();
             String subDirFN = (String) csvDS.getValueAt(currRow, 0);
-            str = "\nModel "+(currRow+1)+". Results in "+subDirFN;
+            str = "\nModel "+(currRow+1)+". Results in subfolder '"+subDirFN+"'.\n";
             jTextArea.append(str);
             str = "";
             boolean setResFN = true;
             for (int i=1;i<csvDS.getColumnCount();i++) {
                 colName = csvDS.getColumnName(i);
-                if (colName.equalsIgnoreCase("startTime")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    Long strt = (Long) csvDS.getValueAt(currRow, i);
-                    mcb.setStartTime(strt.doubleValue());
-                } else
-                if (colName.equalsIgnoreCase("file_ROMSDataset")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    String fn = (String) csvDS.getValueAt(currRow, i);
-                    mcb.setFile_ROMSDataset(fn);
-                } else
-                if (colName.equalsIgnoreCase("file_Results")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    String fn = (String) csvDS.getValueAt(currRow, i);
-                    mcb.setFile_Results(fn);
-                    setResFN = false;
-                } else
-                if (colName.equalsIgnoreCase("file_ConnResults")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    String fn = (String) csvDS.getValueAt(currRow, i);
-                    mcb.setFile_ConnResults(fn);
-                    setResFN = false;
-                } else
-                if (colName.equalsIgnoreCase("file_Parameters")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    String fn = (String) csvDS.getValueAt(currRow, i);
-                    mcb.setFile_Params(fn);
-                } else
-                if (colName.equalsIgnoreCase("file_InitialAttributes")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    String fn = (String) csvDS.getValueAt(currRow, i);
-                    mcb.setFile_InitialAttributes(fn);
-                } else
-                if (colName.equalsIgnoreCase("ntEnvironModel")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    Integer nt = (Integer) csvDS.getValueAt(currRow, i);
-                    mcb.setNtEnvironModel(nt);
-                } else
-                if (colName.equalsIgnoreCase("ntBioModel")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    Integer nt = (Integer) csvDS.getValueAt(currRow, i);
-                    mcb.setNtBioModel(nt);
-                } else
-                if (colName.equalsIgnoreCase("randomNumberSeed")) {
-                    str = str+"\t"+csvDS.getValueAt(currRow, i).toString()+"\n";
-                    Long rns = (Long) csvDS.getValueAt(currRow, i);
-                    mcb.setRandomNumberSeed(rns);
+                type = csvDS.getValueAt(currRow, i).toString();
+                try {
+                    if (colName.equalsIgnoreCase("startTime")) {
+                        long strt = oc.to_long(csvDS.getValueAt(currRow, i));
+                        mcb.setStartTime(strt);
+                        CalendarIF cal = GlobalInfo.getInstance().getCalendar();
+                        cal.setTimeOffset(strt);
+                        str = "\t Start time = "+strt+" ("+cal.getDateTimeString()+")\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_ROMSDataset")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_ROMSDataset(fn);
+                        str = "\t ROMS dataset      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_Results")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_Results(fn);
+                        setResFN = false;
+                        str = "\t Results file      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_ConnResults")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_ConnResults(fn);
+                        setResFN = false;
+                        str = "\t Connectivity file = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_Parameters")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_Params(fn);
+                        str = "\t Parameters file   = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("file_InitialAttributes")) {
+                        String fn = (String) csvDS.getValueAt(currRow, i);
+                        mcb.setFile_InitialAttributes(fn);
+                        str = "\t Init atts file    = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("ntEnvironModel")) {
+                        int nt = oc.to_int(csvDS.getValueAt(currRow, i));
+                        mcb.setNtEnvironModel(nt);
+                        str = "\t Env model time steps = "+nt+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("ntBioModel")) {
+                        int nt = oc.to_int(csvDS.getValueAt(currRow, i));
+                        mcb.setNtBioModel(nt);
+                        str = "\t Bio model time steps = "+nt+"\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("randomNumberSeed")) {
+                        long rns = oc.to_long(csvDS.getValueAt(currRow, i));
+                        mcb.setRandomNumberSeed(rns);
+                        str = "\t Random number seed   = "+rns+"\n";
+                        jTextArea.append(str);
+                    }
+                } catch (java.lang.NumberFormatException ex){
+                    logger.info("Error formatting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
+                    throw ex;
+                } catch (java.lang.ClassCastException ex){
+                    logger.info("Error casting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
+                    throw ex;
                 }
             }
             if (setResFN) {
@@ -453,7 +475,6 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             logger.info("\tmcb.num steps env. model    = "+mcb.getNtEnvironModel());
             logger.info("\tmcb.num steps bio model     = "+mcb.getNtBioModel());
             logger.info("\tmcb.Random number seed      = "+mcb.getRandomNumberSeed());
-            jTextArea.append(str);
             currRow++;
             initializeModel();
         } else {
