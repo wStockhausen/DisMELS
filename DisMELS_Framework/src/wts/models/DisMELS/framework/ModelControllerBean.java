@@ -635,19 +635,22 @@ public class ModelControllerBean extends Object
     protected void initializeOutputFiles() {
         pwResultsMap = new HashMap<>();
         String file = null;
-        LHS_Classes info = globalInfo.getLHSClassesInfo();
+        LHS_Types info = LHS_Types.getInstance();
         Iterator<String> itr = info.getKeys().iterator();
         while (itr.hasNext()) {
-            String lsClass = itr.next();
-            try {
-                file = globalInfo.getWorkingDir()+file_Results+"."+lsClass+".csv";
-                logger.info("Writing model results to '"+file+"'");
-                FileWriter fwResults = new FileWriter(file);
-                PrintWriter pwResults = new PrintWriter(fwResults);
-                pwResultsMap.put(lsClass, pwResults);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-                JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            String lsType = itr.next();
+            String lsClass = info.getType(lsType).getLHSClass();
+            if (!pwResultsMap.containsKey(lsClass)){
+                try {
+                    file = globalInfo.getWorkingDir()+file_Results+"."+lsClass+".csv";
+                    logger.info("Writing model results to '"+file+"'");
+                    FileWriter fwResults = new FileWriter(file);
+                    PrintWriter pwResults = new PrintWriter(fwResults);
+                    pwResultsMap.put(lsClass, pwResults);
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                    JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
         try {
@@ -1293,6 +1296,7 @@ public class ModelControllerBean extends Object
             if (lhs.getAttributes().isActive()) writeToConnectivityFile(lhs);
         }
         it = null;
+        pwConnResults.flush();
     }
  
     protected void writeToReportFile(LifeStageInterface lhs) {
@@ -1311,6 +1315,8 @@ public class ModelControllerBean extends Object
             if (lhs.getAttributes().isActive()) writeToReportFile(lhs);
         }
         it = null;
+        Iterator<String> itr = pwResultsMap.keySet().iterator();
+        while (itr.hasNext()) pwResultsMap.get(itr.next()).flush();
     }
 
     protected void closeOutputFiles() {
