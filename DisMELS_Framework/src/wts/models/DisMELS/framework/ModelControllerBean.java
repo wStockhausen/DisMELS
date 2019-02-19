@@ -152,7 +152,7 @@ public class ModelControllerBean extends Object
     private transient final FeatureCollection tmpDeadPts  = FeatureCollections.newCollection();
     private transient final FeatureCollection tmpDeadTrks = FeatureCollections.newCollection();
 
-    private transient PrintWriter pwResults;
+    private transient HashMap<String,PrintWriter> pwResultsMap;//map to PrintWriters for results
     private transient PrintWriter pwConnResults;//PrintWriter for connctivity results
     
     private transient String statMessage;
@@ -633,12 +633,24 @@ public class ModelControllerBean extends Object
     }
     
     protected void initializeOutputFiles() {
+        pwResultsMap = new HashMap<>();
         String file = null;
+        LHS_Classes info = globalInfo.getLHSClassesInfo();
+        Iterator<String> itr = info.getKeys().iterator();
+        while (itr.hasNext()) {
+            String lsClass = itr.next();
+            try {
+                file = globalInfo.getWorkingDir()+file_Results+"."+lsClass+".csv";
+                logger.info("Writing model results to '"+file+"'");
+                FileWriter fwResults = new FileWriter(file);
+                PrintWriter pwResults = new PrintWriter(fwResults);
+                pwResultsMap.put(lsClass, pwResults);
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            }
+        }
         try {
-            file = globalInfo.getWorkingDir()+file_Results;
-            logger.info("Writing model results to '"+file+"'");
-            FileWriter fwResults = new FileWriter(file);
-            pwResults = new PrintWriter(fwResults);
             file = globalInfo.getWorkingDir()+file_ConnResults;
             logger.info("Writing connectivity results to '"+file+"'");
             FileWriter fwConnRes = new FileWriter(file);
@@ -651,22 +663,16 @@ public class ModelControllerBean extends Object
     
     protected void initializeEnvironment() throws IOException {
         //create ModelGrid3D instance
-        if (ModelGrid3D.isGrid(globalInfo.getGridFile())) {
-//            grid3D = new ModelGrid3D(globalInfo.getGridFile());
-        }  else {
+        if (!ModelGrid3D.isGrid(globalInfo.getGridFile())) {
             JOptionPane.showMessageDialog(null, "file "+globalInfo.getGridFile()+" is not a ROMS grid", 
                                          "Error message", JOptionPane.ERROR_MESSAGE);
             throw(new IOException("Error in ModelControllerBean.initializeEnvironemnt(): \nfile '"+globalInfo.getGridFile()+"' is not a ROMS grid!!"));
         }
 //        //read canonical ROMS dataset for ModelGrid3D constant fields
-//        netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
-//        grid3D.readConstantFields(netcdfReader);
         grid3D = globalInfo.getGrid3D();
         //set netcdfReader to read first ROMS dataset
         file_CurrROMSDataset = file_ROMSDataset;
         netcdfReader = new NetcdfReader(file_CurrROMSDataset);
-//        CalendarIF cal = netcdfReader.getCalendar();
-//        ModelCalendar.setCalendar(cal);
         int nt = netcdfReader.getNumTimeSteps();
         //Identify PE1 & PE2 with which to start model
         if (runForward) {
@@ -1043,7 +1049,7 @@ public class ModelControllerBean extends Object
             indivs = LHS_Factory.createLHSsFromCSV(file);
             logger.info("Created "+indivs.size()+" individuals.");
             logger.info("report header: "+indivs.get(0).getReportHeader());
-            pwResults.println(indivs.get(0).getReportHeader());//write header to results file
+            //pwResults.println(indivs.get(0).getReportHeader());//write header to results file
             pwConnResults.println(indivs.get(0).getReportHeader());//write header to results file
             LifeStageInterface lhs;
             it = indivs.listIterator();
@@ -1290,6 +1296,8 @@ public class ModelControllerBean extends Object
     }
  
     protected void writeToReportFile(LifeStageInterface lhs) {
+        String className = LHS_Types.getInstance().getType(lhs.getTypeName()).getLHSClass();
+        PrintWriter pwResults = pwResultsMap.get(className);
         pwResults.println(lhs.getReport());
         lhs.startTrack(lhs.getLastPosition(LifeStageInterface.COORDINATE_TYPE_GEOGRAPHIC),LifeStageInterface.COORDINATE_TYPE_GEOGRAPHIC);//restart track with current LL position as start
         lhs.startTrack(lhs.getLastPosition(LifeStageInterface.COORDINATE_TYPE_PROJECTED), LifeStageInterface.COORDINATE_TYPE_PROJECTED); //restart track with current XY position as start
@@ -1306,7 +1314,12 @@ public class ModelControllerBean extends Object
     }
 
     protected void closeOutputFiles() {
-        pwResults.close();
+        Iterator<String> itr = pwResultsMap.keySet().iterator();
+        while (itr.hasNext()){
+            String key = itr.next();
+            PrintWriter pwResults = pwResultsMap.remove(key);
+            pwResults.close();
+        }
         pwConnResults.close();
     }
     
