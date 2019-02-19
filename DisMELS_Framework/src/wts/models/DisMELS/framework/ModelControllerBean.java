@@ -1321,11 +1321,7 @@ public class ModelControllerBean extends Object
 
     protected void closeOutputFiles() {
         Iterator<String> itr = pwResultsMap.keySet().iterator();
-        while (itr.hasNext()){
-            String key = itr.next();
-            PrintWriter pwResults = pwResultsMap.remove(key);
-            pwResults.close();
-        }
+        while (itr.hasNext())pwResultsMap.get(itr.next()).close();
         pwConnResults.close();
     }
     
