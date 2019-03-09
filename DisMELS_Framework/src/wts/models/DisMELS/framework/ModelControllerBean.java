@@ -17,12 +17,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
 import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
 import wts.models.DisMELS.events.AnimationEventListener;
 import wts.models.DisMELS.events.AnimationEventSupport;
 import wts.roms.model.*;
@@ -127,8 +130,13 @@ public class ModelControllerBean extends Object
     private transient boolean guiMode = true;
     /** ocean time */
     private transient double time;
+    
+    /** possible ROMS datasets */
+    private transient String[] files_ROMSDatasets = null;
     /** current ROMS dataset */
-    private String file_CurrROMSDataset = "";
+    private transient String file_CurrROMSDataset = "";
+    /** index to current ROMS dataset in files_ROMSDatasets */
+    int indx_CurrROMSDataset = -1;
     
     private transient ModelGrid3D grid3D;
     private transient NetcdfReader netcdfReader;
@@ -634,23 +642,42 @@ public class ModelControllerBean extends Object
     
     protected void initializeOutputFiles() {
         pwResultsMap = new HashMap<>();
+        LifeStageAttributesInterface atts = null;
         String file = null;
         LHS_Types info = LHS_Types.getInstance();
         Iterator<String> itr = info.getKeys().iterator();
         while (itr.hasNext()) {
             String lsType = itr.next();
-            String lsClass = info.getType(lsType).getLHSClass();
-            if (!pwResultsMap.containsKey(lsClass)){
-                try {
-                    file = globalInfo.getWorkingDir()+file_Results+"."+lsClass+".csv";
-                    logger.info("Writing model results to '"+file+"'");
-                    FileWriter fwResults = new FileWriter(file);
-                    PrintWriter pwResults = new PrintWriter(fwResults);
-                    pwResultsMap.put(lsClass, pwResults);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                    JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            String lsiClass  = info.getType(lsType).getLHSClass();
+            String attsClass = info.getType(lsType).getAttributesClass();
+            ClassLoader syscl = Lookup.getDefault().lookup(ClassLoader.class);
+            try{
+                Class attsClazz = syscl.loadClass(attsClass);
+                Constructor con = attsClazz.getDeclaredConstructor();
+                atts = (LifeStageAttributesInterface) con.newInstance();
+                if (!pwResultsMap.containsKey(attsClass)){
+                    try {
+                        file = globalInfo.getWorkingDir()+file_Results+"."+lsiClass+".csv";
+                        logger.info("Writing model results to '"+file+"'");
+                        FileWriter fwResults = new FileWriter(file);
+                        PrintWriter pwResults = new PrintWriter(fwResults);
+                        pwResults.println(atts.getCSVHeader());
+                        pwResults.println(atts.getCSVHeaderShortNames());
+                        pwResults.flush();
+                        pwResultsMap.put(lsiClass, pwResults);
+                    } catch (IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                        JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex){
+                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, "Could not create 'test' object. Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            } catch (ClassNotFoundException ex){
+                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, "Invalid class. Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            } catch (NoSuchMethodException ex){
+                Exceptions.printStackTrace(ex);
             }
         }
         try {
@@ -671,10 +698,22 @@ public class ModelControllerBean extends Object
                                          "Error message", JOptionPane.ERROR_MESSAGE);
             throw(new IOException("Error in ModelControllerBean.initializeEnvironemnt(): \nfile '"+globalInfo.getGridFile()+"' is not a ROMS grid!!"));
         }
-//        //read canonical ROMS dataset for ModelGrid3D constant fields
+        //read canonical ROMS dataset for ModelGrid3D constant fields
         grid3D = globalInfo.getGrid3D();
-        //set netcdfReader to read first ROMS dataset
+        
+        //get array of ROMS dataset names in folder with "first" one
+        files_ROMSDatasets = com.wtstockhausen.utils.FilesLister.findFilesWithSameExtension(file_ROMSDataset);
+        String msg = "InitializeEnvironment:: available ROMS datasets:";
+        for (String file_ROMSDataset : files_ROMSDatasets) msg = msg + "\n \t '" + file_ROMSDataset+"'";
+        logger.info(msg);
+        //set "current" ROMS dataset to "first" one
         file_CurrROMSDataset = file_ROMSDataset;
+        logger.info("InitializeEnvironment:: current ROMS dataset: '"+file_CurrROMSDataset+"'");
+        //identify location of "current" ROMS dataset in filenames array
+        indx_CurrROMSDataset = Arrays.binarySearch(files_ROMSDatasets, file_CurrROMSDataset);
+        logger.info("InitializeEnvironment:: current ROMS dataset has index: "+indx_CurrROMSDataset);
+        
+        //set netcdfReader to read first ROMS dataset
         netcdfReader = new NetcdfReader(file_CurrROMSDataset);
         int nt = netcdfReader.getNumTimeSteps();
         //Identify PE1 & PE2 with which to start model
@@ -954,41 +993,59 @@ public class ModelControllerBean extends Object
     /**
      * Method is called internally to increment the netCDF file name for the
      * next ROMS dataset.
-     * @returns String - next ROMS dataset filename
+     * 
+     * @return String - next ROMS dataset filename
      */
     protected String getNextFilename() {
-        int n = file_CurrROMSDataset.length();
-        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
-        String idx = file_CurrROMSDataset.substring(n-7,n-3);
-        //logger.info("idx = "+idx);
-        int ndx = Integer.parseInt(idx);
-        char[] idxc = String.valueOf(ndx+1).toCharArray();
-        //logger.info("new index = "+String.valueOf(idxc));
-        char[] dfnc = file_CurrROMSDataset.toCharArray();
-        for (int i=idxc.length;i>0;i--) {
-            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
+//        int n = file_CurrROMSDataset.length();
+//        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
+//        String idx = file_CurrROMSDataset.substring(n-7,n-3);
+//        //logger.info("idx = "+idx);
+//        int ndx = Integer.parseInt(idx);
+//        char[] idxc = String.valueOf(ndx+1).toCharArray();
+//        //logger.info("new index = "+String.valueOf(idxc));
+//        char[] dfnc = file_CurrROMSDataset.toCharArray();
+//        for (int i=idxc.length;i>0;i--) {
+//            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
+//        }
+//        return String.valueOf(dfnc);
+        logger.info("in getNextFilename()");
+        if (indx_CurrROMSDataset<(files_ROMSDatasets.length-1)){
+            indx_CurrROMSDataset++;
+            logger.info("incrementing indx_CurrROMSDataset to: "+indx_CurrROMSDataset);
+            logger.info("next ROMS dataset: "+files_ROMSDatasets[indx_CurrROMSDataset]);
+            return files_ROMSDatasets[indx_CurrROMSDataset];
         }
-        return String.valueOf(dfnc);
+        return "";
     }
     
     /**
      * Method is called internally to decrement the netCDF file name for the
      * previous ROMS dataset.
-     * @returns String - previous ROMS dataset filename
+     * 
+     * @return String - previous ROMS dataset filename
      */
     protected String getPreviousFilename() {
-        int n = file_CurrROMSDataset.length();
-        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
-        String idx = file_CurrROMSDataset.substring(n-7,n-3);
-        //logger.info("idx = "+idx);
-        int ndx = Integer.parseInt(idx);
-        char[] idxc = String.valueOf(ndx-1).toCharArray();
-        //logger.info("new index = "+String.valueOf(idxc));
-        char[] dfnc = file_CurrROMSDataset.toCharArray();
-        for (int i=idxc.length;i>0;i--) {
-            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
+//        int n = file_CurrROMSDataset.length();
+//        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
+//        String idx = file_CurrROMSDataset.substring(n-7,n-3);
+//        //logger.info("idx = "+idx);
+//        int ndx = Integer.parseInt(idx);
+//        char[] idxc = String.valueOf(ndx-1).toCharArray();
+//        //logger.info("new index = "+String.valueOf(idxc));
+//        char[] dfnc = file_CurrROMSDataset.toCharArray();
+//        for (int i=idxc.length;i>0;i--) {
+//            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
+//        }
+//        return String.valueOf(dfnc);
+        logger.info("in getPreviousFilename()");
+        if (indx_CurrROMSDataset>0){
+            indx_CurrROMSDataset--;
+            logger.info("decrementing indx_CurrROMSDataset to: "+indx_CurrROMSDataset);
+            logger.info("previous ROMS dataset: "+files_ROMSDatasets[indx_CurrROMSDataset]);
+            return files_ROMSDatasets[indx_CurrROMSDataset];
         }
-        return String.valueOf(dfnc);
+        return "";
     }
 
     /**
