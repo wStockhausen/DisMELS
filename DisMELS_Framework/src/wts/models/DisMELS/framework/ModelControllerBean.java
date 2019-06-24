@@ -702,16 +702,22 @@ public class ModelControllerBean extends Object
         grid3D = globalInfo.getGrid3D();
         
         //get array of ROMS dataset names in folder with "first" one
-        files_ROMSDatasets = com.wtstockhausen.utils.FilesLister.findFilesWithSameExtension(file_ROMSDataset);
-        String msg = "InitializeEnvironment:: available ROMS datasets:";
-        for (String file_ROMSDataset : files_ROMSDatasets) msg = msg + "\n \t '" + file_ROMSDataset+"'";
-        logger.info(msg);
-        //set "current" ROMS dataset to "first" one
-        file_CurrROMSDataset = file_ROMSDataset;
-        logger.info("InitializeEnvironment:: current ROMS dataset: '"+file_CurrROMSDataset+"'");
-        //identify location of "current" ROMS dataset in filenames array
-        indx_CurrROMSDataset = Arrays.binarySearch(files_ROMSDatasets, file_CurrROMSDataset);
-        logger.info("InitializeEnvironment:: current ROMS dataset has index: "+indx_CurrROMSDataset);
+        try {
+            files_ROMSDatasets = com.wtstockhausen.utils.FilesLister.findFilesWithSameExtension(file_ROMSDataset);
+            String msg = "InitializeEnvironment:: available ROMS datasets:";
+            for (String file_ROMSDataset : files_ROMSDatasets) msg = msg + "\n \t '" + file_ROMSDataset+"'";
+            logger.info(msg);
+            //set "current" ROMS dataset to "first" one
+            file_CurrROMSDataset = file_ROMSDataset;
+            logger.info("InitializeEnvironment:: current ROMS dataset: '"+file_CurrROMSDataset+"'");
+            //identify location of "current" ROMS dataset in filenames array
+            indx_CurrROMSDataset = Arrays.binarySearch(files_ROMSDatasets, file_CurrROMSDataset);
+            logger.info("InitializeEnvironment:: current ROMS dataset has index: "+indx_CurrROMSDataset);
+        } catch (IOException ex){
+            JOptionPane.showMessageDialog(null, "file '"+file_ROMSDataset+"' was not found!", 
+                                         "Error message", JOptionPane.ERROR_MESSAGE);
+            throw(ex);
+        }
         
         //set netcdfReader to read first ROMS dataset
         netcdfReader = new NetcdfReader(file_CurrROMSDataset);
