@@ -70,6 +70,7 @@
             </file>
             <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.instance"/>
             <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.instance"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsBySelectedGISLayerAction.instance"/>
             <file name="wts-models-DisMELS-actions-ExportAnimationAction.instance"/>
             <file name="wts-models-DisMELS-actions-RunAction.instance">
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
@@ -78,7 +79,7 @@
                 <attr name="delegate" newvalue="wts.models.DisMELS.actions.RunAction"/>
                 <attr name="surviveFocusChange" boolvalue="false"/>
                 <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#RunAction.CTL_RunAction"/>
-                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <!--attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
             <file name="wts-models-DisMELS-actions-TestAction.instance">
@@ -88,7 +89,7 @@
                 <attr name="delegate" newvalue="wts.models.DisMELS.actions.TestAction"/>
                 <attr name="surviveFocusChange" boolvalue="false"/>
                 <attr name="displayName" bundlevalue="wts/models/DisMELS/actions/Bundle#TestAction.CTL_TestAction"/>
-                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <!--attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
         </folder>
@@ -142,9 +143,13 @@
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.instance"/>
                 <attr name="position" intvalue="470"/>
             </file>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsBySelectedGISLayerAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsBySelectedGISLayerAction.instance"/>
+                <attr name="position" intvalue="480"/>
+            </file>
             <file name="wts-models-DisMELS-actions-ExportAnimationAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-ExportAnimationAction.instance"/>
-                <attr name="position" intvalue="480"/>
+                <attr name="position" intvalue="600"/>
             </file>
             <file name="wts-models-DisMELS-actions-TestAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-actions-TestAction.instance"/>

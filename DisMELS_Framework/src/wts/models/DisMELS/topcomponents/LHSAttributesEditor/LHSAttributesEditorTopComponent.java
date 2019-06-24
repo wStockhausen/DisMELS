@@ -180,6 +180,8 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     JMenu jmuRemoveSelectableGISLayers = null;
     /** JMenu for selecting selectable GIS layer */
     JMenu jmuSelectedGISLayer = null;
+    /** JMenu to add individuals using all polygons in GIS layer */
+    JMenu jmuAddIndividualsBySelectedGISLayer = null;
     /** ButtonGroup for selected map layer */
     ButtonGroup bgSelectableGISLayers = new ButtonGroup();
     
@@ -539,7 +541,11 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
      */
     public void setSelectedLayer(String layer){
         MapLayer mapLayer = selectableLayers.get(layer);
-        if (mapLayer!=null) selectedLayer = mapLayer;
+        jmuAddIndividualsBySelectedGISLayer.setEnabled(false);
+        if (mapLayer!=null) {
+            selectedLayer = mapLayer;
+            jmuAddIndividualsBySelectedGISLayer.setEnabled(true);
+        }
     }
 
     /**
@@ -750,6 +756,14 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         isDragging = false;
     }
 
+    /**
+     * Add one individual at the location defined by the Point2D object, or
+     * a grid of individuals in the polygon feature in the selected GIS layer 
+     * which contains the location.
+     * 
+     * @param addIndividual - flag to add a single individual (if true) or grid (if false) 
+     * @param pt - the Point2D object determining the location used
+     */
     public void addIndividuals(final boolean addIndividual, final java.awt.geom.Point2D pt)throws 
                         IllegalAttributeException, TransformException, IntrospectionException, InstantiationException, IllegalAccessException, IOException{
         if (debug) logger.info("Adding individuals!!");
@@ -787,30 +801,6 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         }
     }
 
-    public void addIndividuals(final java.awt.geom.Point2D pt1, final java.awt.geom.Point2D pt2){
-        Runnable r = new Runnable(){
-            @Override
-            public void run() {
-                try {
-                    Cursor c = getCursor();
-                    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    validate();
-                    repaint();
-                    if (ftLHS==null) setAttributes();
-                    FeatureCollection fc = addPointsInGrid(pt1,pt2);
-                    fcStartPoints.addAll(fc);
-                    fcLastAddedPoints.addAll(fc);
-                    jpFeaturesTable.addAll(fc);
-                    enableSaveAction(true);
-                    setCursor(c);
-                } catch (IllegalAttributeException | TransformException | InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
-        };
-        ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
-    }
-    
     /**
      * Adds individuals based on the horizontal location given by the point.  Multiple individuals
      * can be added if a vertical and/or temporal grid is specified, so a FeatureCollection is returned.
@@ -877,6 +867,36 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             Exceptions.printStackTrace(ex);
         }    
         return fc;
+    }
+    
+    /**
+     * Add individuals in a grid across the rectangle defined by the two input Point2D's.
+     * 
+     * @param pt1 - location of one corner of rectangle as Point2D object 
+     * @param pt2 - location of opposite corner of rectangle as Point2D object 
+     */
+    public void addIndividuals(final java.awt.geom.Point2D pt1, final java.awt.geom.Point2D pt2){
+        Runnable r = new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    Cursor c = getCursor();
+                    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    validate();
+                    repaint();
+                    if (ftLHS==null) setAttributes();
+                    FeatureCollection fc = addPointsInGrid(pt1,pt2);
+                    fcStartPoints.addAll(fc);
+                    fcLastAddedPoints.addAll(fc);
+                    jpFeaturesTable.addAll(fc);
+                    enableSaveAction(true);
+                    setCursor(c);
+                } catch (IllegalAttributeException | TransformException | InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        };
+        ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
     }
     
     /**
@@ -973,6 +993,87 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     }
     
     /**
+     * Add one individual at the location defined by the Point2D object, or
+     * a grid of individuals in the polygon feature in the selected GIS layer 
+     * which contains the location.
+     * 
+     * @param addIndividual - flag to add a single individual (if true) or grid (if false) 
+     * @param pt - the Point2D object determining the location used
+     */
+    public void addIndividualsToAllPolygonsInSelectedLayer(){
+        if (debug) logger.info("Adding individuals to ALL POLYGONS in LAYER!!");
+        fcLastAddedPoints.clear();
+        Runnable r = new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    Cursor c = getCursor();
+                    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    validate();
+                    repaint();
+                    if (ftLHS==null) setAttributes();
+                    FeatureCollection fc = addPointsToAllPolygonsInSelectedLayer();
+                    fcStartPoints.addAll(fc);
+                    fcLastAddedPoints.addAll(fc);
+                    jpFeaturesTable.addAll(fc);
+                    enableSaveAction(true);
+                    setCursor(c);
+                } catch (IllegalAttributeException | TransformException | InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        };
+        ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
+    }
+    
+    /**
+     * Adds points (individuals) to all the polygon features in 
+     * the selected polygon layer.
+     * 
+     * @throws IllegalAttributeException
+     * @throws TransformException
+     * @throws IntrospectionException 
+     */
+    public FeatureCollection addPointsToAllPolygonsInSelectedLayer()
+            throws IllegalAttributeException, TransformException, IntrospectionException {
+        double dx = rpa.getDeltaX();
+        double dy = rpa.getDeltaY();
+        if (debug) logger.info("addPointsToAllPolygonsInSelectedLayer: Adding points to polygon at spacing "+dx+" x "+dy);
+        FeatureCollection fc = FeatureCollections.newCollection();
+        try {
+            //get the feature source for the selectable layer
+            FeatureSource fs = getSelectedLayer().getFeatureSource();
+            FeatureCollection selFC = fs.getFeatures();
+            FeatureIterator itSelFC = selFC.features();
+            Point tp = null;
+            GeometryFactory gfac = new GeometryFactory();
+            while (itSelFC.hasNext()) {
+                //use bounds to define an "array" of potential points to add.  
+                //For each point that is contained by the feature, 
+                //add it to the map as a new initial position.
+                Feature f = itSelFC.next();
+                Geometry poly = f.getDefaultGeometry();
+                Envelope e = f.getBounds();
+                GeometryFilter gf = filterFactory.createGeometryFilter(GeometryFilter.GEOMETRY_CONTAINS);
+                gf.addLeftGeometry(filterFactory.createLiteralExpression(
+                                        f.getDefaultGeometry())
+                                   );
+                for (double x=e.getMinX();x<=e.getMaxX();x=x+dx) {
+                    for (double y=e.getMinY();y<=e.getMaxY();y=y+dy) {
+                        tp = gfac.createPoint(new Coordinate(x,y));
+                        if (tp.within(poly)) {
+                            fc.addAll(addPoint(new Point2D.Double(x,y)));
+                        }
+                    }
+                }
+            }//finished creating FeatureCollection
+        } catch (IllegalFilterException | IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return(fc);
+    }
+    
+    /**
      * Clears all individuals from fcStartPoints.
      */
     public void clearAllIndividuals(){
@@ -999,11 +1100,15 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         jmuRemoveSelectableGISLayers = jmu;
     }
     
+    public void setAddIndividualsBySelectedGISLayerMenu(JMenu jmu){
+        jmuAddIndividualsBySelectedGISLayer = jmu;
+    }
+    
     /** 
      * Adds a GIS layer based on a shapefile the user is prompted for.
      */
     public void addSelectableGISLayer(){
-        if (debug) logger.info("Adding GIS Layer");
+        if (debug) logger.info("Adding selectable GIS Layer");
         int res = jfcLayer.showOpenDialog(this);
         if (res==JFileChooser.APPROVE_OPTION) {
             File f = jfcLayer.getSelectedFile();
@@ -1043,11 +1148,13 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                 //TODO: add a notify descriptor dialog here
                 return;
             }
-
+            
             final MapLayer layer = new DefaultMapLayer(source,style,url.getPath());
             tcMapViewer.addGISLayer(layer);
             selectedLayer = layer;
             selectableLayers.put(layer.getTitle(),layer);
+            
+            //add radio button to SelectableGISLayers button group to allow de/re-selection of map layer
             final JRadioButtonMenuItem jrb = new JRadioButtonMenuItem(layer.getTitle());
             bgSelectableGISLayers.add(jrb);
             jrb.setSelected(true);
@@ -1056,9 +1163,11 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                     setSelectedLayer(evt.getActionCommand());
                 }
             });
-            jmuSelectedGISLayer.add(jrb);//add item to menu associated with the action
-            jmuSelectedGISLayer.setEnabled(true);
+            jmuSelectedGISLayer.add(jrb);        //add radio button to SelectedGISLayer menu
+            jmuSelectedGISLayer.setEnabled(true);//enable menu
             
+            
+            //add menu item to RemoveSelectableGISLayer menu to remove layer
             final JMenuItem jmi = new JMenuItem(layer.getTitle());
             jmi.setText(layer.getTitle());
             jmi.setActionCommand(layer.getTitle());
@@ -1071,7 +1180,10 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                     tcMapViewer.removeGISLayer(layer);
                     //remove the associated menu items 
                     jmuRemoveSelectableGISLayers.remove(jmi);
-                    if (jrb.isSelected()) selectedLayer = null;
+                    if (jrb.isSelected()) {
+                        selectedLayer = null;
+                        jmuAddIndividualsBySelectedGISLayer.setEnabled(false);
+                    }
                     jmuSelectedGISLayer.remove(jrb);
                 }
             });
