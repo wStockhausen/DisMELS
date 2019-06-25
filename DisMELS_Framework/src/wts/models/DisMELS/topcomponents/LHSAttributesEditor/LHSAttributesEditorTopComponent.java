@@ -823,6 +823,9 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         try {
             ftLHS.setGeometryFromMap(pt.getX(),pt.getY());
             LifeStageAttributesInterface aLHSt = (LifeStageAttributesInterface) lhsAttributes.clone();
+            double bd = romsGI.getInterpolator().interpolateBathymetricDepth(IJ);
+            logger.info("creating feature. bathymetric depth = "+bd);
+            aLHSt.setValue(LifeStageAttributesInterface.PROP_bathym, bd);
             ftLHS.setAttributes(aLHSt);
             int nt = 1;
             double dt = 0;
@@ -833,11 +836,8 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             }
             int nz = 1;
             double dz = 0;
-            double bd = 0;
             if (rpa.getCreateVerticalGrid()) {
                 dz = rpa.getDeltaZ();
-                bd = romsGI.getInterpolator().interpolateBathymetricDepth(IJ);
-//                bd = tcMapViewer.interpolateBathymetricDepth(pt.getX(),pt.getY());
                 nz = (int)(bd/dz)+1;
                 aLHSt.setValue(LifeStageAttributesInterface.PROP_vertType,Types.VERT_H);
             }
@@ -857,9 +857,6 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                     }
                     feature = ftLHS.createFeature();
                     fc.add(feature);
-//                    fcStartPoints.add(feature);
-//                    fcLastAddedPoints.add(feature);
-//                    jpFeaturesTable.add(feature);
                 }
             }
             ftLHS.setAttributes(lhsAttributes);

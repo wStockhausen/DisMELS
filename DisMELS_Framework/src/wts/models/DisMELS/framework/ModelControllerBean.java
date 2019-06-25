@@ -1396,8 +1396,10 @@ public class ModelControllerBean extends Object
      * Runs the environmental model for ntEnvironModel with time step of timeStep. 
      * The biological components are integrated forward with a potentially 
      * smaller time step of timeStep/ntBioModel.
+     * 
+     * @throws IOException
      */
-    public void run() {
+    public void run() throws IOException {
         run(ntEnvironModel,timeStep,ntBioModel);
     }
     
@@ -1410,8 +1412,10 @@ public class ModelControllerBean extends Object
      * @param dt        -- time step to use for environmental model propagation
      * @param nLPTsteps -- # of fast integration steps per environmental time step
      *                     used to propagate the biological model forward.
+     * 
+     * @throws IOException
      */
-    public void run(int nTimes, double dt, int nLPTsteps) {
+    public void run(int nTimes, double dt, int nLPTsteps) throws IOException {
         double systime = System.currentTimeMillis();
         double dtp = dt/nLPTsteps;
         for (int t=0;t<nTimes;t++) {//loop over environmental model timesteps
@@ -1447,6 +1451,7 @@ public class ModelControllerBean extends Object
                     else timestepEnvironmentBackwards();
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
+                    throw(ex);
                 }
             }
         }
@@ -1585,7 +1590,12 @@ public class ModelControllerBean extends Object
         
         private class ActualRunModelTask {
             private ActualRunModelTask() {
-                run(ntEnvironModel,timeStep,ntBioModel);
+                try{
+                    run(ntEnvironModel,timeStep,ntBioModel);                    
+                }  catch (Exception ex){
+                   Exceptions.printStackTrace(ex);
+                   done = true;
+                 }
                 done = true;
             }
         }
