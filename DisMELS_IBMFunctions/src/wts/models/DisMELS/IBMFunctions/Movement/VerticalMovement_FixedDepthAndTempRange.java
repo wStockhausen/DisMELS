@@ -13,8 +13,8 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMFunctionInterface;
 import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
 
 /**
- * This class provides an implementation of vertical movement within a
- * fixed, "preferred", depth range.  
+ * This class provides an implementation of vertical movement within
+ * fixed, "preferred", depth and temperature ranges.  
  * 
  * When inside the preferred depth range, vertical movement is described as an 
  * uncorrelated random walk.  When outside the preferred range, a vertical 
@@ -24,15 +24,22 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * Function type: 
  *      vertical movement
  * Parameters (by key):
- *      minDepth      - Double: min depth (m)
- *      maxDepth      - Double: max depth (m)
- *      offBottomDist - Double: min distance off bottom (m)
- *      rpw           - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
+ *      minDepth         - Double: min depth (m)
+ *      maxDepth         - Double: max depth (m)
+ *      minDistOffBottom - Double: min distance off bottom (m)
+ *      minTemp          - Double: min temperature (deg C)
+ *      maxTemp          - Double: max temperature (deg C)
+ *      useEnvVar        - Integer: flag (1/-1/0) indicating preference to stay 
+ *                                  at above (1) or below (-1) a value for an 
+ *                                  environmental variable (0=no preference)
+ *      rpw              - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
  * Variables:
  *      dt          - [0] - integration time step
  *      depth       - [1] - current depth of individual
  *      total depth - [2] - total depth at location
  *      w           - [3] - active vertical swimming speed outside preferred depth range
+ *      valEV       - [4] - (optional) value of environmental variable
+ *      grdEV       - [5] - (optional) vertical gradient of environmental variable
  * Value:
  *      Double: vertical swimming speed (same units as w)
  * Calculation:
@@ -45,7 +52,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
     @ServiceProvider(service=IBMMovementFunctionInterface.class),
     @ServiceProvider(service=IBMFunctionInterface.class)}
 )
-public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction 
+public class VerticalMovement_FixedDepthAndTempRange extends AbstractIBMFunction 
                                             implements IBMMovementFunctionInterface {
     
     /** function classification */
@@ -53,12 +60,12 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
     /** user-friendly function name */
     public static final String DEFAULT_name = "Vertical movement";
     /** function description */
-    public static final String DEFAULT_descr = "Vertical movement within a (fixed) preferred depth range";
+    public static final String DEFAULT_descr = "Vertical movement within a (fixed) preferred depth/temperature range";
     /** full description */
     public static final String DEFAULT_fullDescr = 
             "\n\t**************************************************************************"+
             "\n\t* This class provides an implementation of vertical movement relative to a"+
-            "\n\t* fixed, 'preferred', depth range.  When inside the preferred range, vertical movement"+
+            "\n\t* fixed, \"preferred\", depth and temperature ranges.  When inside the preferred range, vertical movement"+
             "\n\t* is described as an uncorrelated random walk.  When outside the preferred range,"+
             "\n\t* a vertical swimming speed (externally calculated) is applied"+
             "\n\t* in the direction that would move the individual toward the preferred depth range."+
@@ -69,12 +76,19 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
             "\n\t*      minDepth         - Double:"+
             "\n\t*      maxDepth         - Double:"+
             "\n\t*      minDistOffBottom - Double:"+
+            "\n\t*      minTemp          - Double: min temperature (deg C)"+
+            "\n\t*      maxTemp          - Double: max temperature (deg C)"+
+            "\n\t*      useEnvVar        - Integer: flag (1/-1/0) indicating preference to stay"+
+            "\n\t*                                  at above (1) or below (-1) a value for an" +
+            "\n\t*                                  environmental variable (0=no preference)"+
             "\n\t*      rpw              - Double - random walk parameter w/in preferred depth range ([distance]^2/[time])"+
             "\n\t* Variables:"+
             "\n\t*      dt          - [0] - integration time step"+
             "\n\t*      depth       - [1] - current depth of individual"+
             "\n\t*      total depth - [2] - total depth at location"+
             "\n\t*      w           - [3] - active vertical swimming speed outside preferred depth range"+
+            "\n\t*      valEV       - [4] - (optional) value of environmental variable"+
+            "\n\t*      grdEV       - [5] - (optional) vertical gradient of environmental variable"+
             "\n\t* Value:"+
             "\n\t*      Double: vertical swimming speed"+
             "\n\t* Calculation:"+
@@ -87,7 +101,7 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
     protected static final RandomNumberGenerator rng = GlobalInfo.getInstance().getRandomNumberGenerator();
 
     /** number of settable parameters */
-    public static final int numParams = 4;
+    public static final int numParams = 7;
     /** number of sub-functions */
     public static final int numSubFuncs = 0;
 
@@ -103,24 +117,39 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
     public static final String PARAM_minDistOffBottom = "min distance off bottom (m)";
     /* the parameter's value */
     protected double offBottomDepth = 0.0;
+    /* name associated with parameter minTemp */
+    public static final String PARAM_minTemp = "min temp (deg C)";
+    /* the parameter's value */
+    protected double minTemp;
+    /* name associated with parameter maxTemp */
+    public static final String PARAM_maxTemp = "max depth (deg C)";
+    /* the parameter's value */
+    protected double maxTemp;
+    /* name associated with parameter maxDepth */
+    public static final String PARAM_useEnvVar = "use environmental variable (-1/0/1)";
+    /* the parameter's value */
+    protected int useEnvVar = 0;
     /** key to set random walk parameter */
     public static final String PARAM_rpw = "random walk parameter (m^2/s)";    
     /** value of random walk parameter */
     private double rpw = 0;
         
     /** constructor for class */
-    public VerticalMovement_FixedDepthRange(){
+    public VerticalMovement_FixedDepthAndTempRange(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
         String key;
         key = PARAM_minDepth;         addParameter(key, Double.class,key);
         key = PARAM_maxDepth;         addParameter(key, Double.class,key);
         key = PARAM_minDistOffBottom; addParameter(key, Double.class,key);
+        key = PARAM_minTemp;          addParameter(key, Double.class,key);
+        key = PARAM_maxTemp;          addParameter(key, Double.class,key);
+        key = PARAM_useEnvVar;        addParameter(key, Integer.class,key);
         key = PARAM_rpw;              addParameter(key, Double.class,key);
     }
     
     @Override
-    public VerticalMovement_FixedDepthRange clone(){
-        VerticalMovement_FixedDepthRange clone = new VerticalMovement_FixedDepthRange();
+    public VerticalMovement_FixedDepthAndTempRange clone(){
+        VerticalMovement_FixedDepthAndTempRange clone = new VerticalMovement_FixedDepthAndTempRange();
         clone.setFunctionType(getFunctionType());
         clone.setFunctionName(getFunctionName());
         clone.setDescription(getDescription());
@@ -150,6 +179,15 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
                 case PARAM_minDistOffBottom:
                     offBottomDepth = ((Double) value);
                     break;
+                case PARAM_minTemp:
+                    minTemp = ((Double) value);
+                    break;
+                case PARAM_maxTemp:
+                    maxTemp = ((Double) value);
+                    break;
+                case PARAM_useEnvVar:
+                    useEnvVar = ((Integer) value);
+                    break;
                 case PARAM_rpw:
                     rpw = ((Double) value);
                     break;
@@ -178,6 +216,8 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
         double depth             = dbls[k++];//current depth
         double totalDepth        = dbls[k++];//total depth
         double vertSwimmingSpeed = dbls[k++];//vertical swimming speed if outside preferred range
+        double valEV = 0.0; double grdEV = 0.0;
+        if (useEnvVar!=0) {valEV = dbls[k++]; grdEV = dbls[k++];} 
 
         //determine vertical movement & calc indiv. W
         double w = 0;
