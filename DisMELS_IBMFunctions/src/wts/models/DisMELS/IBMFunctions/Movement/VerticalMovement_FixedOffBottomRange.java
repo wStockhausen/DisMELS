@@ -39,7 +39,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  *      eps  = N(0,sigV) [random draw from a normal distribution)
  *      v    = w*delta(outside preferred depth range) + sqrt(rpw/dt)*eps;
  * 
- * @author William.Stockhausen
+ * @author William Stockhausen
  */
 @ServiceProviders(value={
     @ServiceProvider(service=IBMMovementFunctionInterface.class),
@@ -92,18 +92,18 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
     /** number of sub-functions */
     public static final int numSubFuncs = 0;
 
-    /* name associated with parameter minDepth */
-    public static final String PARAM_minDepth = "min depth (m)";
-    /* the parameter's value */
-    protected double minDepth;
     /* name associated with parameter maxDepth */
     public static final String PARAM_maxDepth = "max depth (m)";
     /* the parameter's value */
     protected double maxDepth;
+    /* name associated with parameter minDistOffBottom */
+    public static final String PARAM_minDistOffBottom = "min depth (m)";
+    /* the minDistOffBottom parameter's value */
+    protected double minDistOffBottom;
     /* name associated with parameter maxDepth */
-    public static final String PARAM_offBottomDepth = "off-bottom depth (m)";
+    public static final String PARAM_maxDistOffBottom = "off-bottom depth (m)";
     /* the parameter's value */
-    protected double offBottomDepth = 0.0;
+    protected double maxDistOffBottom = 0.0;
     /** key to set random walk parameter */
     public static final String PARAM_rpw = "random walk parameter (m^2/s)";    
     /** value of random walk parameter */
@@ -113,10 +113,10 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
     public VerticalMovement_FixedOffBottomRange(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
         String key;
-        key = PARAM_minDepth;        addParameter(key, Double.class,key);
-        key = PARAM_maxDepth;        addParameter(key, Double.class,key);
-        key = PARAM_offBottomDepth;  addParameter(key, Double.class,key);
-        key = PARAM_rpw;             addParameter(key, Double.class,key);
+        key = PARAM_maxDepth;         addParameter(key, Double.class,key);
+        key = PARAM_minDistOffBottom; addParameter(key, Double.class,key);
+        key = PARAM_maxDistOffBottom; addParameter(key, Double.class,key);
+        key = PARAM_rpw;              addParameter(key, Double.class,key);
     }
     
     @Override
@@ -142,14 +142,14 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
     public boolean setParameterValue(String param,Object value){
         if (super.setParameterValue(param, value)){
             switch (param) {
-                case PARAM_minDepth:
-                    minDepth = ((Double) value).doubleValue();
-                    break;
                 case PARAM_maxDepth:
                     maxDepth = ((Double) value).doubleValue();
                     break;
-                case PARAM_offBottomDepth:
-                    offBottomDepth = ((Double) value).doubleValue();
+                case PARAM_minDistOffBottom:
+                    minDistOffBottom = ((Double) value).doubleValue();
+                    break;
+                case PARAM_maxDistOffBottom:
+                    maxDistOffBottom = ((Double) value).doubleValue();
                     break;
                 case PARAM_rpw:
                     rpw = ((Double) value).doubleValue();
@@ -182,11 +182,11 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
 
         //determine vertical movement & calc indiv. W
         double w = 0;
-        if (depth<minDepth) {
-            w = -vertSwimmingSpeed*(1.0-Math.exp(-(minDepth-depth)/10.0));
+        if (depth<totalDepth-maxDistOffBottom) {
+            w = -vertSwimmingSpeed*(1.0-Math.exp(-((totalDepth-maxDistOffBottom)-depth)/10.0));
         } else 
-        if ((depth>maxDepth)||(depth>(totalDepth-offBottomDepth))) {
-            w =  vertSwimmingSpeed*(1.0-Math.exp(-(depth-maxDepth)/10.0));
+        if ((depth>maxDepth)||(depth>(totalDepth-minDistOffBottom))) {
+            w =  vertSwimmingSpeed*(1.0-Math.exp(-(Math.min(depth-totalDepth, depth-(totalDepth-minDistOffBottom)))/10.0));
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
         return w;
