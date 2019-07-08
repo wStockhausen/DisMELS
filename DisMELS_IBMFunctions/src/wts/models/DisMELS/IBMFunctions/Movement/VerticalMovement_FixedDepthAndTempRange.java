@@ -16,10 +16,13 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * This class provides an implementation of vertical movement within
  * fixed, "preferred", depth and temperature ranges.  
  * 
+ * <p>
  * When inside the preferred depth range, vertical movement is described as an 
  * uncorrelated random walk.  When outside the preferred range, a vertical 
  * swimming speed (externally calculated) is applied in the direction that 
  * would move the individual toward the preferred depth range.
+ * </p>
+ * <pre>
  * 
  * Function type: 
  *      vertical movement
@@ -45,6 +48,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * Calculation:
  *      eps  = N(0,sigV) [random draw from a normal distribution)
  *      v    = w*delta(outside preferred depth range) + sqrt(rpw/dt)*eps;
+ * </pre>
  * 
  * @author William Stockhausen
  */
@@ -164,7 +168,7 @@ public class VerticalMovement_FixedDepthAndTempRange extends AbstractIBMFunction
      * 
      * @param param - the parameter key (name)
      * @param value - its value
-     * @return 
+     * @return <code>true</code> if parameter was set successfully
      */
     @Override
     public boolean setParameterValue(String param,Object value){
@@ -198,14 +202,13 @@ public class VerticalMovement_FixedDepthAndTempRange extends AbstractIBMFunction
     }
 
     /**
-     * Calculates the value of the function, given the current parameter params 
-     * and the input variable.
+     * Calculates the value of the function, given the input variables.
      * 
-     * @param vars - the inputs variables as a double[] array with elements
+     * @param vars - the inputs variables as a double[] array with elements<pre>
      *                  dt          - [0] - integration time step
      *                  depth       - [1] - current depth of individual
      *                  total depth - [2] - total depth at location
-     *                  w           - [3] - active vertical swimming speed outside preferred depth range
+     *                  w           - [3] - active vertical swimming speed outside preferred depth range</pre>
      * @return     - Double: individual active vertical movement velocity
      */
     @Override
