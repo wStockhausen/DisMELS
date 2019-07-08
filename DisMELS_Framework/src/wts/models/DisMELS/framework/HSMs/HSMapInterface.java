@@ -7,7 +7,7 @@ package wts.models.DisMELS.framework.HSMs;
 
 /**
  *
- * @author WilliamStockhausen
+ * @author William Stockhausen
  */
 public interface HSMapInterface {
     

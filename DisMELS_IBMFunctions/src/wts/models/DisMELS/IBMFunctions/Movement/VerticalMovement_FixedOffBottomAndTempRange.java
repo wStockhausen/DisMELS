@@ -22,6 +22,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * swimming speed (externally calculated) is applied in the direction that 
  * would move the individual toward the preferred depth range. 
  * 
+ * <pre>
  * Function type: 
  *      vertical movement
  * Parameters (by key):
@@ -31,7 +32,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  *      minTemp          - Double: min temperature (deg C)
  *      maxTemp          - Double: max temperature (deg C)
  *      useEnvVar        - Integer: flag (1/-1/0) indicating preference to stay 
- *                                  at above (1) or below (-1) a value for an 
+ *                                  at above (&ge 1) or below (&le -1) a value for an 
  *                                  environmental variable (0=no preference)
  *      rpw              - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
  * Variables:
@@ -46,6 +47,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * Calculation:
  *      eps  = N(0,sigV) [random draw from a normal distribution)
  *      v    = w*delta(outside preferred depth range) + sqrt(rpw/dt)*eps;
+ * </pre>
  * 
  * @author William Stockhausen
  */
@@ -81,7 +83,7 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
             "\n\t*      minTemp          - Double: min temperature (deg C)"+
             "\n\t*      maxTemp          - Double: max temperature (deg C)"+
             "\n\t*      useEnvVar        - Integer: flag (1/-1/0) indicating preference to stay"+
-            "\n\t*                                  at above (1) or below (-1) a value for an" +
+            "\n\t*                                  at above (>=1) or below (<=-1) a value for an" +
             "\n\t*                                  environmental variable (0=no preference)"+
             "\n\t*      rpw              - Double - random walk parameter w/in preferred depth range ([distance]^2/[time])"+
             "\n\t* Variables:"+
@@ -89,6 +91,8 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
             "\n\t*      depth       - [1] - current depth of individual"+
             "\n\t*      total depth - [2] - total depth at location"+
             "\n\t*      w           - [3] - active vertical swimming speed outside preferred depth range"+
+            "\n\t*      valEV       - [4] - (optional) value of environmental variable"+
+            "\n\t*      grdEV       - [5] - (optional) vertical gradient of environmental variable"+
             "\n\t* Value:"+
             "\n\t*      Double: vertical swimming speed"+
             "\n\t* Calculation:"+
@@ -198,14 +202,17 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
     }
 
     /**
-     * Calculates the value of the function, given the current parameter params 
-     * and the input variable.
+     * Calculates the value of the function, given the input values.
      * 
      * @param vars - the inputs variables as a double[] array with elements
-     *                  dt          - [0] - integration time step
-     *                  depth       - [1] - current depth of individual
-     *                  total depth - [2] - total depth at location
-     *                  w           - [3] - active vertical swimming speed outside preferred depth range
+     * <pre>
+     *      dt          - [0] - integration time step
+     *      depth       - [1] - current depth of individual
+     *      total depth - [2] - total depth at location
+     *      w           - [3] - active vertical swimming speed outside preferred depth range
+     *      valEV       - [4] - (optional) value of environmental variable
+     *      grdEV       - [5] - (optional) vertical gradient of environmental variable
+     * </pre>
      * @return     - Double: individual active vertical movement velocity
      */
     @Override
@@ -217,7 +224,8 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
         double totalDepth        = dbls[k++];//total depth
         double vertSwimmingSpeed = dbls[k++];//vertical swimming speed if outside preferred range
         double valEV = 0.0; double grdEV = 0.0;
-        if (useEnvVar!=0) {valEV = dbls[k++]; grdEV = dbls[k++];} 
+        if (Math.abs(useEnvVar)>0) valEV = dbls[k++]; 
+        if (Math.abs(useEnvVar)>1) grdEV = dbls[k++];
 
         //determine vertical movement & calc indiv. W
         double w = 0;

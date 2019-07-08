@@ -21,6 +21,14 @@ public class HSMap_NetCDF implements HSMapInterface {
 
     String conn = null;
     NetcdfDataset ds = null;
+    /** cell size (m) */
+    Variable csz = null; 
+    /** x-coordinates lower left corner */
+    Variable xll = null;
+    /** y-coordinates lower left corner */
+    Variable yll = null;
+    /** hsm */
+    Variable hsm = null;
     
     public HSMap_NetCDF(){
         
@@ -35,6 +43,10 @@ public class HSMap_NetCDF implements HSMapInterface {
     public boolean setConnectionString(String conn) {
         try{
             ds = NetcdfDataset.openDataset(conn);
+            csz = ds.findVariable("cellsize");
+            xll = ds.findVariable("hsm");
+            yll = ds.findVariable("hsm");
+            hsm = ds.findVariable("hsm");
             return true;
         } catch (IOException ex) {
             //TOO: do something here!
@@ -42,11 +54,29 @@ public class HSMap_NetCDF implements HSMapInterface {
         return false;
     }
 
+    /**
+     * Calculate value of the HSM at position 'pos'.
+     * 
+     * @param pos
+     * @return Object reflecting value(s) of HSM
+     */
     @Override
     public Object calcValue(double[] pos) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int x = (int)((pos[1]-xll)/cellsize);
+        int y = (int)((pos[2]-yll)/cellsize);
+        int[] shp = new int[]{y+1,x+1};
+        int[] origin = new int[]{y-1,x-1};
+        Array a = new Array(hsm.read(origin,shp));
     }
 
+    /**
+     * Calculate value of the HSM at position 'pos' based on additional information
+     * 'xtra'.
+     * 
+     * @param pos
+     * @param xtra
+     * @return Object reflecting value(s) of HSM
+     */
     @Override
     public Object calcValue(double[] pos, Object xtra) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
