@@ -5,6 +5,8 @@
  */
 package wts.models.DisMELS.framework.HSMs;
 
+import java.io.IOException;
+
 /**
  *
  * @author William Stockhausen
@@ -25,15 +27,24 @@ public interface HSMapInterface {
      * 
      * @return boolean: true if connection was successfully set
      */
-    boolean setConnectionString(String conn);
+    boolean setConnectionString(String conn) throws IOException;
+    
+    /**
+     * Checks if instance is connected to an HSMap.
+     * 
+     * @return true if connected
+     */
+    boolean isConnected();
     
     /**
      * Calculate value of the HSM at position 'pos'.
      * 
      * @param pos
      * @return Object reflecting value(s) of HSM
+     * 
+     * @throws IOException, Exception
      */
-    Object calcValue(double[] pos);
+    Object calcValue(double[] pos) throws IOException, Exception;
     
     /**
      * Calculate value of the HSM at position 'pos' based on additional information
@@ -42,6 +53,8 @@ public interface HSMapInterface {
      * @param pos
      * @param xtra
      * @return Object reflecting value(s) of HSM
+     * 
+     * @throws IOException, Exception
      */
-    Object calcValue(double[] pos, Object xtra);
+    Object calcValue(double[] pos, Object xtra) throws IOException, Exception;
 }
