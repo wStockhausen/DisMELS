@@ -6,12 +6,14 @@
 package wts.models.DisMELS.framework.HSMs;
 
 import java.io.IOException;
+import java.util.logging.Logger;
+import org.openide.util.Exceptions;
+import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Group;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import wts.roms.model.Array;
-import wts.roms.model.ModelData;
 
 /**
  *
@@ -19,16 +21,26 @@ import wts.roms.model.ModelData;
  */
 public class HSMap_NetCDF implements HSMapInterface {
 
+    /** string giving connection info (filename, url) to netcdf file */
     String conn = null;
+    /** the netcdf datset object */
     NetcdfDataset ds = null;
+    /** number of cells in x direction */
+    int nx;
+    /** number of cells in y direction */
+    int ny;
     /** cell size (m) */
-    Variable csz = null; 
+    double csz; 
     /** x-coordinates lower left corner */
-    Variable xll = null;
+    double xll;
     /** y-coordinates lower left corner */
-    Variable yll = null;
+    double yll;
     /** hsm */
     Variable hsm = null;
+    
+    Index idx;
+    
+    private static final Logger logger = Logger.getLogger(HSMap_NetCDF.class.getName());
     
     public HSMap_NetCDF(){
         
@@ -43,9 +55,11 @@ public class HSMap_NetCDF implements HSMapInterface {
     public boolean setConnectionString(String conn) {
         try{
             ds = NetcdfDataset.openDataset(conn);
-            csz = ds.findVariable("cellsize");
-            xll = ds.findVariable("hsm");
-            yll = ds.findVariable("hsm");
+            nx  = ds.findDimension("x").getLength();
+            ny  = ds.findDimension("y").getLength();
+            xll = ds.findVariable("xll").readScalarDouble();
+            yll = ds.findVariable("yll").readScalarDouble();
+            csz = ds.findVariable("cellsize").readScalarDouble();
             hsm = ds.findVariable("hsm");
             return true;
         } catch (IOException ex) {
@@ -55,92 +69,106 @@ public class HSMap_NetCDF implements HSMapInterface {
     }
 
     /**
-     * Calculate value of the HSM at position 'pos'.
+     * Calculate value of the HSM at position 'pos' (extracts nearest neighbor).
      * 
      * @param pos
      * @return Object reflecting value(s) of HSM
      */
     @Override
     public Object calcValue(double[] pos) {
-        int x = (int)((pos[1]-xll)/cellsize);
-        int y = (int)((pos[2]-yll)/cellsize);
-        int[] shp = new int[]{y+1,x+1};
-        int[] origin = new int[]{y-1,x-1};
-        Array a = new Array(hsm.read(origin,shp));
+        double val = -1.0;
+        try {
+            double xPos = (pos[0]-xll)/csz;
+            double yPos = (pos[1]-yll)/csz;
+            int Ir = (int) Math.floor(xPos)+1;
+            int Jr = (int) Math.floor(yPos)+1;
+            
+            int i1 = Math.min(Math.max(Ir  ,1),nx);
+            int i2 = Math.min(Math.max(Ir+1,2),nx);
+            int j1 = Math.min(Math.max(Jr  ,1),ny);
+            int j2 = Math.min(Math.max(Jr+1,2),ny);
+
+            int[] shp = new int[]{j1,i1};
+            ucar.ma2.Array arr = hsm.read(shp,shp);
+            
+            val = arr.getDouble(1);
+            
+            if (Double.isNaN(val)) {
+                logger.info("HSMap_NetCDF: interpolated NaN value\n"
+                                  +"\tpos[]      = "+pos[0]+", "+pos[1]+"\n"
+                                  +"\txPos, yPos = "+xPos+", "+yPos+"\n"
+                                  +"\ti1, j1     = "+i1+", "+j1);
+            }
+        } catch (IOException ex){
+            Exceptions.printStackTrace(ex);
+        } catch (InvalidRangeException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return val;
     }
 
     /**
-     * Calculate value of the HSM at position 'pos' based on additional information
-     * 'xtra'.
+     * Calculate value of the HSM at position 'pos' by interpolation.
      * 
      * @param pos
      * @param xtra
-     * @return Object reflecting value(s) of HSM
+     * 
+     * @return Object (Double) reflecting value of HSM
      */
     @Override
     public Object calcValue(double[] pos, Object xtra) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    
-    public String[] getVariableNames() {
-        Group g = ds.getRootGroup();
-        java.util.List<Variable> vl = g.getVariables();
-        java.util.ListIterator<Variable> li = vl.listIterator();
-        String[] str= new String[vl.size()];
-        Variable v = null;
-        int i=0;
-        while (li.hasNext()) {
-            v = ((Variable) li.next());
-            str[i++] = v.getName();
-        }
-        return str;
-    }
-    
-    protected void extractHSM() throws IOException {
-        String varname = null;
+        double val = -1.0;
         try {
-            Variable v = ds.findVariable(varname);
-            if (v!=null) {
-                //rank of underlying data array
-                int r = v.getRank(); 
-                //get the variable dimension names & determine indices
-                String[] dimNames = new String[r];
-                int timeIndex = -1;
-                int sIndex    = -1;
-                int etaIndex  = -1;
-                int xiIndex   = -1;
-                for (int j=0;j<r;j++) {
-                    dimNames[j] = v.getDimension(j).getName();
-                    if (dimNames[j].matches(".*time.*")) timeIndex = j;//has 'time' in the name
-                    if (dimNames[j].startsWith("s"))    sIndex    = j;
-                    if (dimNames[j].startsWith("eta"))  etaIndex  = j;
-                    if (dimNames[j].startsWith("xi"))   xiIndex   = j;
-                }
-                //set the origin and shape arrays with which to extract data
-                //from the variable.
-                int[] shp = v.getShape();
-                int[] origin = (int[]) shp.clone();
-                for (int j=0;j<r;j++) {
-                    origin[j] = 0;
-//                    if (j==timeIndex) {
-//                        shp[j] = 1;
-//                        origin[j] = iTime;
-//                    }
-                }
-                //Extract the time-sliced array from the variable.
-                //Note that the array rank remains the same as the 
-                //original.
-                Array a = new Array(v.read(origin,shp));
-                //Set the index names for the array to 
-                //the dimension names from the variable
-                for (int j=0;j<r;j++){
-                    String dm = v.getDimension(j).getName();
-                    a.setIndexName(j,dm);
-                }
+            double xPos = (pos[0]-xll)/csz;
+            double yPos = (pos[1]-yll)/csz;
+            int Ir = (int) Math.floor(xPos)+1;
+            int Jr = (int) Math.floor(yPos)+1;
+            
+            int i1 = Math.min(Math.max(Ir  ,1),nx);
+            int i2 = Math.min(Math.max(Ir+1,2),nx);
+            int j1 = Math.min(Math.max(Jr  ,1),ny);
+            int j2 = Math.min(Math.max(Jr+1,2),ny);
+
+            double p2 = ((double)(i2-i1))*(xPos-(double) i1);
+            double q2 = ((double)(j2-j1))*(yPos-(double) j1);
+            double p1 = ((double) 1) - p2;
+            double q1 = ((double) 1) - q2;
+
+            int[] shp = new int[]{y+1,x+1};
+            int[] origin = new int[]{y-1,x-1};
+            ucar.ma2.Array a = hsm.read(origin,shp);
+            
+            double v11 = md.getValue(i1,j1); v11 = Double.isNaN(v11) ? 0.0 : v11;
+            double v21 = md.getValue(i2,j1); v21 = Double.isNaN(v21) ? 0.0 : v21;
+            double v12 = md.getValue(i1,j2); v12 = Double.isNaN(v12) ? 0.0 : v12;
+            double v22 = md.getValue(i2,j2); v22 = Double.isNaN(v22) ? 0.0 : v22;
+
+            cff1 =  p1*q1*m11*v11+
+                    p2*q1*m21*v21+
+                    p1*q2*m12*v12+
+                    p2*q2*m22*v22;
+
+            cff2 =  p1*q1*m11+
+                    p2*q1*m21+
+                    p1*q2*m12+
+                    p2*q2*m22;
+
+            if (cff2>0.0) {
+                v = cff1/cff2;
+            } else {
+                v = 0.0;
             }
+
+            if (Double.isNaN(val)) {
+                logger.info("HSMap_NetCDF: interpolated NaN value\n"
+                                  +"\tvalues were "+v12+", "+v22+"\n"
+                                  +"\t            "+v11+", "+v21);
+            }
+        } catch (IOException ex){
+            Exceptions.printStackTrace(ex);
         } catch (InvalidRangeException ex) {
-            ex.printStackTrace();
+            Exceptions.printStackTrace(ex);
         }
-    }
+        return val;
+    }    
 }
