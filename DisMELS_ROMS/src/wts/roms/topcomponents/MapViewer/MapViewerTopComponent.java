@@ -449,7 +449,10 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                 style.setName("point name");
                 style.setTitle("point title");
             } else {
-                style = sb.createStyle(sb.createPolygonSymbolizer(Color.LIGHT_GRAY, Color.BLACK, 1));
+                Fill fill = sb.createFill(Color.DARK_GRAY,0.7);
+                Stroke strk = sb.createStroke(Color.BLACK, 1.0);
+                PolygonSymbolizer ps = sb.createPolygonSymbolizer(strk, fill);
+                style = sb.createStyle(ps);
                 style.setName("polygon name");
                 style.setTitle("polygon title");
            }
@@ -467,6 +470,8 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                     MapLayer layer = mapLayers.remove(evt.getActionCommand());
                     mapGUI.removeLayer(layer);
                     jmuGISLayers.remove((JMenuItem)evt.getSource());
+                    logger.info("jmi ActionPerformed: jmuGISLayers component count =  "+jmuGISLayers.getComponentCount());
+                    if (jmuGISLayers.getComponentCount()==0) jmuGISLayers.setEnabled(false);
                 }
             });
             jmi.setEnabled(true);

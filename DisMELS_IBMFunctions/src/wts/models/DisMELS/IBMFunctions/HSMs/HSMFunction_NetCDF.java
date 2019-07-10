@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
+import ucar.ma2.InvalidRangeException;
 import wts.models.DisMELS.framework.HSMs.HSM_NetCDF;
 import wts.models.DisMELS.framework.IBMFunctions.AbstractIBMFunction;
 import wts.models.DisMELS.framework.IBMFunctions.IBMFunctionInterface;
@@ -147,7 +148,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
             res = new double[1];
             try {
                 res[0] = (Double)hsm.calcValue(pos);
-            } catch (IOException ex) {
+            } catch (IOException | InvalidRangeException ex) {
                 Logger.getLogger(HSMFunction_NetCDF.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {

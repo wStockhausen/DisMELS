@@ -5,6 +5,7 @@
 package wts.roms.topcomponents.MapViewer;
 
 import java.awt.event.ActionEvent;
+import java.util.logging.Logger;
 import javax.swing.*;
 import org.openide.util.*;
 import org.openide.util.actions.Presenter;
@@ -20,7 +21,7 @@ public class RemoveGISLayerAction  extends AbstractAction
     
     private JMenu jmu = null;
     
-//    private static final Logger logger = Logger.getLogger(RemoveGISLayerAction.class.getName());
+    private static final Logger logger = Logger.getLogger(RemoveGISLayerAction.class.getName());
     
     public RemoveGISLayerAction(){
         this(Utilities.actionsGlobalContext());
@@ -40,7 +41,8 @@ public class RemoveGISLayerAction  extends AbstractAction
     
     private void initComponents(){
 //        logger.info("Creating JMenu component");
-        jmu = new JMenu("Remove Non-selectable Map Layer");//TODO: use DynamicMenuContent ??
+        jmu = new JMenu("Remove GIS layer");//TODO: use DynamicMenuContent ??
+        jmu.setEnabled(false);
     }
     
     @Override
@@ -51,6 +53,8 @@ public class RemoveGISLayerAction  extends AbstractAction
             MapViewerTopComponent tc = lkpResult.allInstances().iterator().next();
             tc.removeGISLayer(ac);
             jmu.remove((JMenuItem) e.getSource());
+            logger.info("Number of components = "+jmu.getMenuComponentCount());
+            if (jmu.getMenuComponentCount()==0) jmu.setEnabled(false);
 //            logger.info(e.paramString());
 //        }
     }
