@@ -225,6 +225,7 @@
             </test-dependencies>
             <public-packages>
                 <package>wts.models.DisMELS.framework</package>
+                <package>wts.models.DisMELS.framework.HSMs</package>
                 <package>wts.models.DisMELS.framework.IBMAttributes</package>
                 <package>wts.models.DisMELS.framework.IBMFunctions</package>
                 <package>wts.models.DisMELS.gui</package>
