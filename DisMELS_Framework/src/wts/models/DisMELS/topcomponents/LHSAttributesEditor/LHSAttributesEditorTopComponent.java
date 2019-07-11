@@ -177,7 +177,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     /** collection of the selectable map layers */
     private final Map<String,MapLayer> selectableLayers = new TreeMap<>();
     /** JMenu for removing selectable GIS layers */
-    JMenu jmuRemoveSelectableGISLayers = null;
+    JMenu jmuSelectableGISLayers = null;
     /** JMenu for selecting selectable GIS layer */
     JMenu jmuSelectedGISLayer = null;
     /** JMenu to add individuals using all polygons in GIS layer */
@@ -1094,7 +1094,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     }
     
     public void setRemoveSelectableGISLayersMenu(JMenu jmu){
-        jmuRemoveSelectableGISLayers = jmu;
+        jmuSelectableGISLayers = jmu;
     }
     
     public void setAddIndividualsBySelectedGISLayerMenu(JMenu jmu){
@@ -1153,6 +1153,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             
             //add radio button to SelectableGISLayers button group to allow de/re-selection of map layer
             final JRadioButtonMenuItem jrb = new JRadioButtonMenuItem(layer.getTitle());
+            jrb.setActionCommand(layer.getTitle());
             bgSelectableGISLayers.add(jrb);
             jrb.setSelected(true);
             jrb.addActionListener(new java.awt.event.ActionListener(){
@@ -1166,7 +1167,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             
             //add menu item to RemoveSelectableGISLayer menu to remove layer
             final JMenuItem jmi = new JMenuItem(layer.getTitle());
-            jmi.setText(layer.getTitle());
+            //jmi.setText(layer.getTitle());
             jmi.setActionCommand(layer.getTitle());
             jmi.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1176,20 +1177,30 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                     MapLayer layer = selectableLayers.remove(ac);
                     tcMapViewer.removeGISLayer(layer);
                     //remove the associated menu items 
-                    jmuRemoveSelectableGISLayers.remove(jmi);
-                    if (jrb.isSelected()) {
-                        selectedLayer = null;
-                        jmuAddIndividualsBySelectedGISLayer.setEnabled(false);
+                    jmuSelectableGISLayers.remove((JMenuItem)evt.getSource());
+                    logger.info("jmi ActionPerformed: jmuSelectableGISLayers component count =  "+jmuSelectableGISLayers.getComponentCount());
+                    if (jmuSelectableGISLayers.getComponentCount()==0) jmuSelectableGISLayers.setEnabled(false);
+                    if (jrb==null){
+                        logger.info("jmi ActionPerformed: jrb IS NULL!");
+                    } else {
+                        logger.info("jmi ActionPerformed: jrb.getActionCommand()="+jrb.getActionCommand());
+                        if (jrb.isSelected()) {
+                            selectedLayer = null;
+                            jmuAddIndividualsBySelectedGISLayer.setEnabled(false);
+                        }
+                        jmuSelectedGISLayer.remove(jrb);
+                        bgSelectableGISLayers.remove(jrb);
                     }
-                    jmuSelectedGISLayer.remove(jrb);
+                        logger.info("jmi ActionPerformed: jmuSelectedGISLayers component count =  "+jmuSelectedGISLayer.getComponentCount());
+                    if (jmuSelectedGISLayer.getComponentCount()==0) jmuSelectedGISLayer.setEnabled(false);
                 }
             });
             jmi.setEnabled(true);
             jmi.setVisible(true);
-            if (jmuRemoveSelectableGISLayers!=null){
+            if (jmuSelectableGISLayers!=null){
                 if (debug) logger.info("Adding JMenuItem to RemoveSelectableGISLayers menu");
-                jmuRemoveSelectableGISLayers.add(jmi);//add item to menu associated with the action
-                jmuRemoveSelectableGISLayers.setEnabled(true);
+                jmuSelectableGISLayers.add(jmi);//add item to menu associated with the action
+                jmuSelectableGISLayers.setEnabled(true);
             }
         } catch (MalformedURLException ex) {
             javax.swing.JOptionPane.showMessageDialog(
