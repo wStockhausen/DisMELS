@@ -26,14 +26,14 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * Function type: 
  *      vertical movement
  * Parameters (by key):
- *      minDepth         - Double: min depth (m)
- *      maxDepth         - Double: max depth (m)
- *      minDistOffBottom - Double: min distance off bottom (m)
- *      rpw              - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
+ *      minDepth      - Double: min depth (m)
+ *      maxDepth      - Double: max depth (m)
+ *      offBottomDist - Double: min distance off bottom (m)
+ *      rpw           - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
  * Variables:
  *      dt          - [0] - integration time step
- *      depth       - [1] - distance below mean sea level of individual
- *      bathym      - [2] - bathymetric depth at location
+ *      depth       - [1] - current depth of individual
+ *      total depth - [2] - total depth at location
  *      w           - [3] - active vertical swimming speed outside preferred depth range
  * Value:
  *      Double: vertical swimming speed (same units as w)
@@ -48,7 +48,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
     @ServiceProvider(service=IBMMovementFunctionInterface.class),
     @ServiceProvider(service=IBMFunctionInterface.class)}
 )
-public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction 
+public class VerticalMovement_FixedDepthRangeRelativeToSurfaceBoundaryLayer extends AbstractIBMFunction 
                                             implements IBMMovementFunctionInterface {
     
     /** function classification */
@@ -75,8 +75,8 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
             "\n\t*      rpw              - Double - random walk parameter w/in preferred depth range ([distance]^2/[time])"+
             "\n\t* Variables:"+
             "\n\t*      dt          - [0] - integration time step"+
-            "\n\t*      depth       - [1] - distance below mean sea level of individual"+
-            "\n\t*      bathym      - [2] - bathymetric depth at location"+
+            "\n\t*      depth       - [1] - current depth of individual"+
+            "\n\t*      total depth - [2] - total depth at location"+
             "\n\t*      w           - [3] - active vertical swimming speed outside preferred depth range"+
             "\n\t* Value:"+
             "\n\t*      Double: vertical swimming speed"+
@@ -112,7 +112,7 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
     private double rpw = 0;
         
     /** constructor for class */
-    public VerticalMovement_FixedDepthRange(){
+    public VerticalMovement_FixedDepthRangeRelativeToSurfaceBoundaryLayer(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
         String key;
         key = PARAM_minDepth;         addParameter(key, Double.class,key);
@@ -122,8 +122,8 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
     }
     
     @Override
-    public VerticalMovement_FixedDepthRange clone(){
-        VerticalMovement_FixedDepthRange clone = new VerticalMovement_FixedDepthRange();
+    public VerticalMovement_FixedDepthRangeRelativeToSurfaceBoundaryLayer clone(){
+        VerticalMovement_FixedDepthRangeRelativeToSurfaceBoundaryLayer clone = new VerticalMovement_FixedDepthRangeRelativeToSurfaceBoundaryLayer();
         clone.setFunctionType(getFunctionType());
         clone.setFunctionName(getFunctionName());
         clone.setDescription(getDescription());
@@ -167,8 +167,8 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
      * 
      * @param vars the inputs variables as a double[] array with elements <pre>
      *                  dt          - [0] - integration time step 
-     *                  depth       - [1] - distance below mean sea level of individual
-     *                  bathym      - [2] - bathymetric depth at location
+     *                  depth       - [1] - current depth of individual
+     *                  total depth - [2] - total depth at location
      *                  w           - [3] - active vertical swimming speed 
      *                                        outside preferred depth range </pre>
      * @return     Double: individual vertical movement velocity
@@ -179,16 +179,15 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
         int k = 0;
         double adt               = Math.abs(dbls[k++]);//time step
         double depth             = dbls[k++];//current depth
-        double bathym            = dbls[k++];//total depth
+        double totalDepth        = dbls[k++];//total depth
         double vertSwimmingSpeed = dbls[k++];//vertical swimming speed if outside preferred range
 
         //determine vertical movement & calc indiv. W
-        double rOBD = bathym - offBottomDepth;//realized max off bottom depth relative to sea surface
         double w = 0;
         if (depth<minDepth) {
             w = -vertSwimmingSpeed*(1.0-Math.exp(-(minDepth-depth)/10.0));
         } else 
-        if ((depth>maxDepth)||(depth>(bathym-offBottomDepth))) {
+        if ((depth>maxDepth)||(depth>(totalDepth-offBottomDepth))) {
             w =  vertSwimmingSpeed*(1.0-Math.exp(-(depth-maxDepth)/10.0));
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
