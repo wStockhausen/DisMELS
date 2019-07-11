@@ -68,9 +68,9 @@
                 <!-- attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
-            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.instance"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectLayerFromSelectableGISLayersAction.instance"/>
             <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.instance"/>
-            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsBySelectedGISLayerAction.instance"/>
+            <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsToAllPolygonsInSelectedGISLayerAction.instance"/>
             <file name="wts-models-DisMELS-actions-ExportAnimationAction.instance"/>
             <file name="wts-models-DisMELS-actions-RunAction.instance">
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
@@ -136,7 +136,7 @@
                 <attr name="position" intvalue="450"/>
             </file>
             <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.shadow">
-                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectGISLayerAction.instance"/>
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-SelectLayerFromSelectableGISLayersAction.instance"/>
                 <attr name="position" intvalue="460"/>
             </file>
             <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-RemoveSelectableGISLayerAction.shadow">
@@ -144,7 +144,7 @@
                 <attr name="position" intvalue="470"/>
             </file>
             <file name="wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsBySelectedGISLayerAction.shadow">
-                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsBySelectedGISLayerAction.instance"/>
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-models-DisMELS-topcomponents-LHSAttributesEditor-AddIndividualsToAllPolygonsInSelectedGISLayerAction.instance"/>
                 <attr name="position" intvalue="480"/>
             </file>
             <file name="wts-models-DisMELS-actions-ExportAnimationAction.shadow">

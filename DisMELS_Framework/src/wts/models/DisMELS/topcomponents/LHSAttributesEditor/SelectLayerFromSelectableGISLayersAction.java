@@ -16,7 +16,7 @@ import org.openide.util.actions.Presenter;
  *
  * @author William.Stockhausen
  */
-public class SelectGISLayerAction  extends AbstractAction 
+public class SelectLayerFromSelectableGISLayersAction  extends AbstractAction 
                                        implements Presenter.Menu, LookupListener, ContextAwareAction {
 
     private Lookup.Result<LHSAttributesEditorTopComponent> lkpResult;
@@ -25,12 +25,12 @@ public class SelectGISLayerAction  extends AbstractAction
     
 //    private static final Logger logger = Logger.getLogger(SelectGISLayerAction.class.getName());
     
-    public SelectGISLayerAction(){
+    public SelectLayerFromSelectableGISLayersAction(){
         this(Utilities.actionsGlobalContext());
 //        logger.info("===Creating SelectGISLayerAction instance via default constructor");
     }
     
-    public SelectGISLayerAction(Lookup lookup){
+    public SelectLayerFromSelectableGISLayersAction(Lookup lookup){
         super();
         initComponents();//create visual components
         lkpResult = lookup.lookupResult(LHSAttributesEditorTopComponent.class);
@@ -39,7 +39,7 @@ public class SelectGISLayerAction  extends AbstractAction
     }
     
     private void initComponents(){
-        jmu = new JMenu("Select GIS Layer");//TODO: use DynamicMenuContent ??
+        jmu = new JMenu("Select selectable GIS layer");//TODO: use DynamicMenuContent ??
     }
     
     @Override
@@ -56,7 +56,7 @@ public class SelectGISLayerAction  extends AbstractAction
 //            logger.info("===setEnabled false");
         } else {
             LHSAttributesEditorTopComponent tc = lkpResult.allInstances().iterator().next();
-            tc.setSelectableGISLayersMenu(jmu);
+            tc.setJMenu_SelectLayerFromSelectableGISLayers(jmu);
 //            logger.info("===set menu in MapViewer!");
             if (jmu.getMenuComponentCount()>0){
                 b = true;
@@ -70,7 +70,7 @@ public class SelectGISLayerAction  extends AbstractAction
     @Override
     public Action createContextAwareInstance(Lookup actionContext) {
 //        logger.info("Creating ContextAwareInstance");
-        return new SelectGISLayerAction(actionContext);
+        return new SelectLayerFromSelectableGISLayersAction(actionContext);
     }
 
     @Override

@@ -40,6 +40,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.openide.awt.ActionID;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
+import org.openide.util.LookupEvent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
@@ -177,11 +178,11 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     /** collection of the selectable map layers */
     private final Map<String,MapLayer> selectableLayers = new TreeMap<>();
     /** JMenu for removing selectable GIS layers */
-    JMenu jmuSelectableGISLayers = null;
+    JMenu jmuRemoveSelectableGISLayers = null;
     /** JMenu for selecting selectable GIS layer */
-    JMenu jmuSelectedGISLayer = null;
+    JMenu jmuSelectLayerFromSelectableGISLayers = null;
     /** JMenu to add individuals using all polygons in GIS layer */
-    JMenu jmuAddIndividualsBySelectedGISLayer = null;
+    JMenu jmuAddIndividualsToAllPolygonsInSelectedGISLayer = null;
     /** ButtonGroup for selected map layer */
     ButtonGroup bgSelectableGISLayers = new ButtonGroup();
     
@@ -541,10 +542,10 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
      */
     public void setSelectedLayer(String layer){
         MapLayer mapLayer = selectableLayers.get(layer);
-        jmuAddIndividualsBySelectedGISLayer.setEnabled(false);
+        jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(false);
         if (mapLayer!=null) {
             selectedLayer = mapLayer;
-            jmuAddIndividualsBySelectedGISLayer.setEnabled(true);
+            jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
         }
     }
 
@@ -998,29 +999,31 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
      * @param pt - the Point2D object determining the location used
      */
     public void addIndividualsToAllPolygonsInSelectedLayer(){
-        if (debug) logger.info("Adding individuals to ALL POLYGONS in LAYER!!");
-        fcLastAddedPoints.clear();
-        Runnable r = new Runnable(){
-            @Override
-            public void run() {
-                try {
-                    Cursor c = getCursor();
-                    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    validate();
-                    repaint();
-                    if (ftLHS==null) setAttributes();
-                    FeatureCollection fc = addPointsToAllPolygonsInSelectedLayer();
-                    fcStartPoints.addAll(fc);
-                    fcLastAddedPoints.addAll(fc);
-                    jpFeaturesTable.addAll(fc);
-                    enableSaveAction(true);
-                    setCursor(c);
-                } catch (IllegalAttributeException | TransformException | InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
-                    Exceptions.printStackTrace(ex);
+        if (selectedLayer!=null){
+            if (debug) logger.info("Adding individuals to ALL POLYGONS in LAYER!!");
+            fcLastAddedPoints.clear();
+            Runnable r = new Runnable(){
+                @Override
+                public void run() {
+                    try {
+                        Cursor c = getCursor();
+                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        validate();
+                        repaint();
+                        if (ftLHS==null) setAttributes();
+                        FeatureCollection fc = addPointsToAllPolygonsInSelectedLayer();
+                        fcStartPoints.addAll(fc);
+                        fcLastAddedPoints.addAll(fc);
+                        jpFeaturesTable.addAll(fc);
+                        enableSaveAction(true);
+                        setCursor(c);
+                    } catch (IllegalAttributeException | TransformException | InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
                 }
-            }
-        };
-        ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
+            };
+            ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
+        }
     }
     
     /**
@@ -1033,39 +1036,41 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
      */
     public FeatureCollection addPointsToAllPolygonsInSelectedLayer()
             throws IllegalAttributeException, TransformException, IntrospectionException {
-        double dx = rpa.getDeltaX();
-        double dy = rpa.getDeltaY();
-        if (debug) logger.info("addPointsToAllPolygonsInSelectedLayer: Adding points to polygon at spacing "+dx+" x "+dy);
         FeatureCollection fc = FeatureCollections.newCollection();
-        try {
-            //get the feature source for the selectable layer
-            FeatureSource fs = getSelectedLayer().getFeatureSource();
-            FeatureCollection selFC = fs.getFeatures();
-            FeatureIterator itSelFC = selFC.features();
-            Point tp = null;
-            GeometryFactory gfac = new GeometryFactory();
-            while (itSelFC.hasNext()) {
-                //use bounds to define an "array" of potential points to add.  
-                //For each point that is contained by the feature, 
-                //add it to the map as a new initial position.
-                Feature f = itSelFC.next();
-                Geometry poly = f.getDefaultGeometry();
-                Envelope e = f.getBounds();
-                GeometryFilter gf = filterFactory.createGeometryFilter(GeometryFilter.GEOMETRY_CONTAINS);
-                gf.addLeftGeometry(filterFactory.createLiteralExpression(
-                                        f.getDefaultGeometry())
-                                   );
-                for (double x=e.getMinX();x<=e.getMaxX();x=x+dx) {
-                    for (double y=e.getMinY();y<=e.getMaxY();y=y+dy) {
-                        tp = gfac.createPoint(new Coordinate(x,y));
-                        if (tp.within(poly)) {
-                            fc.addAll(addPoint(new Point2D.Double(x,y)));
+        if (selectedLayer!=null){
+            double dx = rpa.getDeltaX();
+            double dy = rpa.getDeltaY();
+            if (debug) logger.info("addPointsToAllPolygonsInSelectedLayer: Adding points to polygon at spacing "+dx+" x "+dy);
+            try {
+                //get the feature source for the selectable layer
+                FeatureSource fs = getSelectedLayer().getFeatureSource();
+                FeatureCollection selFC = fs.getFeatures();
+                FeatureIterator itSelFC = selFC.features();
+                Point tp = null;
+                GeometryFactory gfac = new GeometryFactory();
+                while (itSelFC.hasNext()) {
+                    //use bounds to define an "array" of potential points to add.  
+                    //For each point that is contained by the feature, 
+                    //add it to the map as a new initial position.
+                    Feature f = itSelFC.next();
+                    Geometry poly = f.getDefaultGeometry();
+                    Envelope e = f.getBounds();
+                    GeometryFilter gf = filterFactory.createGeometryFilter(GeometryFilter.GEOMETRY_CONTAINS);
+                    gf.addLeftGeometry(filterFactory.createLiteralExpression(
+                                            f.getDefaultGeometry())
+                                       );
+                    for (double x=e.getMinX();x<=e.getMaxX();x=x+dx) {
+                        for (double y=e.getMinY();y<=e.getMaxY();y=y+dy) {
+                            tp = gfac.createPoint(new Coordinate(x,y));
+                            if (tp.within(poly)) {
+                                fc.addAll(addPoint(new Point2D.Double(x,y)));
+                            }
                         }
                     }
-                }
-            }//finished creating FeatureCollection
-        } catch (IllegalFilterException | IOException ex) {
-            Exceptions.printStackTrace(ex);
+                }//finished creating FeatureCollection
+            } catch (IllegalFilterException | IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
         }
         return(fc);
     }
@@ -1089,16 +1094,32 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         fcLastAddedPoints.clear();
     }
     
-    public void setSelectableGISLayersMenu(JMenu jmu){
-        jmuSelectedGISLayer = jmu;
+    /**
+     * Sets the JMenu for selecting a GIS layer from among the selectable layers
+     * in order to add individuals via polygons in the layer.
+     * 
+     * @param jmu the JMenuItem
+     */
+    public void setJMenu_SelectLayerFromSelectableGISLayers(JMenu jmu){
+        jmuSelectLayerFromSelectableGISLayers = jmu;
     }
     
-    public void setRemoveSelectableGISLayersMenu(JMenu jmu){
-        jmuSelectableGISLayers = jmu;
+    /**
+     * Sets the JMenu for removing a GIS layer from among the selectable layers.
+     * 
+     * @param jmu the JMenuItem
+     */
+    public void setJMenu_RemoveSelectableGISLayers(JMenu jmu){
+        jmuRemoveSelectableGISLayers = jmu;
     }
     
-    public void setAddIndividualsBySelectedGISLayerMenu(JMenu jmu){
-        jmuAddIndividualsBySelectedGISLayer = jmu;
+    /**
+     * Sets the JMenu for adding individuals to all polygons in the selected GIS layer.
+     * 
+     * @param jmu the JMenuItem
+     */
+    public void setJMenu_AddIndividualsToAllPolygonsInSelectedGISLayer(JMenu jmu){
+        jmuAddIndividualsToAllPolygonsInSelectedGISLayer = jmu;
     }
     
     /** 
@@ -1159,10 +1180,12 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             jrb.addActionListener(new java.awt.event.ActionListener(){
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     setSelectedLayer(evt.getActionCommand());
+                    jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
                 }
             });
-            jmuSelectedGISLayer.add(jrb);        //add radio button to SelectedGISLayer menu
-            jmuSelectedGISLayer.setEnabled(true);//enable menu
+            jmuSelectLayerFromSelectableGISLayers.add(jrb);        //add radio button to SelectedGISLayer menu
+            jmuSelectLayerFromSelectableGISLayers.setEnabled(true);//enable menu
+            jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
             
             
             //add menu item to RemoveSelectableGISLayer menu to remove layer
@@ -1172,36 +1195,44 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             jmi.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     String ac = evt.getActionCommand();
-                    if (debug) logger.info("jmi ActionPerformed for "+ac);
+                    if (debug) logger.info("----------------jmi start actionPerformed for "+ac);
                     //remmove layer identified by action command from the map
                     MapLayer layer = selectableLayers.remove(ac);
                     tcMapViewer.removeGISLayer(layer);
                     //remove the associated menu items 
-                    jmuSelectableGISLayers.remove((JMenuItem)evt.getSource());
-                    logger.info("jmi ActionPerformed: jmuSelectableGISLayers component count =  "+jmuSelectableGISLayers.getComponentCount());
-                    if (jmuSelectableGISLayers.getComponentCount()==0) jmuSelectableGISLayers.setEnabled(false);
+                    logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectableGISLayers nemu component count before removing jmi=  "+jmuRemoveSelectableGISLayers.getMenuComponentCount());
+                    jmuRemoveSelectableGISLayers.remove((JMenuItem)evt.getSource());
+                    logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectableGISLayers menu component count after removing jmi=  "+jmuRemoveSelectableGISLayers.getMenuComponentCount());
+                    if (jmuRemoveSelectableGISLayers.getMenuComponentCount()==0) jmuRemoveSelectableGISLayers.setEnabled(false);
                     if (jrb==null){
-                        logger.info("jmi ActionPerformed: jrb IS NULL!");
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: jrb IS NULL!");
                     } else {
-                        logger.info("jmi ActionPerformed: jrb.getActionCommand()="+jrb.getActionCommand());
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: jrb.getActionCommand()="+jrb.getActionCommand());
                         if (jrb.isSelected()) {
+                            logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: jrb was selected, so setting selected layer to null");
                             selectedLayer = null;
-                            jmuAddIndividualsBySelectedGISLayer.setEnabled(false);
+                            bgSelectableGISLayers.clearSelection();
+                            jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(false);
                         }
-                        jmuSelectedGISLayer.remove(jrb);
-                        bgSelectableGISLayers.remove(jrb);
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: removing jrb from jmuSelectLayerFromSelectableGISLayers, bg");
+                        logger.info("--jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectLayerFromSelectableGISLayers menu component count before =  "+jmuSelectLayerFromSelectableGISLayers.getMenuComponentCount());
+                        jmuSelectLayerFromSelectableGISLayers.remove(jrb);
+                        bgSelectableGISLayers.remove(jrb);                        
+                        logger.info("--jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectLayerFromSelectableGISLayers component menu count after =  "+jmuSelectLayerFromSelectableGISLayers.getMenuComponentCount());
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: removed jrb from jmujmuSelectLayerFromSelectableGISLayers, bg");
                     }
-                        logger.info("jmi ActionPerformed: jmuSelectedGISLayers component count =  "+jmuSelectedGISLayer.getComponentCount());
-                    if (jmuSelectedGISLayer.getComponentCount()==0) jmuSelectedGISLayer.setEnabled(false);
+                    if (jmuSelectLayerFromSelectableGISLayers.getMenuComponentCount()==0) jmuSelectLayerFromSelectableGISLayers.setEnabled(false);
+                    if (debug) logger.info("----------------jmi end actionPerformed for "+ac);
                 }
             });
             jmi.setEnabled(true);
             jmi.setVisible(true);
-            if (jmuSelectableGISLayers!=null){
+            if (jmuRemoveSelectableGISLayers!=null){
                 if (debug) logger.info("Adding JMenuItem to RemoveSelectableGISLayers menu");
-                jmuSelectableGISLayers.add(jmi);//add item to menu associated with the action
-                jmuSelectableGISLayers.setEnabled(true);
+                jmuRemoveSelectableGISLayers.add(jmi);//add item to menu associated with the action
+                jmuRemoveSelectableGISLayers.setEnabled(true);
             }
+            if (selectedLayer!=null) jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
         } catch (MalformedURLException ex) {
             javax.swing.JOptionPane.showMessageDialog(
                     null,
