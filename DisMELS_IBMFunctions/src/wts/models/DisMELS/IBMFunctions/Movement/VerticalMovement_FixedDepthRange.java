@@ -162,6 +162,10 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
         return false;
     }
 
+    
+    
+    
+    
     /**
      * Calculates the vertical movement velocity, given the input variables.
      * 
