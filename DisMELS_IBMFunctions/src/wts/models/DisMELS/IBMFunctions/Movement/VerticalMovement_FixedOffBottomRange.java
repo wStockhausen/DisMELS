@@ -183,8 +183,8 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
         //determine vertical movement & calc indiv. W
         double w = 0;
         double dob    = bathym - depth;//individual's distance off-bottom
-        double rMxDOB = Math.min(maxDistOffBottom, bathym - minDepth);
-        double rMnDOB = Math.min(minDistOffBottom, bathym - minDepth);
+        double rMxDOB = Math.min(maxDistOffBottom, bathym - minDepth);//realized max preferred distance off bottom
+        double rMnDOB = Math.min(minDistOffBottom, bathym - minDepth);//realized min preferred distance off bottom
         if (rMxDOB<dob) {//swim down
             w = -vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/10.0));
         } else 
