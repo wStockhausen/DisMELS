@@ -62,6 +62,7 @@ public class VerticalMovement_FixedDepthRangeCustomizer extends javax.swing.JPan
 
         jtfRPW.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jtfRPW.setText("0.0");
+        jtfRPW.setToolTipText("diffusion constant");
         jtfRPW.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfRPWActionPerformed(evt);
@@ -70,16 +71,18 @@ public class VerticalMovement_FixedDepthRangeCustomizer extends javax.swing.JPan
 
         jtfMinDepth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jtfMinDepth.setText("0");
+        jtfMinDepth.setToolTipText("min preferred depth (in deep water)");
         jtfMinDepth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMinDepthActionPerformed(evt);
             }
         });
 
-        jLabel2.setText("min depth (m)");
+        jLabel2.setText("nominal min depth (m)");
 
         jtfMaxDepth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfMaxDepth.setText("0");
+        jtfMaxDepth.setText("1000");
+        jtfMaxDepth.setToolTipText("max preferred depth (i.e., n deep water)");
         jtfMaxDepth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMaxDepthActionPerformed(evt);
@@ -88,13 +91,14 @@ public class VerticalMovement_FixedDepthRangeCustomizer extends javax.swing.JPan
 
         jtfMinDistOffBottom.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jtfMinDistOffBottom.setText("0");
+        jtfMinDistOffBottom.setToolTipText("can't get closer to bottom than this");
         jtfMinDistOffBottom.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMinDistOffBottomActionPerformed(evt);
             }
         });
 
-        jLabel3.setText("max depth (m)");
+        jLabel3.setText("nominal max depth (m)");
         jLabel3.setToolTipText("");
 
         jLabel4.setText("min distance off bottom (m)");

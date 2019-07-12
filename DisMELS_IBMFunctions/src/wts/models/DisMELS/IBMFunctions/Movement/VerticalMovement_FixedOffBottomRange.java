@@ -24,15 +24,15 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * Function type: 
  *      vertical movement
  * Parameters (by key):
- *      maxDepth         - Double: max depth (m)
- *      minDistOffBottom - Double: min distance off bottom (m)
- *      maxDistOffBottom - Double: max distance off bottom (m)
+ *      minDepth         - Double: min preferred depth, relative to mean sea level (m)
+ *      minDistOffBottom - Double: min preferred distance off bottom (m)
+ *      maxDistOffBottom - Double: max preferred distance off bottom (m)
  *      rpw              - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
  * Variables:
- *      dt          - [0] - integration time step
- *      depth       - [1] - current depth of individual (m)
- *      total depth - [2] - total depth at location     (m)
- *      w           - [3] - active vertical swimming speed outside preferred depth range
+ *      dt     - [0] - integration time step
+ *      depth  - [1] - current depth of individual, relative to mean sea level (m)
+ *      bathym - [2] - bathymetric depth at location  (m)
+ *      w      - [3] - active vertical swimming speed outside preferred depth range
  * Value:
  *      Double: vertical swimming speed (same units as w)
  * Calculation:
@@ -67,14 +67,14 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
             "\n\t* Function type: "+
             "\n\t*      vertical movement"+
             "\n\t* Parameters (by key):"+
-            "\n\t*      maxDepth         - Double:"+
-            "\n\t*      minDistOffBottom - Double:"+
-            "\n\t*      maxDistOffBottom - Double:"+
+            "\n\t*      minDepth         - Double: min preferred depth, relative to mean sea level (m)"+
+            "\n\t*      minDistOffBottom - Double: min preferred distance off bottom (m)"+
+            "\n\t*      maxDistOffBottom - Double: max preferred distance off bottom (m)"+
             "\n\t*      rpw              - Double - random walk parameter w/in preferred depth range ([distance]^2/[time])"+
             "\n\t* Variables:"+
             "\n\t*      dt          - [0] - integration time step"+
-            "\n\t*      depth       - [1] - current depth of individual"+
-            "\n\t*      total depth - [2] - total depth at location"+
+            "\n\t*      depth       - [1] - current depth of individual, relative to mean sea level (m)"+
+            "\n\t*      total depth - [2] - bathymetric depth at location"+
             "\n\t*      w           - [3] - active vertical swimming speed outside preferred depth range"+
             "\n\t* Value:"+
             "\n\t*      Double: vertical swimming speed"+
@@ -92,16 +92,16 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
     /** number of sub-functions */
     public static final int numSubFuncs = 0;
 
-    /* name associated with parameter maxDepth */
-    public static final String PARAM_maxDepth = "max depth (m)";
+    /* name associated with parameter minDepth */
+    public static final String PARAM_maxDepth = "min preferred depth, relative to sea level (m)";
     /* the parameter's value */
-    protected double maxDepth;
+    protected double minDepth;
     /* name associated with parameter minDistOffBottom */
-    public static final String PARAM_minDistOffBottom = "min depth (m)";
+    public static final String PARAM_minDistOffBottom = "min preferred distance off bottom (m)";
     /* the minDistOffBottom parameter's value */
     protected double minDistOffBottom;
-    /* name associated with parameter maxDepth */
-    public static final String PARAM_maxDistOffBottom = "off-bottom depth (m)";
+    /* name associated with parameter minDepth */
+    public static final String PARAM_maxDistOffBottom = "max preferred distance off bottom (m)";
     /* the parameter's value */
     protected double maxDistOffBottom = 0.0;
     /** key to set random walk parameter */
@@ -143,7 +143,7 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
         if (super.setParameterValue(param, value)){
             switch (param) {
                 case PARAM_maxDepth:
-                    maxDepth = ((Double) value).doubleValue();
+                    minDepth = ((Double) value).doubleValue();
                     break;
                 case PARAM_minDistOffBottom:
                     minDistOffBottom = ((Double) value).doubleValue();
@@ -165,11 +165,11 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
      * and the input variable.
      * 
      * @param vars - the inputs variables as a double[] array with elements
-     *                  dt          - [0] - integration time step
-     *                  depth       - [1] - current depth of individual
-     *                  total depth - [2] - total depth at location
-     *                  w           - [3] - active vertical swimming speed outside preferred depth range
-     * @return     - Double: individual active vertical movement velocity
+     *                  dt     - [0] - integration time step (s)
+     *                  depth  - [1] - current depth of individual, relative to mean sea level (m)
+     *                  bathym - [2] - bathymetric depth at location (m)
+     *                  w      - [3] - active vertical swimming speed outside preferred depth range (m/s)
+     * @return     - Double: individual active vertical movement velocity (m/s)
      */
     @Override
     public Double calculate(Object vars) {
@@ -177,16 +177,19 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
         int k = 0;
         double adt               = Math.abs(dbls[k++]);//time step
         double depth             = dbls[k++];//current depth
-        double totalDepth        = dbls[k++];//total depth
+        double bathym            = dbls[k++];//bathymetric depth
         double vertSwimmingSpeed = dbls[k++];//vertical swimming speed if outside preferred range
 
         //determine vertical movement & calc indiv. W
         double w = 0;
-        if (depth<totalDepth-maxDistOffBottom) {
-            w = -vertSwimmingSpeed*(1.0-Math.exp(-((totalDepth-maxDistOffBottom)-depth)/10.0));
+        double dob    = bathym - depth;//individual's distance off-bottom
+        double rMxDOB = Math.min(maxDistOffBottom, bathym - minDepth);
+        double rMnDOB = Math.min(minDistOffBottom, bathym - minDepth);
+        if (rMxDOB<dob) {//swim down
+            w = -vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/10.0));
         } else 
-        if ((depth>maxDepth)||(depth>(totalDepth-minDistOffBottom))) {
-            w =  vertSwimmingSpeed*(1.0-Math.exp(-(Math.min(depth-totalDepth, depth-(totalDepth-minDistOffBottom)))/10.0));
+        if (dob<rMnDOB) {//swim up
+            w =  vertSwimmingSpeed*(1.0-Math.exp(-(rMnDOB-dob)/10.0));
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
         return w;

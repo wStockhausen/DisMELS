@@ -53,15 +53,16 @@ public class VerticalMovement_FixedOffBottomRangeCustomizer extends javax.swing.
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
 
-        setMaximumSize(new java.awt.Dimension(260, 100));
-        setMinimumSize(new java.awt.Dimension(260, 100));
-        setPreferredSize(new java.awt.Dimension(260, 100));
+        setMaximumSize(new java.awt.Dimension(305, 122));
+        setMinimumSize(new java.awt.Dimension(305, 122));
+        setPreferredSize(new java.awt.Dimension(305, 122));
 
         jLabel1.setText("random walk parameter (m^2/s)");
         jLabel1.setToolTipText("");
 
         jtfRPW.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jtfRPW.setText("0.0");
+        jtfRPW.setToolTipText("diffusion rate");
         jtfRPW.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfRPWActionPerformed(evt);
@@ -69,7 +70,8 @@ public class VerticalMovement_FixedOffBottomRangeCustomizer extends javax.swing.
         });
 
         jtfMaxDepth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfMaxDepth.setText("0");
+        jtfMaxDepth.setText("1000");
+        jtfMaxDepth.setToolTipText("maximum overall depth for individual");
         jtfMaxDepth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMaxDepthActionPerformed(evt);
@@ -80,6 +82,7 @@ public class VerticalMovement_FixedOffBottomRangeCustomizer extends javax.swing.
 
         jtfMinDistanceOffBottom.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jtfMinDistanceOffBottom.setText("0");
+        jtfMinDistanceOffBottom.setToolTipText("min preferred distance above bottom (m)");
         jtfMinDistanceOffBottom.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMinDistanceOffBottomActionPerformed(evt);
@@ -87,7 +90,8 @@ public class VerticalMovement_FixedOffBottomRangeCustomizer extends javax.swing.
         });
 
         jtfMaxDistOffBottom.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfMaxDistOffBottom.setText("0");
+        jtfMaxDistOffBottom.setText("10000");
+        jtfMaxDistOffBottom.setToolTipText("max preferred distance above bottom (m) ");
         jtfMaxDistOffBottom.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMaxDistOffBottomActionPerformed(evt);
@@ -105,24 +109,21 @@ public class VerticalMovement_FixedOffBottomRangeCustomizer extends javax.swing.
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfRPW, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMaxDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel2))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMinDistanceOffBottom, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel3))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMaxDistOffBottom, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel4)))
-                .addGap(269, 269, 269))
+                .addComponent(jtfRPW, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel1))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMaxDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel2))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMinDistanceOffBottom, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMaxDistOffBottom, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel4))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -141,7 +142,8 @@ public class VerticalMovement_FixedOffBottomRangeCustomizer extends javax.swing.
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jtfRPW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1)))
+                    .addComponent(jLabel1))
+                .addContainerGap(1, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
