@@ -62,8 +62,8 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
     /** number of sub-functions */
     public static final int numSubFuncs = 0;
 
-    /** key to set the constant parameter */
-    public static final String PARAM_constant = "the netCDF file name";
+    /** key to set the fileName parameter */
+    public static final String PARAM_fileName = "the netCDF file name";
     
     /** value of the fileName parameter */
     protected String fileName = "";
@@ -75,7 +75,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
     public HSMFunction_NetCDF(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
         String key; 
-        key = PARAM_constant;  addParameter(key,String.class, key);
+        key = PARAM_fileName;  addParameter(key,String.class, key);
     }
     
     @Override
@@ -107,7 +107,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
         boolean res = false;
         if (super.setParameterValue(param, value)){
             switch (param) {
-                case PARAM_constant:
+                case PARAM_fileName:
                     fileName = (String) value;
                     if (hsm==null) hsm = new HSM_NetCDF();
                     try {
@@ -128,13 +128,12 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
     /**
      * Calculates the value of the function.
      * 
-     * @param vars ArrayList
+     * @param vars double[]
      * <pre>
-     * The first element of vars must be a double[] with the 2-d position in 
+     * The first two elements of <code>vars</code> must be the 2-d position in 
      * the coordinate system the hsm uses.
      * 
-     * Although any other elements of vars are ignored in terms of value, the presence
-     * of other elements (vars.size()>1) indicates the return value should include
+     * If the length of <code>vars</code> is &gt 2, the return value will include
      * gradient information as well the local value of the HSM.
      * </pre>
      * @return     double[] with HSM value and (possibly) horizontal gradient information.

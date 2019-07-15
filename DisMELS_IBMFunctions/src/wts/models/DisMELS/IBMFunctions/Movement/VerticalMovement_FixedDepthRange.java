@@ -188,10 +188,10 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
         double rMxD = Math.min(maxDepth, rDOB); //realized max depth--stay min dist above bottom
         double w = 0;//if in preferred range
         if (depth<rMnD) {//too shallow, swim down
-            w = -vertSwimmingSpeed*(1.0-Math.exp(-(rMnD-depth)/10.0));
+            w = -vertSwimmingSpeed*(1.0-Math.exp(-(rMnD-depth)/1.0));
         } else 
         if (depth>rMxD) {//too deep, swim up
-            w =  vertSwimmingSpeed*(1.0-Math.exp(-(depth-rMxD)/10.0));
+            w =  vertSwimmingSpeed*(1.0-Math.exp(-(depth-rMxD)/1.0));
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
         return w;

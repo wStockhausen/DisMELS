@@ -186,10 +186,10 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
         double rMxDOB = Math.min(maxDistOffBottom, bathym - minDepth);//realized max preferred distance off bottom
         double rMnDOB = Math.min(minDistOffBottom, bathym - minDepth);//realized min preferred distance off bottom
         if (rMxDOB<dob) {//swim down
-            w = -vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/10.0));
+            w = -vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/1.0));
         } else 
         if (dob<rMnDOB) {//swim up
-            w =  vertSwimmingSpeed*(1.0-Math.exp(-(rMnDOB-dob)/10.0));
+            w =  vertSwimmingSpeed*(1.0-Math.exp(-(rMnDOB-dob)/1.0));
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
         return w;

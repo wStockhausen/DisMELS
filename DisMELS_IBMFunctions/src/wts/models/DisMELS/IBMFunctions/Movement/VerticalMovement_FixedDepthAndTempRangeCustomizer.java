@@ -33,7 +33,10 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
         jtfMinDepth.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedDepthAndTempRange.PARAM_minDepth)).getValueAsString());
         jtfMaxDepth.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedDepthAndTempRange.PARAM_maxDepth)).getValueAsString());
         jtfMinDistOffBottom.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedDepthAndTempRange.PARAM_minDistOffBottom)).getValueAsString());
-        jtfRPW.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedDepthAndTempRange.PARAM_rpw)).getValueAsString());
+        jtfMinTemp.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_minTemp)).getValueAsString());
+        jtfMaxTemp.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_maxTemp)).getValueAsString());
+        jtfRPW.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_rpw)).getValueAsString());
+        jchkTempTakesPrecedence.setSelected((Boolean)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_TempTakesPrecedence).getValue());
     }
     
     /**
@@ -55,9 +58,8 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
         jLabel5 = new javax.swing.JLabel();
         jtfMaxTemp = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
-        jtfUseEnvVar = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
         jtfMinDepth = new javax.swing.JTextField();
+        jchkTempTakesPrecedence = new javax.swing.JCheckBox();
 
         setMaximumSize(new java.awt.Dimension(280, 180));
         setMinimumSize(new java.awt.Dimension(280, 180));
@@ -119,17 +121,6 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
         jLabel6.setText("max temperature (deg C)");
         jLabel6.setToolTipText("");
 
-        jtfUseEnvVar.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfUseEnvVar.setText("0");
-        jtfUseEnvVar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfUseEnvVarActionPerformed(evt);
-            }
-        });
-
-        jLabel7.setText("use an environmental field (-1/0/1)");
-        jLabel7.setToolTipText("");
-
         jtfMinDepth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jtfMinDepth.setText("0");
         jtfMinDepth.addActionListener(new java.awt.event.ActionListener() {
@@ -138,41 +129,44 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
             }
         });
 
+        jchkTempTakesPrecedence.setText("temp range takes precedence");
+        jchkTempTakesPrecedence.setToolTipText("select if temp range takes precedence over depth range");
+        jchkTempTakesPrecedence.setActionCommand("temp range takes priority");
+        jchkTempTakesPrecedence.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jchkTempTakesPrecedenceItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfRPW, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMinDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel2))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMaxDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel3))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMinDistOffBottom, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel4))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMinTemp, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel5))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMaxTemp, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel6))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfUseEnvVar, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel7)))
-                .addContainerGap(44, Short.MAX_VALUE))
+                .addComponent(jtfRPW, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMinDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel2))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMaxDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMinDistOffBottom, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel4))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMinTemp, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel5))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jtfMaxTemp, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel6))
+            .addComponent(jchkTempTakesPrecedence)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -198,13 +192,10 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
                     .addComponent(jLabel6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jtfUseEnvVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jtfRPW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
-                .addGap(46, 46, 46))
+                .addGap(7, 7, 7)
+                .addComponent(jchkTempTakesPrecedence))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -244,11 +235,10 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
         obj.setParameterValue(VerticalMovement_FixedDepthAndTempRange.PARAM_maxTemp, val);
     }//GEN-LAST:event_jtfMaxTempActionPerformed
 
-    private void jtfUseEnvVarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfUseEnvVarActionPerformed
-        String str = jtfUseEnvVar.getText();
-        Integer val = Integer.parseInt(str);
-        obj.setParameterValue(VerticalMovement_FixedDepthAndTempRange.PARAM_useEnvVar, val);
-    }//GEN-LAST:event_jtfUseEnvVarActionPerformed
+    private void jchkTempTakesPrecedenceItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jchkTempTakesPrecedenceItemStateChanged
+        boolean tempPrefd = jchkTempTakesPrecedence.isSelected();
+        obj.setParameterValue(VerticalMovement_FixedDepthAndTempRange.PARAM_TempTakesPrecedence, tempPrefd);
+    }//GEN-LAST:event_jchkTempTakesPrecedenceItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
@@ -257,13 +247,12 @@ public class VerticalMovement_FixedDepthAndTempRangeCustomizer extends javax.swi
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
+    private javax.swing.JCheckBox jchkTempTakesPrecedence;
     private javax.swing.JTextField jtfMaxDepth;
     private javax.swing.JTextField jtfMaxTemp;
     private javax.swing.JTextField jtfMinDepth;
     private javax.swing.JTextField jtfMinDistOffBottom;
     private javax.swing.JTextField jtfMinTemp;
     private javax.swing.JTextField jtfRPW;
-    private javax.swing.JTextField jtfUseEnvVar;
     // End of variables declaration//GEN-END:variables
 }
