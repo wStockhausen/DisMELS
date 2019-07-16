@@ -75,6 +75,12 @@ public class HSM_NetCDF implements HSM_Interface {
             throw(ex);
         }
     }
+    
+    public int getNX(){return nx;}
+    public int getNY(){return ny;}
+    public double getXLL(){return xll;}
+    public double getYLL(){return yll;}
+    public double getCellSize(){return csz;}
 
     /**
      * Checks if instance is connected to an HSMap.

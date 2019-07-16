@@ -5,10 +5,8 @@
 package wts.models.DisMELS.IBMFunctions.HSMs;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 import ucar.ma2.InvalidRangeException;
@@ -116,6 +114,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
                         res = false;
                         String title = "Error: netCDF file not found";
                         String msg = "netCDF file \n\t'"+fileName+"'\nnot found!";
+                        System.out.println(title+"\n"+msg);
                         javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.ERROR_MESSAGE);
                     }
                     break;
@@ -140,19 +139,27 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
      */
     @Override
     public double[] calculate(Object vars) {
+        System.out.println("\tStarting HSMFunction_NetCdF.calculate(pos)");
         double[] res = null;
-        ArrayList al = (ArrayList) vars;
-        double[] pos = (double[])al.get(0);
-        if (al.size()==1){
-            res = new double[1];
+        double[] pos = (double[])vars;
+        if (pos.length==2){
+            res = new double[]{-999.0};
             try {
                 res[0] = (Double)hsm.calcValue(pos);
             } catch (IOException | InvalidRangeException ex) {
                 Logger.getLogger(HSMFunction_NetCDF.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else {
+        } else if (pos.length>2){
             res = (double[]) hsm.calcValue(pos,null);
+        } else {
+            String msg = "Error in HSM_Function_NetCDF.calculate(vars).\n"+
+                         "vars must be double[] with length 2 or greater, but got\n"+
+                         "vars.length = "+pos.length+".\nvars = {";
+            for (int i=0;i<(pos.length-1);i++) msg += pos[i]+",";
+            msg += pos[pos.length-1]+"}.";
+            throw(new java.lang.Error(msg));
         }
+        System.out.println("\tFinished HSMFunction_NetCdF.calculate(pos)");
         return res;
     }
 }
