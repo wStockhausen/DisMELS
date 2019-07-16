@@ -5,11 +5,13 @@
 package wts.models.DisMELS.IBMFunctions.HSMs;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 import ucar.ma2.InvalidRangeException;
+import wts.models.DisMELS.framework.GlobalInfo;
 import wts.models.DisMELS.framework.HSMs.HSM_NetCDF;
 import wts.models.DisMELS.framework.IBMFunctions.AbstractIBMFunction;
 import wts.models.DisMELS.framework.IBMFunctions.IBMFunctionInterface;
@@ -127,21 +129,41 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
     /**
      * Calculates the value of the function.
      * 
-     * @param vars double[]
+     * @param vars double[] or ArrayList with a double[] as the first element
      * <pre>
-     * The first two elements of <code>vars</code> must be the 2-d position in 
-     * the coordinate system the hsm uses.
+     * The first two elements of the double[] must be the 2-d position at which
+     * to evaluate the hsm. If vars is a double[], the coordnate system for the
+     * position should be the same as that for the hsm. If vars is an ArrayList,
+     * the coordinate system of the double[] first element of the list should be
+     * the native ROMS xi-eta (IJ) coordinate system.
      * 
-     * If the length of <code>vars</code> is &gt 2, the return value will include
-     * gradient information as well the local value of the HSM.
+     * If the length of the double[] is &gt 2, the return value will include
+     * gradient information along the ROMS coordinates, as well the local value of the HSM.
      * </pre>
      * @return     double[] with HSM value and (possibly) horizontal gradient information.
      */
     @Override
     public double[] calculate(Object vars) {
         System.out.println("\tStarting HSMFunction_NetCdF.calculate(pos)");
+        double[] pos = null;
+        if (vars instanceof double[]){
+            pos = (double[]) vars;
+        } else if (vars instanceof ArrayList){       
+            ArrayList al = (ArrayList) vars;
+            double[] posIJ = (double[])al.get(0);
+            wts.roms.model.Interpolator2D i2d = wts.roms.model.GlobalInfo.getInstance().getInterpolator();
+            pos = new double[posIJ.length];
+            pos[0] = i2d.interpolateX(posIJ);
+            pos[1] = i2d.interpolateY(posIJ);
+            System.out.println("\tpos[]   = {"+pos[0]+", "+pos[1]+"}");
+        } else {
+            String msg = "Error in HSM_Function_NetCDF.calculate(vars).\n"+
+                         "vars must be an ArrrayList or a double[], but got\n"+
+                         "vars.class = "+vars.getClass().getName()+".";
+            throw(new java.lang.Error(msg));
+        }
+        
         double[] res = null;
-        double[] pos = (double[])vars;
         if (pos.length==2){
             res = new double[]{-999.0};
             try {
