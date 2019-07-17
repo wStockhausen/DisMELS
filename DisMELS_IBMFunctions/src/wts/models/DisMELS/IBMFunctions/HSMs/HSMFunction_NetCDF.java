@@ -126,61 +126,36 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
     }
 
     /**
-     * Calculates the value of the function.
+     * Calculates the value of the function at a location.
      * 
-     * @param vars double[] or ArrayList with a double[] as the first element
+     * @param vars double[], or ArrayList with a double[] as the first element
      * <pre>
      * The first two elements of the double[] must be the 2-d position at which
-     * to evaluate the hsm. If vars is a double[], the coordnate system for the
-     * position should be the same as that for the hsm. If vars is an ArrayList,
-     * the coordinate system of the double[] first element of the list should be
-     * the native ROMS xi-eta (IJ) coordinate system.
-     * 
-     * If the length of the double[] is &gt 2, the return value will include
-     * gradient information along the ROMS coordinates, as well the local value of the HSM.
+     * to evaluate the hsm: 
+     *   1. If vars is a double[], the position should be given as {lon,lat}. 
+     *   2. If vars is an ArrayList, the first element of the list should
+     *      be a double[] with the position {x,y} given in terms of the
+     *      coordinate system for the hsm.
      * </pre>
-     * @return     double[] with HSM value and (possibly) horizontal gradient information.
+     * @return double[] with HSM value and (possibly) horizontal gradient information.
      */
     @Override
-    public double[] calculate(Object vars) {
+    public Double calculate(Object vars) {
         System.out.println("\tStarting HSMFunction_NetCdF.calculate(pos)");
-        double[] pos = null;
-        if (vars instanceof double[]){
-            pos = (double[]) vars;
-        } else if (vars instanceof ArrayList){       
-            ArrayList al = (ArrayList) vars;
-            double[] posIJ = (double[])al.get(0);
-            wts.roms.model.Interpolator2D i2d = wts.roms.model.GlobalInfo.getInstance().getInterpolator();
-            pos = new double[posIJ.length];
-            pos[0] = i2d.interpolateX(posIJ);
-            pos[1] = i2d.interpolateY(posIJ);
-            System.out.println("\tpos[]   = {"+pos[0]+", "+pos[1]+"}");
-        } else {
+        if (!((vars instanceof double[])||(vars instanceof ArrayList))){   
             String msg = "Error in HSM_Function_NetCDF.calculate(vars).\n"+
                          "vars must be an ArrrayList or a double[], but got\n"+
                          "vars.class = "+vars.getClass().getName()+".";
             throw(new java.lang.Error(msg));
         }
         
-        double[] res = null;
-        if (pos.length==2){
-            res = new double[]{-999.0};
-            try {
-                res[0] = (Double)hsm.calcValue(pos);
-            } catch (IOException | InvalidRangeException ex) {
-                Logger.getLogger(HSMFunction_NetCDF.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (pos.length>2){
-            res = (double[]) hsm.calcValue(pos,null);
-        } else {
-            String msg = "Error in HSM_Function_NetCDF.calculate(vars).\n"+
-                         "vars must be double[] with length 2 or greater, but got\n"+
-                         "vars.length = "+pos.length+".\nvars = {";
-            for (int i=0;i<(pos.length-1);i++) msg += pos[i]+",";
-            msg += pos[pos.length-1]+"}.";
-            throw(new java.lang.Error(msg));
+        double res = -999.0;
+        try {
+            res = (Double)hsm.calcValue(vars);
+        } catch (IOException | InvalidRangeException ex) {
+            Logger.getLogger(HSMFunction_NetCDF.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("\tFinished HSMFunction_NetCdF.calculate(pos)");
+        System.out.println("\tFinished HSMFunction_NetCdF.calculate(vars)");
         return res;
     }
 }

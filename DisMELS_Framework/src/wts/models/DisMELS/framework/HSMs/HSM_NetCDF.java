@@ -6,11 +6,13 @@
 package wts.models.DisMELS.framework.HSMs;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
+import wts.roms.gis.AlbersNAD83;
 
 /**
  *
@@ -91,22 +93,42 @@ public class HSM_NetCDF implements HSM_Interface {
     public boolean isConnected(){return isConnected;}
     
     /**
-     * Calculate value of the HSM at position 'pos'.
+     * Calculate value of the HSM at position 'pos', given in
+     * geographic (lon, lat) coordinates.
      * 
-     * @param pos
-     * @return Object reflecting value(s) of HSM
+     * @param objPosLL - double[] with location as {lon, lat} as Object
+     * 
+     * @return Object (Double) reflecting value(s) of HSM
      * 
      * @throws IOException, Exception
      * @throws ucar.ma2.InvalidRangeException
      */
     @Override
-    public Object calcValue(double[] pos) throws IOException, InvalidRangeException {
-        System.out.println("\tStarting HSMap_NetCdF.calcValue(pos)");
+    public Object calcValue(Object objPosLL) throws IOException, InvalidRangeException {
+        System.out.println("\tStarting HSMap_NetCdF.calcValue(objPosLL)");
         double val = -1.0;
-        double xPos = (pos[0]-xll)/csz;
-        double yPos = (pos[1]-yll)/csz;
-        System.out.println("\t\tpos[] = {"+pos[0]+", "+pos[1]+"}");
+        double[] posXY = null;
+        if (objPosLL instanceof double[]){
+            double[] posLL = (double[]) objPosLL;
+            System.out.println("\t\tposLL[] = {"+posLL[0]+", "+posLL[1]+"}");
+            //convert to Albers projected coordinate system
+            posXY = AlbersNAD83.transformGtoP(posLL);
+        } else if (objPosLL instanceof ArrayList){
+            ArrayList arrList = (ArrayList) objPosLL;
+            //get Albers projected coordinates
+            posXY = (double[])arrList.get(0);
+        } else {
+            String msg = "Error: Expected a double[] or ArrayList but got "+objPosLL.getClass().getName();
+            throw(new Error(msg));
+        }
+        System.out.println("\t\tposXY[] = {"+posXY[0]+", "+posXY[1]+"}");
+       
+         //convert to decimal array indices
+        double xPos = (posXY[0]-xll)/csz;
+        double yPos = (posXY[1]-yll)/csz;
+        System.out.println("\t\txPos, yPos = {"+xPos+", "+yPos+"}");
         
+        //convert to nearest-neighbor integer array indices
         int Ir = (int) Math.round(xPos)+1;
         int Jr = (int) Math.round(yPos)+1;
         System.out.println("\t\tIr, Jr = {"+Ir+", "+Jr+"}");
@@ -115,6 +137,7 @@ public class HSM_NetCDF implements HSM_Interface {
         int j1 = Math.min(Math.max(Jr  ,1),ny);
         System.out.println("\t\ti1, j1 = {"+i1+", "+j1+"}");
         
+        //extract associated Alaska Albers coordinates
         int[] shpxy = new int[]{1};
         int[] orgx  = new int[]{i1-1};
         System.out.println("xps.read(i1,1) has size "+xps.read(orgx,shpxy).getSize());
@@ -124,7 +147,7 @@ public class HSM_NetCDF implements HSM_Interface {
         double ypsv = yps.read(orgy,shpxy).getDouble(0);
         
         System.out.println("\t\txpsv, ypsv  = {"+xpsv+", "+ypsv+"}");
-        System.out.println("\t\toffsets x,y = {"+(pos[0]-xpsv)+", "+(pos[1]-ypsv)+"}");
+        System.out.println("\t\toffsets x,y = {"+(posXY[0]-xpsv)+", "+(posXY[1]-ypsv)+"}");
         
         int[] shp = new int[]{1,1};
         int[] org = new int[]{j1-1,i1-1};
@@ -138,77 +161,17 @@ public class HSM_NetCDF implements HSM_Interface {
 
         if (Double.isNaN(val)) {
             logger.info("HSMap_NetCDF: interpolated NaN value\n"
-                              +"\tpos[]      = "+pos[0]+", "+pos[1]+"\n"
+                              +"\tpos[]      = "+posXY[0]+", "+posXY[1]+"\n"
                               +"\txPos, yPos = "+xPos+", "+yPos+"\n"
                               +"\ti1, j1     = "+i1+", "+j1);
         }
-        System.out.println("\tFinished HSMap_NetCdF.calcValue(pos)");
+        System.out.println("\tFinished HSMap_NetCdF.calcValue(objPosLL)");
         return val;
     }
 
-    /**
-     * Calculate value and gradient of the HSM at position 'pos'.
-     * 
-     * @param pos
-     * @param xtra if xtra is NOT null, the value of the HSM is linearly interpolated,
-     * otherwise it is taken from the nearest neighbor.
-     * 
-     * @return Object (Double) reflecting value of HSM
-     */
     @Override
-    public Object calcValue(double[] pos, Object xtra) {
+    public Object interpolateValue(Object objPosLL) {
         double[] val = new double[]{-1.0,0.0,0.0};
-//        try {
-//            double xPos = (pos[0]-xll)/csz;
-//            double yPos = (pos[1]-yll)/csz;
-//            int Ir = (int) Math.floor(xPos)+1;
-//            int Jr = (int) Math.floor(yPos)+1;
-//            
-//            int i1 = Math.min(Math.max(Ir  ,1),nx);
-//            int i2 = Math.min(Math.max(Ir+1,2),nx);
-//            int j1 = Math.min(Math.max(Jr  ,1),ny);
-//            int j2 = Math.min(Math.max(Jr+1,2),ny);
-//
-//            double p2 = ((double)(i2-i1))*(xPos-(double) i1);
-//            double q2 = ((double)(j2-j1))*(yPos-(double) j1);
-//            double p1 = ((double) 1) - p2;
-//            double q1 = ((double) 1) - q2;
-//
-//            int[] shp = new int[]{y+1,x+1};
-//            int[] origin = new int[]{y-1,x-1};
-//            ucar.ma2.Array a = hsm.read(origin,shp);
-//            
-//            double v11 = md.getValue(i1,j1); v11 = Double.isNaN(v11) ? 0.0 : v11;
-//            double v21 = md.getValue(i2,j1); v21 = Double.isNaN(v21) ? 0.0 : v21;
-//            double v12 = md.getValue(i1,j2); v12 = Double.isNaN(v12) ? 0.0 : v12;
-//            double v22 = md.getValue(i2,j2); v22 = Double.isNaN(v22) ? 0.0 : v22;
-//
-//            cff1 =  p1*q1*m11*v11+
-//                    p2*q1*m21*v21+
-//                    p1*q2*m12*v12+
-//                    p2*q2*m22*v22;
-//
-//            cff2 =  p1*q1*m11+
-//                    p2*q1*m21+
-//                    p1*q2*m12+
-//                    p2*q2*m22;
-//
-//            if (cff2>0.0) {
-//                v = cff1/cff2;
-//            } else {
-//                v = 0.0;
-//            }
-//
-//            if (Double.isNaN(val)) {
-//                logger.info("HSM_NetCDF: interpolated NaN value\n"
-//                                  +"\tvalues were "+v12+", "+v22+"\n"
-//                                  +"\t            "+v11+", "+v21);
-//            }
-//        } catch (IOException ex){
-//            Exceptions.printStackTrace(ex);
-//        } catch (InvalidRangeException ex) {
-//            Exceptions.printStackTrace(ex);
-//        }
         return val;
     }    
 }

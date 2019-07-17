@@ -37,24 +37,23 @@ public interface HSM_Interface {
     boolean isConnected();
     
     /**
-     * Calculate value of the HSM at position 'pos'.
+     * Calculate value of the HSM at a location.
      * 
-     * @param pos
-     * @return Object reflecting value(s) of HSM
+     * @param posInfo - Object that contains the desired location
+     * 
+     * @return Object with the value of the HSM
      * 
      * @throws IOException, Exception
      */
-    Object calcValue(double[] pos) throws IOException, Exception;
+    Object calcValue(Object posInfo) throws IOException, Exception;
     
     /**
-     * Calculate value of the HSM at position 'pos' based on additional information
-     * 'xtra'.
+     * Calculate smoothed value of the HSM at a location.
      * 
-     * @param pos
-     * @param xtra
-     * @return Object reflecting value(s) of HSM
+     * @param posInfo
+     * @return Object with the value of the HSM
      * 
      * @throws IOException, Exception
      */
-    Object calcValue(double[] pos, Object xtra) throws IOException, Exception;
+    Object interpolateValue(Object posInfo) throws IOException, Exception;
 }

@@ -13,7 +13,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Ignore;
-import wts.models.DisMELS.framework.HSMs.HSM_NetCDF;
+import wts.roms.gis.AlbersNAD83;
 import wts.roms.model.Interpolator2D;
 
 /**
@@ -59,8 +59,8 @@ public class HSMFunction_NetCDFTest {
     
     @Before
     public void setUp() {
-        System.out.println("starting setUp");
-        System.out.println("finished setUp");
+        //System.out.println("starting setUp");
+        //System.out.println("finished setUp");
     }
     
     @After
@@ -68,92 +68,41 @@ public class HSMFunction_NetCDFTest {
     }
 
     /**
-     * Test of calculate method of class HSMFunction_NetCDF.
-     */
-    @Ignore
-    @Test
-    public void testCalculateWithDoubleArray() {
-        System.out.println("testing HSMFunction_NetCDF.calculate(double[])");
-        HSM_NetCDF hsm = instance.hsm;
-        double xll = hsm.getXLL();
-        double yll = hsm.getYLL();
-        double csz = hsm.getCellSize();
-        System.out.println("\txll, yll, csz = "+xll+", "+yll+", "+csz);
-        double value = -1000;
-        int[] i =          new int[]{  0,      2000,      3000,          0, 4000, 5000, 5500, 5900, 6000, 7000, 8000, 10000,19400, 19408, 19409, 19410};
-        int[] j =          new int[]{  0,      1000,      1000,       3000, 4000, 5000, 5500, 5900, 6000, 7000, 8000,  7000, 8000,  8182,  8183,  8184};
-        double[] vals = new double[]{0.0, 0.2970694, 0.3329274, 0.05058163,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0,   0.0};
-        for (int k=0;k<i.length;k++){
-            double[] pos = new double[]{xll+i[k]*csz,yll+j[k]*csz};
-            System.out.println("i,j   = {"+i[k]+", "+j[k]+"}");
-            System.out.println("\tpos[] = {"+pos[0]+", "+pos[1]+"}");
-            value = ((double[])instance.calculate(pos))[0];
-            System.out.println("\t\tvalue = "+value+"; exp. value = "+vals[k]+"; diff = "+(value-vals[k]));
-            String msg = "Extracted value ("+value+") does not match extracted value("+vals[k]+") for\n"+
-                    "i, j = {"+i[k]+", "+j[k]+"}";
-            assertEquals(msg,vals[k],value,0.0001);
-        }
-        System.out.println("finished testing HSMFunction_NetCDF.calculate(double[])");
-    }
-
-    /**
-     * Test of calculate method  of class HSMFunction_NetCDF using ArayList input.
+     * Test of calculate method of class HSMFunction_NetCDF with lon, lat inputs.
+     * 
+     * <pre>
+     * Comparisons:
+     * 1. Input coordinates are converted from lon, lat to x,y to compare with expected x,y.
+     * 2. Input coordinates (lon, lat) are used to calculate HSM at the location and compared with expected value.
+     * </pre>
      */
     @Test
-    public void testCalculateWithArrayList() {
-        System.out.println("testing HSMFunction_NetCDF.calculate(ArrayList)");
-        HSM_NetCDF hsm = instance.hsm;
-        double xll = hsm.getXLL();
-        double yll = hsm.getYLL();
-        double csz = hsm.getCellSize();
-        System.out.println("\txll, yll, csz = "+xll+", "+yll+", "+csz);
-        double value = -1000;
-        int[] i =          new int[]{  0,      2000,      3000,          0, 4000, 5000, 5500, 5900, 6000, 7000, 8000, 10000,19400, 19408, 19409, 19410};
-        int[] j =          new int[]{  0,      1000,      1000,       3000, 4000, 5000, 5500, 5900, 6000, 7000, 8000,  7000, 8000,  8182,  8183,  8184};
-        double[] vals = new double[]{0.0, 0.2970694, 0.3329274, 0.05058163,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0,   0.0};
-        for (int k=0;k<i.length;k++){
-            double[] pos = new double[]{xll+i[k]*csz,yll+j[k]*csz};
-            System.out.println("i,j   = {"+i[k]+", "+j[k]+"}");
-            System.out.println("\tpos[]   = {"+pos[0]+", "+pos[1]+"}");
-            double[] posIJ = i2d.getGrid().computeIJfromXY(pos[0], pos[1]);
-            System.out.println("\tposIJ[] = {"+posIJ[0]+", "+posIJ[1]+"}");
-            ArrayList al = new ArrayList(1);
-            al.add(posIJ);
-            value = ((double[])instance.calculate(al))[0];
-            System.out.println("\t\tvalue = "+value+"; exp. value = "+vals[k]+"; diff = "+(value-vals[k]));
-            String msg = "Extracted value ("+value+") does not match extracted value("+vals[k]+") for\n"+
-                    "i, j = {"+i[k]+", "+j[k]+"}";
-            assertEquals(msg,vals[k],value,0.0001);
+    public void testCalculateWithLLs() {
+        System.out.println("\n\ntesting HSMFunction_NetCDF.calculate(double[]) with LLs");
+        double[] v   = new double[]{ 0.783076012,  0.781201196,  0.779940957,  0.777802259,  0.774819291, 0.771905005,  0.769363391,  0.766910815,  0.767519039};
+        double[] x   = new double[]{ 6399.021159,  6499.021159,  6599.021159,  6699.021159,  6799.021159, 6899.021159,  6999.021159,  7099.021159,  7199.021159};
+        double[] y   = new double[]{ 824428.2249,  824428.2249,  824428.2249,  824428.2249,  824428.2249, 824428.2249,  824428.2249,  824428.2249,  824428.2249};
+        double[] lon = new double[]{-153.8932141, -153.8915454, -153.8898766, -153.8882078, -153.886539, -153.8848702, -153.8832014, -153.8815327, -153.8798639};
+        double[] lat = new double[]{ 57.42426562,  57.42426417,  57.42426269,   57.4242612, 57.42425968,  57.42425814,  57.42425657,  57.42425499,  57.42425338};
+        double value; String msg;
+        for (int k=0;k<lon.length;k++){
+            double[] posLL = new double[]{lon[k],lat[k]};
+            System.out.println("\tposLL[] = {"+lon[k]+", "+lat[k]+"} [lon,lat]");
+            double[] posXY = AlbersNAD83.transformGtoP(posLL);
+            System.out.println("\tposXY[] = {"+posXY[0]+", "+posXY[1]+"}");
+            System.out.println("\t    x,y = {"+x[k]+", "+y[k]+"}");
+            System.out.println("\t  dx,dy = {"+(x[k]-posXY[0])+", "+(y[k]-posXY[1])+"}");
+            msg = "Expected x position ("+x[k]+") does not match transformed value("+posXY[0]+")";
+            assertEquals(msg,x[k],posXY[0],0.00001);
+            msg = "Expected y position ("+y[k]+") does not match transformed value("+posXY[1]+")";
+            assertEquals(msg,y[k],posXY[0],0.00001);
+            value = instance.calculate(posLL);
+            System.out.println("\t\tvalue = "+value+"; exp. value = "+v[k]+"; diff = "+(value-v[k]));
+            msg = "Extracted value ("+value+") does not match extracted value("+v[k]+") for\n"+
+                    "x, y = {"+lon[k]+", "+lat[k]+"}";
+            assertEquals(msg,v[k],value,0.00001);
         }
-        //assertTrue(true);
-    }
-
-    /**
-     * Test of calculate method  of class HSMFunction_NetCDF using ArayList input.
-     */
-    @Ignore
-    @Test(expected=Error.class)
-    public void testCalculateWithShortDoubleArray() {
-        System.out.println("testing HSMFunction_NetCDF.calculate(short double[])");
-        HSM_NetCDF hsm = instance.hsm;
-        double xll = hsm.getXLL();
-        double yll = hsm.getYLL();
-        double csz = hsm.getCellSize();
-        System.out.println("\txll, yll, csz = "+xll+", "+yll+", "+csz);
-        double value = -1000;
-        int[] i =          new int[]{  0,      2000,      3000,          0, 4000, 5000, 5500, 5900, 6000, 7000, 8000, 10000,19400, 19408, 19409, 19410};
-        int[] j =          new int[]{  0,      1000,      1000,       3000, 4000, 5000, 5500, 5900, 6000, 7000, 8000,  7000, 8000,  8182,  8183,  8184};
-        double[] vals = new double[]{0.0, 0.2970694, 0.3329274, 0.05058163,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0,   0.0};
-        for (int k=0;k<i.length;k++){
-            double[] pos = new double[]{xll+i[k]*csz};//note this position vector is only 1 element--should be at least 2!
-            System.out.println("i,j   = {"+i[k]+", "+j[k]+"}");
-            System.out.println("\tpos[] = {"+pos[0]+"}");
-            value = ((double[])instance.calculate(pos))[0];
-            System.out.println("\t\tvalue = "+value+"; exp. value = "+vals[k]+"; diff = "+(value-vals[k]));
-            String msg = "Extracted value ("+value+") does not match extracted value("+vals[k]+") for\n"+
-                    "i, j = {"+i[k]+", "+j[k]+"}";
-            assertEquals(msg,vals[k],value,0.0001);
-        }
+        System.out.println("finished testing HSMFunction_NetCDF.calculate(ArrayList) with LL->IJ");
         //assertTrue(true);
     }
 }

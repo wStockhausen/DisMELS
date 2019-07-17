@@ -563,7 +563,7 @@ public class ModelGrid2D {
      */
     public double[] computeIJfromXY(double x, double y)
                             throws java.lang.ArrayIndexOutOfBoundsException {
-        if (spherical) return new double[] {-1.0,-1.0};
+        //if (spherical) return new double[] {-1.0,-1.0};
         double[] pos = new double[] {x,y};
         double[] posIJ = Grid2DUtilities.computeHorizontalIndices(pos,
                                                             x_rho,
