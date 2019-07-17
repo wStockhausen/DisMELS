@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import wts.models.DisMELS.framework.HSMs.HSM_NetCDF;
 import wts.roms.model.Interpolator2D;
 
@@ -37,7 +38,7 @@ public class HSMFunction_NetCDFTest {
         System.out.println("'"+System.getProperty("os.name")+"' = 'Mac OS X'?: "+(System.getProperty("os.name").equals("Mac OS X")));
         if (System.getProperty("os.name").equals("Mac OS X")){
             conn = "/Users/WilliamStockhausen/Projects/EFH-IBMs_Shotwell/GIS_Data/HSM_BenthicNurseryHabitat/HSM.nc";
-            g2df = "??";
+            g2df = "/Users/WilliamStockhausen/Projects/ROMS/CGOA/CGOA_grid_5.nc";
         }
         System.out.println("\tsetting conn = '"+conn+"'");
         System.out.println("\tsetting g2df = '"+g2df+"'");
@@ -46,6 +47,9 @@ public class HSMFunction_NetCDFTest {
         i2d = gi.getInterpolator();
         instance = new HSMFunction_NetCDF();
         instance.setParameterValue(HSMFunction_NetCDF.PARAM_fileName, conn);
+        if (instance.hsm==null){
+            throw(new Error("could not create hsm"));
+        }
         System.out.println("finished setUpClass");
     }
     
@@ -56,7 +60,6 @@ public class HSMFunction_NetCDFTest {
     @Before
     public void setUp() {
         System.out.println("starting setUp");
-        instance = new HSMFunction_NetCDF();
         System.out.println("finished setUp");
     }
     
@@ -67,6 +70,7 @@ public class HSMFunction_NetCDFTest {
     /**
      * Test of calculate method of class HSMFunction_NetCDF.
      */
+    @Ignore
     @Test
     public void testCalculateWithDoubleArray() {
         System.out.println("testing HSMFunction_NetCDF.calculate(double[])");
@@ -127,6 +131,7 @@ public class HSMFunction_NetCDFTest {
     /**
      * Test of calculate method  of class HSMFunction_NetCDF using ArayList input.
      */
+    @Ignore
     @Test(expected=Error.class)
     public void testCalculateWithShortDoubleArray() {
         System.out.println("testing HSMFunction_NetCDF.calculate(short double[])");

@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 import ucar.ma2.InvalidRangeException;
-import wts.models.DisMELS.framework.GlobalInfo;
 import wts.models.DisMELS.framework.HSMs.HSM_NetCDF;
 import wts.models.DisMELS.framework.IBMFunctions.AbstractIBMFunction;
 import wts.models.DisMELS.framework.IBMFunctions.IBMFunctionInterface;
