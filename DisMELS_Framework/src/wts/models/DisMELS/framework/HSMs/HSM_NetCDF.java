@@ -28,22 +28,23 @@ public class HSM_NetCDF implements HSM_Interface {
     int nx;
     /** number of cells in y direction */
     int ny;
-    /** cell size (m) */
-    double csz; 
-    /** x-coordinates lower left corner */
-    double xll;
-    /** y-coordinates lower left corner */
-    double yll;
-    /** x coordinates of raster (m) as netcdf Variable */
-    Variable xps = null;
-    /** y coordinates of raster (m) as netcdf Variable */
-    Variable yps = null;
+    /** x coordinates of the centers of the HSM raster cells (m), as a ucar.nc2.Variable */
+    Variable x = null;
+    /** y coordinates of the centers of the HSM raster cells (m), as a ucar.nc2.Variable */
+    Variable y = null;
     /** habitat suitability values as netcdf Variable */
     Variable hsm = null;
     
     /** flag indicating active connection */
     boolean isConnected = false;
     
+        /** cell size (m) */
+    double csz; 
+    /** x-coordinate for origin of the hsm (center of upper left corner raster cell; i=0) */
+    double xul;
+    /** y-coordinate for origin of the hsm (center of upper left corner raster cell; j=0) */
+    double yul;
+
     Index idx;
     
     private static final Logger logger = Logger.getLogger(HSM_NetCDF.class.getName());
@@ -52,24 +53,27 @@ public class HSM_NetCDF implements HSM_Interface {
         
     }
     
-    @Override
     public String getConnectionString() {
         return(conn);
     }
 
-    @Override
-    public boolean setConnectionString(String conn) throws IOException {
+    public boolean setConnectionString(String conn) throws IOException, InvalidRangeException {
         try{
             if (ds!=null) {ds.close(); ds=null; isConnected=false;}//close old connection
-            ds = NetcdfDataset.openDataset(conn);
+            ds  = NetcdfDataset.openDataset(conn);
             nx  = ds.findDimension("x").getLength();
             ny  = ds.findDimension("y").getLength();
-            xll = ds.findVariable("xll").readScalarDouble();
-            yll = ds.findVariable("yll").readScalarDouble();
-            csz = ds.findVariable("cellsize").readScalarDouble();
-            xps = ds.findVariable("xps");
-            yps = ds.findVariable("yps");
+            x   = ds.findVariable("x");
+            y   = ds.findVariable("y");
             hsm = ds.findVariable("hsm");
+            
+            ucar.ma2.Array xa = x.read(new int[]{0}, new int[]{2});
+            ucar.ma2.Array ya = y.read(new int[]{0}, new int[]{1});
+            
+            xul = xa.getDouble(0); //x-coordinate for origin of hsm (center of upper left corner raster cell)
+            yul = ya.getDouble(0); //y-coordinate for origin of hsm (center of upper left corner raster cell)
+            csz = xa.getDouble(1)-xul;
+            
             isConnected = true;
             return isConnected;
         } catch (IOException ex) {
@@ -80,8 +84,8 @@ public class HSM_NetCDF implements HSM_Interface {
     
     public int getNX(){return nx;}
     public int getNY(){return ny;}
-    public double getXLL(){return xll;}
-    public double getYLL(){return yll;}
+    public double getXUL(){return xul;}
+    public double getYUL(){return yul;}
     public double getCellSize(){return csz;}
 
     /**
@@ -89,7 +93,6 @@ public class HSM_NetCDF implements HSM_Interface {
      * 
      * @return true if connected
      */
-    @Override
     public boolean isConnected(){return isConnected;}
     
     /**
@@ -98,7 +101,7 @@ public class HSM_NetCDF implements HSM_Interface {
      * 
      * @param objPosLL - double[] with location as {lon, lat} as Object
      * 
-     * @return Object (Double) reflecting value(s) of HSM
+     * @return Object (Double) value of the HSM at the location
      * 
      * @throws IOException, Exception
      * @throws ucar.ma2.InvalidRangeException
@@ -124,33 +127,33 @@ public class HSM_NetCDF implements HSM_Interface {
         System.out.println("\t\tposXY[] = {"+posXY[0]+", "+posXY[1]+"}");
        
          //convert to decimal array indices
-        double xPos = (posXY[0]-xll)/csz;
-        double yPos = (posXY[1]-yll)/csz;
+        double xPos = (posXY[0]-xul)/csz;
+        double yPos = (yul-posXY[1])/csz;
         System.out.println("\t\txPos, yPos = {"+xPos+", "+yPos+"}");
         
         //convert to nearest-neighbor integer array indices
-        int Ir = (int) Math.round(xPos)+1;
-        int Jr = (int) Math.round(yPos)+1;
+        int Ir = (int) Math.round(xPos);
+        int Jr = (int) Math.round(yPos);
         System.out.println("\t\tIr, Jr = {"+Ir+", "+Jr+"}");
         
-        int i1 = Math.min(Math.max(Ir  ,1),nx);
-        int j1 = Math.min(Math.max(Jr  ,1),ny);
+        int i1 = Math.min(Math.max(Ir  ,0),nx-1);
+        int j1 = Math.min(Math.max(Jr  ,0),ny-1);
         System.out.println("\t\ti1, j1 = {"+i1+", "+j1+"}");
         
         //extract associated Alaska Albers coordinates
         int[] shpxy = new int[]{1};
-        int[] orgx  = new int[]{i1-1};
-        System.out.println("xps.read(i1,1) has size "+xps.read(orgx,shpxy).getSize());
-        double xpsv = xps.read(orgx,shpxy).getDouble(0);
-        int[] orgy = new int[]{j1-1};
-        System.out.println("yps.read(j1,1) has size "+yps.read(orgy,shpxy).getSize());
-        double ypsv = yps.read(orgy,shpxy).getDouble(0);
+        int[] orgx  = new int[]{i1};
+        System.out.println("xps.read(i1,1) has size "+x.read(orgx,shpxy).getSize());
+        double xv = x.read(orgx,shpxy).getDouble(0);
+        int[] orgy = new int[]{j1};
+        System.out.println("yps.read(j1,1) has size "+y.read(orgy,shpxy).getSize());
+        double yv = y.read(orgy,shpxy).getDouble(0);
         
-        System.out.println("\t\txpsv, ypsv  = {"+xpsv+", "+ypsv+"}");
-        System.out.println("\t\toffsets x,y = {"+(posXY[0]-xpsv)+", "+(posXY[1]-ypsv)+"}");
+        System.out.println("\t\txv, yv  = {"+xv+", "+yv+"}");
+        System.out.println("\t\toffsets x,y = {"+(posXY[0]-xv)+", "+(posXY[1]-yv)+"}");
         
         int[] shp = new int[]{1,1};
-        int[] org = new int[]{j1-1,i1-1};
+        int[] org = new int[]{j1,i1};
         System.out.println("shp = "+shp[0]+", "+shp[1]);
         System.out.println("org = "+org[0]+", "+org[1]);
         ucar.ma2.Array arr = hsm.read(org,shp);

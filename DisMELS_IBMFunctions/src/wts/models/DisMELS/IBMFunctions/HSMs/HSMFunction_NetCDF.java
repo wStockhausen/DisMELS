@@ -117,6 +117,8 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
                         String msg = "netCDF file \n\t'"+fileName+"'\nnot found!";
                         System.out.println(title+"\n"+msg);
                         javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.ERROR_MESSAGE);
+                    } catch (InvalidRangeException ex) {
+                        System.out.println(ex.toString());
                     }
                     break;
             }

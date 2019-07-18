@@ -14,29 +14,6 @@ import java.io.IOException;
 public interface HSM_Interface {
     
     /**
-     * Gets the current connection string.
-     * 
-     * @return String: the connection string
-     */
-    String getConnectionString();
-    
-    /**
-     * Set the connection to the HSM.
-     * 
-     * @param conn
-     * 
-     * @return boolean: true if connection was successfully set
-     */
-    boolean setConnectionString(String conn) throws IOException;
-    
-    /**
-     * Checks if instance is connected to an HSMap.
-     * 
-     * @return true if connected
-     */
-    boolean isConnected();
-    
-    /**
      * Calculate value of the HSM at a location.
      * 
      * @param posInfo - Object that contains the desired location
