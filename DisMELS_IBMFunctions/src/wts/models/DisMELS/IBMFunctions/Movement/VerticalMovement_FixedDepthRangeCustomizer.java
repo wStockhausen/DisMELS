@@ -12,7 +12,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMParameterDouble;
  */
 public class VerticalMovement_FixedDepthRangeCustomizer extends javax.swing.JPanel implements java.beans.Customizer {
     
-    private VerticalMovement_FixedDepthRange obj = null;;
+    private VerticalMovement_FixedDepthRange obj = null;
 
     /**
      * Creates new customizer DielVerticalMigration_FixedDepthRangesCustomizer

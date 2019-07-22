@@ -143,7 +143,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
      */
     @Override
     public Double calculate(Object vars) {
-        System.out.println("\tStarting HSMFunction_NetCdF.calculate(pos)");
+        System.out.println("\tStarting HSMFunction_NetCDF.calculate(pos)");
         if (!((vars instanceof double[])||(vars instanceof ArrayList))){   
             String msg = "Error in HSM_Function_NetCDF.calculate(vars).\n"+
                          "vars must be an ArrrayList or a double[], but got\n"+
@@ -157,7 +157,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
         } catch (IOException | InvalidRangeException ex) {
             Logger.getLogger(HSMFunction_NetCDF.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("\tFinished HSMFunction_NetCdF.calculate(vars)");
+        System.out.println("\tFinished HSMFunction_NetCDF.calculate(vars)");
         return res;
     }
 }

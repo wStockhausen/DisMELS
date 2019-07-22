@@ -15,11 +15,27 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.openide.awt</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>7.67.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.dialogs</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
                         <specification-version>7.23.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.util</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.7.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -78,6 +94,7 @@
             </test-dependencies>
             <public-packages>
                 <package>wts.models.DisMELS.IBMFunctions.Growth</package>
+                <package>wts.models.DisMELS.IBMFunctions.HSMs</package>
                 <package>wts.models.DisMELS.IBMFunctions.Miscellaneous</package>
                 <package>wts.models.DisMELS.IBMFunctions.Mortality</package>
                 <package>wts.models.DisMELS.IBMFunctions.Movement</package>

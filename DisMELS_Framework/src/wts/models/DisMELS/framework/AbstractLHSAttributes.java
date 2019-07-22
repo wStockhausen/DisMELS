@@ -19,15 +19,22 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
     /** static number of attributes defined by this class (including typeName) */
     public static final int numAttributes = LifeStageAttributesInterface.PROP_NumAtts;
     
-    /** static set of keys (as Strings) to the map of attribute values */
-    protected static final Set<String> keys = new LinkedHashSet<>(32);
+    /** static set of keys (as Strings) to the map of attribute values defined for THIS CLASS */
+    protected static final Set<String> keys = new LinkedHashSet<>(2*numAttributes);
     
-    /** static map to the attributes values defined for this class */
-    protected static final Map<String,IBMAttribute> mapAttributes = new HashMap<>(32);
+    /** static map to the attributes values defined for ALL SUPERCLASSES and THIS CLASS */
+    protected static final Map<String,IBMAttribute> mapAttributes = new HashMap<>(2*numAttributes);
+    /** String[] of attribute keys, not including typeName, for ALL SUPERCLASSES and THIS CLASS */
+    protected static final String[] aKeys      = new String[numAttributes-1];
+    /** Class[] of attribute classes for ALL SUPERCLASSES and THIS CLASS */
+    protected static final Class[]  classes    = new Class[numAttributes];
+    /** String[] of short names for attributes for ALL SUPERCLASSES and THIS CLASS */
+    protected static final String[] shortNames = new String[numAttributes];
     
+    //INSTANCE FIELDS
     /** LHS type name assigned to instance*/
     protected String typeName;
-    /** instance-level map of keys to values for attributes defined in the this class and subclasses 
+    /** instance-level map of keys to values for attributes defined in the THIS CLASS and SUBCLASSES 
      * (subclasses should add their attribute values to it) */
     protected Map<String,Object> mapValues;
     
@@ -42,14 +49,28 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
      * and the static Map mapAttributes.
      * 
      * Subclasses should call this constructor with a valid life stage type name from
-     * all constructors to set the type name.  They should then 
+     * all constructors to set the type name.  They should then provide a 
+     * "finishInstantiation" method of their own to create and fill in mapValues 
+     * with the new attributes defined in the subclass, as well as the static fields
+     * that define the new keys and attributes if this has not been done yet.
      * 
      *@param typeName - the type name as a String.
      */
     protected AbstractLHSAttributes(String typeName) {
         this.typeName = typeName;
         propertySupport =  new PropertyChangeSupport(this);
-        if (mapAttributes.isEmpty()){
+        finishInstantiation();
+    }
+    
+    /**
+     * This method creates and fills in the instance field "mapValues".
+     * 
+     * It also checks to see if the static field "keys" has been filled in--if not,
+     * the method fills in "keys" and the static field "mapAttributes". This should only
+     * happen once per subclass.
+     */
+    private void finishInstantiation(){
+        if (keys.isEmpty()){
             //assign static-level attributes information for this class
             String key;
             key = PROP_typeName;   keys.add(key); mapAttributes.put(key,new IBMAttributeString(key,  "typeName"));
@@ -71,6 +92,10 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
             key = PROP_age;        keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "age"));
             key = PROP_ageInStage; keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "ageInStage"));
             key = PROP_number;     keys.add(key); mapAttributes.put(key,new IBMAttributeDouble(key,  "number"));
+            
+            Iterator<String> it = keys.iterator();
+            int j = 0; it.next();//skip typeName
+            while (it.hasNext()) aKeys[j++] = it.next();
         }
         //assign default instance-level attributes values for this class
         mapValues = new HashMap<>(2*numAttributes);
@@ -227,14 +252,13 @@ public abstract class AbstractLHSAttributes implements LifeStageAttributesInterf
     /**
      * Gets type name and attribute values as an ArrayList.  Subclasses should 
      * override this method. The overriding method can call super.getArrayList()
-     * to return an ArrayList of the correct size and with the values filled in
-     * for the attributes defined in this class.
+     * to return an ArrayList with the values filled in for the attributes defined in THIS class.
      * 
      * @return - the array list.
      */
     @Override
     public ArrayList getArrayList() {
-        ArrayList a = new ArrayList(mapValues.size());
+        ArrayList a = new ArrayList(keys.size());
         a.add(typeName);
         Iterator<String> it = keys.iterator();
         it.next();//skip PROP_typeName
