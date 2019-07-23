@@ -59,9 +59,9 @@ public class HSMFunction_ConstantTest {
         Object vars = null;
         HSMFunction_Constant instance = new HSMFunction_Constant();
         instance.setParameterValue(HSMFunction_Constant.PARAM_value, 99.0);
-        double[] expResult = new double[]{99.0};
-        double[] result = instance.calculate(vars);
-        assertArrayEquals(expResult, result,0.001);
+        double expResult = 99.0;
+        double result = instance.calculate(vars);
+        assertEquals(expResult, result,0.001);
         System.out.println("finished testing HSMFunction_Constant.calculate(pos)");
     }
     

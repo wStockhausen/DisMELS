@@ -61,6 +61,9 @@ public class HSMFunction_Constant extends AbstractIBMFunction {
     /** value of the fileName parameter */
     protected double value = 1.0;
     
+    /** flag to print debugging information */
+    public static boolean debug = false;
+    
     /** constructor for class */
     public HSMFunction_Constant(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
@@ -112,12 +115,12 @@ public class HSMFunction_Constant extends AbstractIBMFunction {
      * 
      * @param vars any Object or null
      * 
-     * @return double[] with HSM value as single element.
+     * @return Double with HSM value as single element.
      */
     @Override
-    public double[] calculate(Object vars) {
-        System.out.println("\tStarting HSMFunction_Constant.calculate(pos)");
-        System.out.println("\tFinished HSMFunction_NetCdF.calculate(pos)");
-        return new double[]{value};
+    public Double calculate(Object vars) {
+        if (debug) System.out.println("\tStarting HSMFunction_Constant.calculate(pos)");
+        if (debug) System.out.println("\tFinished HSMFunction_NetCdF.calculate(pos)");
+        return value;
     }
 }

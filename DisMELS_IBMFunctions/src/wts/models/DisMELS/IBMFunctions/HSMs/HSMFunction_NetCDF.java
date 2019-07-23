@@ -69,6 +69,9 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
     
     /** instance of HSM_NetCDF class to read file*/
     protected HSM_NetCDF hsm = null;
+    
+    /** flag to print debugging information */
+    public static boolean debug = false;
    
     /** constructor for class */
     public HSMFunction_NetCDF(){
@@ -139,11 +142,11 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
      *      be a double[] with the position {x,y} given in terms of the
      *      coordinate system for the hsm.
      * </pre>
-     * @return double[] with HSM value and (possibly) horizontal gradient information.
+     * @return Double with HSM value and (possibly) horizontal gradient information.
      */
     @Override
     public Double calculate(Object vars) {
-        System.out.println("\tStarting HSMFunction_NetCDF.calculate(pos)");
+        if (debug) System.out.println("\tStarting HSMFunction_NetCDF.calculate(pos)");
         if (!((vars instanceof double[])||(vars instanceof ArrayList))){   
             String msg = "Error in HSM_Function_NetCDF.calculate(vars).\n"+
                          "vars must be an ArrrayList or a double[], but got\n"+
@@ -157,7 +160,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
         } catch (IOException | InvalidRangeException ex) {
             Logger.getLogger(HSMFunction_NetCDF.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("\tFinished HSMFunction_NetCDF.calculate(vars)");
+        if (debug) System.out.println("\tFinished HSMFunction_NetCDF.calculate(vars)");
         return res;
     }
 }

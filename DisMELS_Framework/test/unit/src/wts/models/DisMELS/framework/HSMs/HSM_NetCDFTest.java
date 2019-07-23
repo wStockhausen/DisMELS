@@ -47,11 +47,14 @@ public class HSM_NetCDFTest {
         wts.roms.model.GlobalInfo gi = wts.roms.model.GlobalInfo.getInstance();
         gi.setGridFile(g2df);
         i2d = gi.getInterpolator();
+        
+        HSM_NetCDF.debug = true;
         System.out.println("finished setUpClass");
     }
     
     @AfterClass
     public static void tearDownClass() {
+        HSM_NetCDF.debug = false;
         System.out.println("starting tearDownClass");
     }
     

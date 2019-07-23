@@ -5,14 +5,12 @@
  */
 package wts.models.DisMELS.IBMFunctions.HSMs;
 
-import java.util.ArrayList;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Ignore;
 import wts.roms.gis.AlbersNAD83;
 import wts.roms.model.Interpolator2D;
 
@@ -52,11 +50,16 @@ public class HSMFunction_NetCDFTest {
         if (instance.hsm==null){
             throw(new Error("could not create hsm"));
         }
+        
+        HSMFunction_NetCDF.debug = true;
         System.out.println("finished setUpClass");
     }
     
     @AfterClass
     public static void tearDownClass() {
+        System.out.println("starting tearDownClass");
+        HSMFunction_NetCDF.debug = false;
+        System.out.println("finished tearDownClass");
     }
     
     @Before
