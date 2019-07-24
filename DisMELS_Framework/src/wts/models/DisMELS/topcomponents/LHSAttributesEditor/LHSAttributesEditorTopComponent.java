@@ -816,12 +816,12 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         //Create the feature and add itm to the feature collection
 //        if (debug) logger.info("Adding point");
         FeatureCollection fc = FeatureCollections.newCollection();
-        double[] latlon = AlbersNAD83.transformPtoG(new double[]{pt.getX(),pt.getY()});
-        double[] IJ = romsGI.getGrid2D().computeIJfromLL(latlon[1],latlon[0]);
-        //do not create points on land!
-        if (romsGI.getGrid2D().isOnLand(IJ)) return fc;
-        
         try {
+            double[] latlon = AlbersNAD83.transformPtoG(new double[]{pt.getX(),pt.getY()});
+            double[] IJ = romsGI.getGrid2D().computeIJfromLL(latlon[1],latlon[0]);
+            //do not create points on land!
+            if (romsGI.getGrid2D().isOnLand(IJ)) return fc;
+        
             ftLHS.setGeometryFromMap(pt.getX(),pt.getY());
             LifeStageAttributesInterface aLHSt = (LifeStageAttributesInterface) lhsAttributes.clone();
             double bd = romsGI.getInterpolator().interpolateBathymetricDepth(IJ);
@@ -863,7 +863,10 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             ftLHS.setAttributes(lhsAttributes);
         } catch (CloneNotSupportedException ex) {
             Exceptions.printStackTrace(ex);
-        }    
+        }  catch (java.lang.ArrayIndexOutOfBoundsException ex){
+            //catch the exception and return an empty collection
+            logger.info(ex.getMessage());
+        }
         return fc;
     }
     
