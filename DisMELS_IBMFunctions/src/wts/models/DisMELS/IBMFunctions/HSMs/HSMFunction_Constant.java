@@ -58,8 +58,8 @@ public class HSMFunction_Constant extends AbstractIBMFunction {
     /** key to set the fileName parameter */
     public static final String PARAM_value = "the value";
     
-    /** value of the fileName parameter */
-    protected double value = 1.0;
+    /** value of the constant */
+    protected double value = 0.0;
     
     /** flag to print debugging information */
     public static boolean debug = false;

@@ -6,11 +6,8 @@
 package wts.models.DisMELS.framework.HSMs;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.logging.Logger;
-import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
-import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import wts.roms.gis.AlbersNAD83;
 
@@ -18,22 +15,20 @@ import wts.roms.gis.AlbersNAD83;
  *
  * @author William Stockhausen
  */
-public class HSM_NetCDF implements HSM_Interface {
+public class HSM_NetCDF_InMemory implements HSM_Interface {
 
     /** string giving connection info (filename, url) to netcdf file */
     protected String conn = null;
-    /** the netcdf datset object */
-    protected NetcdfDataset ds = null;
     /** number of cells in x direction */
     protected  int nx;
     /** number of cells in y direction */
     protected int ny;
-    /** x coordinates of the centers of the HSM raster cells (m), as a ucar.nc2.Variable */
-    protected Variable x = null;
-    /** y coordinates of the centers of the HSM raster cells (m), as a ucar.nc2.Variable */
-    protected Variable y = null;
-    /** habitat suitability values as netcdf Variable */
-    protected Variable hsm = null;
+    /** x coordinates of the centers of the HSM raster cells (m), as a ucar.ma2.ArrayDouble.D1 */
+    protected ucar.ma2.ArrayDouble.D1 x = null;
+    /** y coordinates of the centers of the HSM raster cells (m), as a ucar.ma2.ArrayDouble.D1 */
+    protected ucar.ma2.ArrayDouble.D1 y = null;
+    /** habitat suitability values as a ucar.ma2.ArrayFloat.D2 */
+    protected ucar.ma2.ArrayFloat.D2 hsm = null;
     
     /** flag indicating active connection */
     protected boolean isConnected = false;
@@ -45,14 +40,13 @@ public class HSM_NetCDF implements HSM_Interface {
     /** y-coordinate for origin of the hsm (center of upper left corner raster cell; j=0) */
     protected double yul;
 
-    protected Index idx;
-    
     /** flag to print debugging information */
     public static boolean debug = false;
     
-    private static final Logger logger = Logger.getLogger(HSM_NetCDF.class.getName());
+    /** class logger */
+    private static final Logger logger = Logger.getLogger(HSM_NetCDF_InMemory.class.getName());
     
-    public HSM_NetCDF(){
+    public HSM_NetCDF_InMemory(){
         
     }
     
@@ -62,28 +56,32 @@ public class HSM_NetCDF implements HSM_Interface {
 
     public boolean setConnectionString(String conn) throws IOException, InvalidRangeException {
         try{
-            if ((ds!=null)&&(!conn.equals(this.conn))) {ds.close(); ds=null; isConnected=false;}//close old connection
-            ds  = NetcdfDataset.openDataset(conn);
+            if (conn.equals(this.conn)) {return isConnected;}
+            NetcdfDataset ds          = NetcdfDataset.openDataset(conn);
+            ucar.nc2.Variable x_var   = ds.findVariable("x");
+            ucar.nc2.Variable y_var   = ds.findVariable("y");
+            ucar.nc2.Variable hsm_var = ds.findVariable("hsm");
+            
             nx  = ds.findDimension("x").getLength();
             ny  = ds.findDimension("y").getLength();
-            x   = ds.findVariable("x");
-            y   = ds.findVariable("y");
-            hsm = ds.findVariable("hsm");
+            x   = (ucar.ma2.ArrayDouble.D1) x_var.read();
+            y   = (ucar.ma2.ArrayDouble.D1) y_var.read();
+            hsm = (ucar.ma2.ArrayFloat.D2) hsm_var.read();
             
-            ucar.ma2.Array xa = x.read(new int[]{0}, new int[]{2});
-            ucar.ma2.Array ya = y.read(new int[]{0}, new int[]{1});
             
-            xul = xa.getDouble(0); //x-coordinate for origin of hsm (center of upper left corner raster cell)
-            yul = ya.getDouble(0); //y-coordinate for origin of hsm (center of upper left corner raster cell)
-            csz = xa.getDouble(1)-xul;
+            xul = x.get(0);    //x-coordinate for origin of hsm (center of upper left corner raster cell)
+            yul = y.get(0);    //y-coordinate for origin of hsm (center of upper left corner raster cell)
+            csz = x.get(1)-xul;//cell size, in m
+            
+            ds.close();
             
             this.conn = conn;
             isConnected = true;
             return isConnected;
         } catch (IOException ex) {
             logger.severe("\n\tCould not set connection string \n\t\t'"+conn+"'");
-            isConnected = false;
             this.conn = null;
+            isConnected = false;
             throw(ex);
         }
     }
@@ -114,7 +112,7 @@ public class HSM_NetCDF implements HSM_Interface {
      */
     @Override
     public double calcValue(double[] objPosLL) throws IOException, InvalidRangeException {
-        if (debug) System.out.println("\tStarting HSMap_NetCdF.calcValue(objPosLL)");
+        if (debug) System.out.println("\tStarting HSMap_NetCdF_InMemory.calcValue(objPosLL)");
         double val = 0.0;
         double[] posXY = null;
         double[] posLL = (double[]) objPosLL;
@@ -144,26 +142,15 @@ public class HSM_NetCDF implements HSM_Interface {
         if (debug) System.out.println("\t\ti1, j1 = {"+i1+", "+j1+"}");
         
         //extract associated Alaska Albers coordinates
-        int[] shpxy = new int[]{1};
-        int[] orgx  = new int[]{i1};
-        if (debug) System.out.println("xps.read(i1,1) has size "+x.read(orgx,shpxy).getSize());
-        double xv = x.read(orgx,shpxy).getDouble(0);
-        int[] orgy = new int[]{j1};
-        if (debug) System.out.println("yps.read(j1,1) has size "+y.read(orgy,shpxy).getSize());
-        double yv = y.read(orgy,shpxy).getDouble(0);
+        double xv = x.get(i1);
+        double yv = y.get(j1);
         
-        if (debug) System.out.println("\t\txv, yv  = {"+xv+", "+yv+"}");
-        if (debug) System.out.println("\t\toffsets x,y = {"+(posXY[0]-xv)+", "+(posXY[1]-yv)+"}");
+        if (debug) {
+            System.out.println("\t\txv, yv  = {"+xv+", "+yv+"}");
+            System.out.println("\t\toffsets x,y = {"+(posXY[0]-xv)+", "+(posXY[1]-yv)+"}");
+        }
         
-        int[] shp = new int[]{1,1};
-        int[] org = new int[]{j1,i1};
-        if (debug) System.out.println("shp = "+shp[0]+", "+shp[1]);
-        if (debug) System.out.println("org = "+org[0]+", "+org[1]);
-        ucar.ma2.Array arr = hsm.read(org,shp);
-        if (debug) System.out.println("hsm.read(org,shp) has size "+arr.getSize());
-
-        val = arr.getDouble(0);
-        if (debug) System.out.println("\t\t\tval = "+val);
+        val = hsm.get(j1,i1);
 
         if (Double.isNaN(val)) {
             logger.info("HSMap_NetCDF: interpolated NaN value\n"
@@ -171,7 +158,10 @@ public class HSM_NetCDF implements HSM_Interface {
                               +"\txPos, yPos = "+xPos+", "+yPos+"\n"
                               +"\ti1, j1     = "+i1+", "+j1);
         }
-        if (debug) System.out.println("\tFinished HSMap_NetCdF.calcValue(objPosLL)");
+        if (debug) {
+            System.out.println("\t\t\tval = "+val);
+            System.out.println("\tFinished HSMap_NetCdF_InMemory.calcValue(objPosLL)");
+        }
         return val;
     }
 

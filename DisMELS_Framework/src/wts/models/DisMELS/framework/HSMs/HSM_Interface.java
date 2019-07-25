@@ -16,21 +16,21 @@ public interface HSM_Interface {
     /**
      * Calculate value of the HSM at a location.
      * 
-     * @param posInfo - Object that contains the desired location
+     * @param posInfo - double[] that contains the desired location
      * 
-     * @return Object with the value of the HSM
+     * @return the value of the HSM
      * 
      * @throws IOException, Exception
      */
-    Object calcValue(Object posInfo) throws IOException, Exception;
+    double calcValue(double[] posInfo) throws IOException, Exception;
     
     /**
      * Calculate smoothed value of the HSM at a location.
      * 
-     * @param posInfo
-     * @return Object with the value of the HSM
+     * @param posInfo - double[] that contains the desired location
+     * @return the value of the HSM
      * 
      * @throws IOException, Exception
      */
-    Object interpolateValue(Object posInfo) throws IOException, Exception;
+    double interpolateValue(double[] posInfo) throws IOException, Exception;
 }

@@ -17,15 +17,15 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMParameterString;
  *
  * @author william.stockhausen
  */
-public class HSMFunction_NetCDFCustomizer extends javax.swing.JPanel implements java.beans.Customizer {
+public class HSMFunction_NetCDF_InMemoryCustomizer extends javax.swing.JPanel implements java.beans.Customizer {
 
-    private HSMFunction_NetCDF obj = null;
+    private HSMFunction_NetCDF_InMemory obj = null;
     private JFileChooser jfc = new JFileChooser();
     
     /**
-     * Creates new form HSMFunction_NetCDFCustomizer
+     * Creates new form HSMFunction_NetCDF_InMemoryCustomizer
      */
-    public HSMFunction_NetCDFCustomizer() {
+    public HSMFunction_NetCDF_InMemoryCustomizer() {
         initComponents();
         FileFilter ff = new FileNameExtensionFilter("netCDF files", "nc");
         jfc.setFileFilter(ff);
@@ -45,17 +45,17 @@ public class HSMFunction_NetCDFCustomizer extends javax.swing.JPanel implements 
         jtfFilename = new javax.swing.JTextField();
         jbFindFile = new javax.swing.JButton();
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(HSMFunction_NetCDFCustomizer.class, "HSMFunction_NetCDFCustomizer.jPanel1.border.title"))); // NOI18N
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(HSMFunction_NetCDF_InMemoryCustomizer.class, "HSMFunction_NetCDF_InMemoryCustomizer.jPanel1.border.title"))); // NOI18N
 
-        jtfFilename.setText(org.openide.util.NbBundle.getMessage(HSMFunction_NetCDFCustomizer.class, "HSMFunction_NetCDFCustomizer.jtfFilename.text")); // NOI18N
-        jtfFilename.setToolTipText(org.openide.util.NbBundle.getMessage(HSMFunction_NetCDFCustomizer.class, "HSMFunction_NetCDFCustomizer.jtfFilename.toolTipText")); // NOI18N
+        jtfFilename.setText(org.openide.util.NbBundle.getMessage(HSMFunction_NetCDF_InMemoryCustomizer.class, "HSMFunction_NetCDF_InMemoryCustomizer.jtfFilename.text")); // NOI18N
+        jtfFilename.setToolTipText(org.openide.util.NbBundle.getMessage(HSMFunction_NetCDF_InMemoryCustomizer.class, "HSMFunction_NetCDF_InMemoryCustomizer.jtfFilename.toolTipText")); // NOI18N
         jtfFilename.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfFilenameActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(jbFindFile, org.openide.util.NbBundle.getMessage(HSMFunction_NetCDFCustomizer.class, "HSMFunction_NetCDFCustomizer.jbFindFile.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(jbFindFile, org.openide.util.NbBundle.getMessage(HSMFunction_NetCDF_InMemoryCustomizer.class, "HSMFunction_NetCDF_InMemoryCustomizer.jbFindFile.text")); // NOI18N
         jbFindFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jbFindFileActionPerformed(evt);
@@ -94,39 +94,59 @@ public class HSMFunction_NetCDFCustomizer extends javax.swing.JPanel implements 
        String fn = jtfFilename.getText();
        File f = new File(fn);
        if (f.exists()) {
-           jfc.setSelectedFile(f);
-       } else {
-           JOptionPane.showMessageDialog(jPanel1, "File '"+fn+"' does not exist.","File not found error",JOptionPane.ERROR_MESSAGE);
-           String fnp = jfc.getSelectedFile().getPath();
-           f = new File(fnp);
-           if (f.exists()) {
-               jtfFilename.setText(fnp);//revert to previous file
-               obj.setParameterValue(HSMFunction_NetCDF.PARAM_fileName, fnp);
+           boolean r = obj.setParameterValue(HSMFunction_NetCDF_InMemory.PARAM_fileName, fn);
+           if (r) {
+               jfc.setSelectedFile(f);
            } else {
-               jtfFilename.setText("");
+               revertFile(fn);
            }
+       } else {
+           revertFile(fn);
        }
     }//GEN-LAST:event_jtfFilenameActionPerformed
 
+    private void revertFile(String fn){
+        JOptionPane.showMessageDialog(jPanel1, "Problem with file '"+fn+"'.","Customizer: File doesn't exist or is not an HSM file.",JOptionPane.ERROR_MESSAGE);
+        String fnp = jfc.getSelectedFile().getPath();
+        File f = new File(fnp);
+        if (f.exists()) {
+           boolean r = obj.setParameterValue(HSMFunction_NetCDF_InMemory.PARAM_fileName, fnp);
+           if (r) {//revert to previous file
+            jtfFilename.setEnabled(false);//turn off event processing
+            jtfFilename.setText(fnp);
+            jtfFilename.setEnabled(true);//turn on event processing
+           }
+        } else {
+            jtfFilename.setEnabled(false);//turn off event processing
+            jtfFilename.setText("");
+            jtfFilename.setEnabled(true);//turn on event processing
+        }
+    }
+    
     private void jbFindFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbFindFileActionPerformed
         if (jfc.showOpenDialog(jPanel1)==JFileChooser.APPROVE_OPTION){
-           File f = jfc.getSelectedFile();
-           String fn = f.getPath();
-           jtfFilename.setText(fn);
-           obj.setParameterValue(HSMFunction_NetCDF.PARAM_fileName, fn);
+           String fn = jfc.getSelectedFile().getPath();
+           boolean r = obj.setParameterValue(HSMFunction_NetCDF_InMemory.PARAM_fileName, fn);
+           if (r) {
+                jtfFilename.setEnabled(false);//turn off event processing
+                jtfFilename.setText(fn);
+                jtfFilename.setEnabled(true);//turn on event processing
+           } else {
+               revertFile(fn);
+           }
         }
     }//GEN-LAST:event_jbFindFileActionPerformed
 
     @Override
     public void setObject(Object bean) {
-        if (bean instanceof HSMFunction_NetCDF){
-            obj = (HSMFunction_NetCDF) bean;
+        if (bean instanceof HSMFunction_NetCDF_InMemory){
+            obj = (HSMFunction_NetCDF_InMemory) bean;
             setParameters();
         }
     }
 
     private void setParameters() {
-        String fn = ((IBMParameterString)obj.getParameter(HSMFunction_NetCDF.PARAM_fileName)).getValueAsString();
+        String fn = ((IBMParameterString)obj.getParameter(HSMFunction_NetCDF_InMemory.PARAM_fileName)).getValueAsString();
         jtfFilename.setText(fn);
         File f = new File(fn);
         if (f.exists()){

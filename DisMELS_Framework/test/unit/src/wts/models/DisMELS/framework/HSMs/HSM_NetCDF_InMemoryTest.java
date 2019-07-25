@@ -21,13 +21,13 @@ import wts.roms.model.Interpolator2D;
  *
  * @author william.stockhausen
  */
-public class HSM_NetCDFTest {
+public class HSM_NetCDF_InMemoryTest {
     
     public static String conn = null;
     public static Interpolator2D i2d = null;
-    public HSM_NetCDF instance = null;
+    public HSM_NetCDF_InMemory instance = null;
     
-    public HSM_NetCDFTest() {
+    public HSM_NetCDF_InMemoryTest() {
     }
     
     @BeforeClass
@@ -48,38 +48,33 @@ public class HSM_NetCDFTest {
         gi.setGridFile(g2df);
         i2d = gi.getInterpolator();
         
-        HSM_NetCDF.debug = true;
+        HSM_NetCDF_InMemory.debug = true;
         System.out.println("finished setUpClass");
     }
     
     @AfterClass
     public static void tearDownClass() {
-        HSM_NetCDF.debug = false;
+        HSM_NetCDF_InMemory.debug = false;
         System.out.println("starting tearDownClass");
     }
     
     @Before
     public void setUp() {
         System.out.println("starting setUp");
-        instance = new HSM_NetCDF();
+        instance = new HSM_NetCDF_InMemory();
         System.out.println("finished setUp");
     }
     
     @After
     public void tearDown() {
-        try {
-            System.out.println("starting tearDown");
-            if (instance!=null) instance.ds.close();
-            System.out.println("finished tearDown");
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+        System.out.println("starting tearDown");
+        System.out.println("finished tearDown");
     }
 
     /**
-     * Test of getConnectionString method, of class HSM_NetCDF.
+     * Test of getConnectionString method, of class HSM_NetCDF_InMemory.
      */
-    @Ignore("sure this works")
+    @Test
     public void testGetConnectionString() {
         System.out.println("getConnectionString");
         String expResult = "";
@@ -90,7 +85,7 @@ public class HSM_NetCDFTest {
     }
 
     /**
-     * Test of setConnectionString method, of class HSM_NetCDF.
+     * Test of setConnectionString method, of class HSM_NetCDF_InMemory.
      */
     @Test
     public void testSetConnectionString() {
@@ -110,7 +105,7 @@ public class HSM_NetCDFTest {
     }
 
     /**
-     * Test of HSM_NetCDF.calcValue(double[]).
+     * Test of HSM_NetCDF_InMemory.calcValue(double[]).
      * 
      * @throws java.io.IOException
      * @throws ucar.ma2.InvalidRangeException
