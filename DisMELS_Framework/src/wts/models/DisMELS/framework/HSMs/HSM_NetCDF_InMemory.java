@@ -18,7 +18,7 @@ import wts.roms.gis.AlbersNAD83;
 public class HSM_NetCDF_InMemory implements HSM_Interface {
 
     /** string giving connection info (filename, url) to netcdf file */
-    protected String conn = null;
+    protected String conn = "";
     /** number of cells in x direction */
     protected  int nx;
     /** number of cells in y direction */
@@ -79,7 +79,7 @@ public class HSM_NetCDF_InMemory implements HSM_Interface {
             isConnected = true;
             return isConnected;
         } catch (IOException ex) {
-            logger.severe("\n\tCould not set connection string \n\t\t'"+conn+"'");
+            logger.severe("HSM_NetCDF_InMemory.setConnectionString(String conn): Invalid connection string \n\t\t'"+conn+"'");
             this.conn = null;
             isConnected = false;
             throw(ex);

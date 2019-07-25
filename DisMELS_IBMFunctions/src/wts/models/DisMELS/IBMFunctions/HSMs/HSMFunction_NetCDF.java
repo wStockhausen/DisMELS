@@ -116,7 +116,7 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
                         res = hsm.setConnectionString(fileName);
                     } catch (IOException ex) {
                         res = false;
-                        String title = "Error: netCDF file not found";
+                        String title = "Error in HSMFunction_NetCDF.setParameterValue(param,value)";
                         String msg = "netCDF file \n\t'"+fileName+"'\nnot found!";
                         System.out.println(title+"\n"+msg);
                         javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.ERROR_MESSAGE);

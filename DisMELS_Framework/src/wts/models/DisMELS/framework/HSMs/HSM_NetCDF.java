@@ -81,7 +81,7 @@ public class HSM_NetCDF implements HSM_Interface {
             isConnected = true;
             return isConnected;
         } catch (IOException ex) {
-            logger.severe("\n\tCould not set connection string \n\t\t'"+conn+"'");
+            logger.severe("HSM_NetCDF.setConnectionString(String conn): Invalid connection string \n\t\t'"+conn+"'");
             isConnected = false;
             this.conn = null;
             throw(ex);
