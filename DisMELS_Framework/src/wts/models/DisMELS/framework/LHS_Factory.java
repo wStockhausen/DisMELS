@@ -125,7 +125,6 @@ public class LHS_Factory implements PropertyChangeListener {
      *  Returns an instance of the LHSAttributes class corresponding to the 
      * input String array.  The type name for the resulting instance should be
      * strv[0].
-     * @param key  - LHS type name to create attributes instance for
      * @param strv - String array defining attributes values
      * @return - instance of attributes class with values contained in strv
      * @throws java.lang.InstantiationException 
@@ -490,6 +489,28 @@ public class LHS_Factory implements PropertyChangeListener {
     }
     
     /**
+     *  Returns a point feature representing the LHS object location
+     * and typeName, but with no LHSAttributes.
+     * @param lhs 
+     * @return 
+     * @throws java.lang.InstantiationException 
+     * @throws java.lang.IllegalAccessException 
+     */
+    public static Feature createPointFeatureNoAtts(LifeStageInterface lhs) 
+                        throws InstantiationException, IllegalAccessException {
+        LHSPointFeatureTypeNoAtts ftLHS = createPointFeatureTypeNoAtts(lhs.getTypeName());
+        LifeStageAttributesInterface atts = lhs.getAttributes();
+        ftLHS.setGeometryFromAttributes(atts);
+        Feature feature = null;
+        try {
+            feature = ftLHS.createFeature();
+        } catch (IllegalAttributeException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return feature;
+    }
+    
+    /**
      *  Returns a "default" instance of the LHSPointFeatureType class 
      *  associated with the given key.
      * @param key 
@@ -514,6 +535,24 @@ public class LHS_Factory implements PropertyChangeListener {
         } catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException ex) {
             Exceptions.printStackTrace(ex);
         }
+        return lhs;
+    }
+    
+    /**
+     *  Returns a "default" instance of the LHSPointFeatureTypeNoAtts class 
+     *  associated with the given key.
+     * @param key 
+     * @return 
+     * @throws java.lang.IllegalAccessException 
+     * @throws java.lang.InstantiationException 
+     */
+    public static LHSPointFeatureTypeNoAtts createPointFeatureTypeNoAtts(String key) 
+                        throws InstantiationException, IllegalAccessException {
+        if (instance==null) instance = new LHS_Factory();
+        LHSPointFeatureTypeNoAtts lhs = instance.pointFTsNoAtts.get(key);
+        if (lhs!=null) return lhs; //found it, so return.
+        lhs = new LHSPointFeatureTypeNoAtts(key);//create a new instance
+        instance.pointFTsNoAtts.put(key,lhs);//update map pointFTsNoAtts
         return lhs;
     }
     
@@ -892,6 +931,8 @@ public class LHS_Factory implements PropertyChangeListener {
     private Map<String,LifeStageParametersInterface> paramsMap;
     /** lookup map by LH stage name for point feature type objects associated with different LHS types */
     private Map<String,LHSPointFeatureType> pointFTs;
+    /** lookup map by LH stage name for point feature type objects without LifeStageAttributes associated with different LHS types */
+    private Map<String,LHSPointFeatureTypeNoAtts> pointFTsNoAtts;
     /** lookup map by LH stage name for track feature type objects associated with different LHS types */
     private Map<String,LHSTrackFeatureType> trackFTs;
     /** lookup map by LH stage name for attributes instance constructors associated with different LHS types */
@@ -909,9 +950,10 @@ public class LHS_Factory implements PropertyChangeListener {
         logger.info("Instantiating LHS_Factory");
         types = LHS_Types.getInstance();//get the singleton once!
         
-        paramsMap = new LinkedHashMap<>();
-        pointFTs  = new LinkedHashMap<>();
-        trackFTs  = new LinkedHashMap<>();
+        paramsMap              = new LinkedHashMap<>();
+        pointFTs               = new LinkedHashMap<>();
+        pointFTsNoAtts         = new LinkedHashMap<>();
+        trackFTs               = new LinkedHashMap<>();
         attributesConstructors = new LinkedHashMap<>();
         lhsConstructors        = new LinkedHashMap<>();
         

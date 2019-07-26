@@ -1136,7 +1136,7 @@ public class ModelControllerBean extends Object
                 it = indivs.listIterator();
                 while (it.hasNext()) {
                     lhs = it.next();
-                    tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
+                    tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                 }
                 fcEndPoints.addAll(tmpStrtPts);
                 tmpStrtPts.clear();
@@ -1192,13 +1192,13 @@ public class ModelControllerBean extends Object
                                         lhs1 = itOutput.next();//just-created individual
                                         lhs1.setActive(true);//make sure it's active
                                         //logger.info("new LHS "+lhs.getID()+" set active.");
-                                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs1));
+                                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs1));
                     //                    lhs1.setStartTime(time+dt);//new lhs regarded as created at end of time step
                     //                    lhs.step(0.0);//no dispersal, but make sure all internal var.s are set
                                         writeToReportFile(lhs1);//record initial conditions
                                         writeToConnectivityFile(lhs1);
                                         if (guiMode && updateAnimation) {
-                                            tmpPts.add(LHS_Factory.createPointFeature(lhs1));
+                                            tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs1));
                                             //can't get track: length would be 0.
                                         }
                                     }
@@ -1214,7 +1214,7 @@ public class ModelControllerBean extends Object
                         }
                         if (lhs.isAlive()) {
                             if (guiMode && updateAnimation) {
-                                tmpPts.add(LHS_Factory.createPointFeature(lhs));
+                                tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                                 tmpTrks.add(LHS_Factory.createTrackFeature(lhs));
                             }
                             if (updateResults) writeToReportFile(lhs);
@@ -1222,7 +1222,7 @@ public class ModelControllerBean extends Object
                             //lhs was alive but is now dead
                             //logger.info("lhs "+lhs.id+" id dead!");
                             if (guiMode&&showDeadIndivs) {
-                                tmpDeadPts.add(LHS_Factory.createPointFeature(lhs));
+                                tmpDeadPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                                 tmpDeadTrks.add(LHS_Factory.createTrackFeature(lhs));
                             }
                             writeToReportFile(lhs);//write last report
@@ -1234,7 +1234,7 @@ public class ModelControllerBean extends Object
                         lhs.setActive(false);
                         lhs.setAlive(false);
                         if (guiMode&&showDeadIndivs) {
-                            tmpDeadPts.add(LHS_Factory.createPointFeature(lhs));
+                            tmpDeadPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                             tmpDeadTrks.add(LHS_Factory.createTrackFeature(lhs));
                         }
                         writeToReportFile(lhs);//write last report
@@ -1247,7 +1247,7 @@ public class ModelControllerBean extends Object
                            (!runForward&&((lhs.getStartTime()<=0)||(lhs.getStartTime()>(time+dt))))) {
                         lhs.setActive(true);
                         //logger.info("LHS "+lhs.getID()+" set active.");
-                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
+                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                         double dtp = (time+dt)-lhs.getStartTime();
                         //dtp could be > timeStep if startTime were set to (e.g.) 0.0
                         //If so, we'll set the StartTime for this gl to time and
@@ -1261,7 +1261,7 @@ public class ModelControllerBean extends Object
                         lhs.step(dtp);//step the lhs to time+dt
                         if (updateResults) writeToReportFile(lhs);
                         if (guiMode && updateAnimation) {
-                            tmpPts.add(LHS_Factory.createPointFeature(lhs));
+                            tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                             tmpTrks.add(LHS_Factory.createTrackFeature(lhs));
                         }
                     }
@@ -1290,13 +1290,13 @@ public class ModelControllerBean extends Object
                         lhs = itOutput.next();
                         lhs.setActive(true);
                         //logger.info("new LHS "+lhs.getID()+" set active.");
-                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
+                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                         lhs.setStartTime(time+dt);//output lhs's regarded as created at end of time step
     //                    lhs.step(0.0);//no dispersal, but make sure all internal var.s are set
                         writeToReportFile(lhs);//record initial conditions
                         writeToConnectivityFile(lhs);
                         if (guiMode && updateAnimation) {
-                            tmpPts.add(LHS_Factory.createPointFeature(lhs));
+                            tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                             //can't get track: length would be 0.
                         }
                     }
