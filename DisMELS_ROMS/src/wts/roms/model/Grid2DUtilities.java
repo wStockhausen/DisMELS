@@ -108,8 +108,8 @@ public class Grid2DUtilities {
                 logger.info("<<<<<<<<<<<<<<<<<<<<<Grid2DUtilities>>>>>>>>>>>>>>>>>");
             }
         } else {
-            String str = "Utilities.computeHorizontalIndices: could not compute indices for {"+
-                    pos[0]+","+pos[1]+"}";
+            String str = "\nGrid2DUtilities.computeHorizontalIndices: could not compute indices for {"+
+                    pos[0]+","+pos[1]+"}. \nStopped at: "+"IJ:\t"+Imin+"\t"+Imax+"\t"+Jmin+"\t"+Jmax;
             throw new java.lang.ArrayIndexOutOfBoundsException(str);
         }
         return grdPos;

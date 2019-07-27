@@ -637,7 +637,7 @@ public class LHS_Factory implements PropertyChangeListener {
                 String msg = "java.lang.ArrayIndexOutOfBoundsException thrown reading initial "+
                              "attributes file line "+ctr+".";
                 logger.info(msg);
-                throw(ex);
+                logger.info(ex.getMessage());
             } catch(java.lang.UnknownError ex) {
                 logger.info("UnknownError in createLHSsFromCSV on line "+ctr);
                 throw(ex);
