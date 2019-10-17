@@ -53,11 +53,6 @@ public class SimpleBenthicJuvenileLHSParameters extends wts.models.DisMELS.frame
                                          PROP_useRandomTransitions};
     
     /**
-     * Utility field used by bound properties.
-     */
-    private PropertyChangeSupport propertySupport;
-    
-    /**
      * Creates a new instance of GenericLHSParameters
      */
     public SimpleBenthicJuvenileLHSParameters() {

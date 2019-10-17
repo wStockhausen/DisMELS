@@ -125,15 +125,19 @@ public class LifeStageParametersCustomizer extends javax.swing.JPanel
         jtpFCats.setTabPlacement(JTabbedPane.BOTTOM);
         jpFunctions.add(jtpFCats,BorderLayout.CENTER);
         
-        Set<String> cats = obj.getIBMFunctionCategories();
-        for (String cat: cats){
-            JPanel jpFCat = new JPanel();
-            jpFCat.setLayout(new BorderLayout());
-            jtpFCats.addTab(cat+" functions",jpFCat);
-            
-            IBMFunctionsCustomizer czr = new IBMFunctionsCustomizer();
-            czr.setObject(obj, cat);
-            jpFCat.add(czr,BorderLayout.CENTER);
+        try {
+            Set<String> cats = obj.getIBMFunctionCategories();
+            for (String cat: cats){
+                JPanel jpFCat = new JPanel();
+                jpFCat.setLayout(new BorderLayout());
+                jtpFCats.addTab(cat+" functions",jpFCat);
+
+                IBMFunctionsCustomizer czr = new IBMFunctionsCustomizer();
+                czr.setObject(obj, cat);
+                jpFCat.add(czr,BorderLayout.CENTER);
+            }
+        } catch (java.lang.UnsupportedOperationException ex) {
+            //do nothing
         }
         logger.info("----Finished constructing customizer for LifeStageParameters type '"+obj.getTypeName()+"'.");
     }

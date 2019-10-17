@@ -10,7 +10,6 @@
 package wts.models.DisMELS.LHS.PelagicStages;
 
 import java.beans.PropertyChangeSupport;
-import java.util.HashMap;
 import org.openide.util.lookup.ServiceProvider;
 import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHSAttributes;
 
@@ -45,17 +44,9 @@ public class SimplePelagicLHSAttributes extends AbstractSimpleLHSAttributes {
      */
     @Override
     public Object clone() {
-        SimplePelagicLHSAttributes clone = null;
-        try {
-            clone = (SimplePelagicLHSAttributes) super.clone();
-            clone.map = (HashMap<String,Object>) map.clone();
-            for (int i=0;i<keys.length;i++) {
-                clone.setValue(keys[i],this.getValue(keys[i]));
-            }
-            clone.propertySupport = new PropertyChangeSupport(clone);
-        } catch (CloneNotSupportedException ex) {
-            ex.printStackTrace();
-        }
+        SimplePelagicLHSAttributes clone = new SimplePelagicLHSAttributes(typeName);
+        for (String key: keys) clone.setValue(key,this.getValue(key));
+        clone.propertySupport = new PropertyChangeSupport(clone);
         return clone;
     }
 

@@ -67,12 +67,7 @@ public class SimpleSettlerLHSParameters extends wts.models.DisMELS.framework.Abs
                                          PROP_useRandomGrowth,
                                          PROP_useRandomMortality,
                                          PROP_useRandomTransitions};
-    
-    /**
-     * Utility field used by bound properties.
-     */
-    private PropertyChangeSupport propertySupport;
-    
+        
     /**
      * Creates a new instance of GenericLHSParameters
      */

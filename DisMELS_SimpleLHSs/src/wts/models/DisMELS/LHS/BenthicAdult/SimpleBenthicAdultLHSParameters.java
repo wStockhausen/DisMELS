@@ -65,11 +65,6 @@ public class SimpleBenthicAdultLHSParameters extends wts.models.DisMELS.framewor
                                          PROP_useRandomSpawning};
     
     /**
-     * Utility field used by bound properties.
-     */
-    private PropertyChangeSupport propertySupport;
-    
-    /**
      * Creates a new instance of GenericLHSParameters
      */
     public SimpleBenthicAdultLHSParameters() {

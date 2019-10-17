@@ -69,11 +69,6 @@ public class SimplePelagicLHSParameters extends wts.models.DisMELS.framework.Abs
                                          PROP_useRandomTransitions};
     
     /**
-     * Utility field used by bound properties.
-     */
-    private PropertyChangeSupport propertySupport;
-    
-    /**
      * Creates a new instance of SimplePelagicLHSParameters
      */
     public SimplePelagicLHSParameters() {

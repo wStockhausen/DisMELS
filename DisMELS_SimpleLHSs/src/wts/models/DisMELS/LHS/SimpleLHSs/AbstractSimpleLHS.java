@@ -44,7 +44,7 @@ public abstract class AbstractSimpleLHS extends AbstractLHS {
      * @param subAtts 
      */
     protected void setAttributesFromSubClass(AbstractSimpleLHSAttributes subAtts){
-        super.setAttributesFromSubClass(atts);
+        super.setAttributesFromSubClass(subAtts);
     }
     
     /**
