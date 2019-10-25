@@ -46,6 +46,16 @@
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
             <file name="wts-roms-topcomponents-MapViewer-RemoveGISLayerAction.instance"/>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridToShapefileAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.roms.topcomponents.ModelGridViewer.ModelGridViewerTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.topcomponents.ModelGridViewer.ExportGridToShapefileAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/topcomponents/ModelGridViewer/Bundle#ExportGridToShapefileAction.CTL_ExportGridToShapefileAction"/>
+                <!-- attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
             <file name="wts-roms-topcomponents-MapViewer-ExportMapAsImageAction.instance">
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
                 <attr name="type" stringvalue="wts.roms.topcomponents.MapViewer.MapViewerTopComponent"/>
@@ -69,6 +79,10 @@
             <file name="wts-roms-topcomponents-MapViewer-RemoveGISLayerAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-MapViewer-RemoveGISLayerAction.instance"/>
                 <attr name="position" intvalue="100"/>
+            </file>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridToShapefileAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-ModelGridViewer-ExportGridToShapefileAction.instance"/>
+                <attr name="position" intvalue="125"/>
             </file>
             <file name="wts-roms-topcomponents-MapViewer-ExportMapAsImageAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-MapViewer-ExportMapAsImageAction.instance"/>

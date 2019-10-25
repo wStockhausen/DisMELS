@@ -466,6 +466,8 @@ public class MapGUI_JPanel extends javax.swing.JPanel implements PropertyChangeL
     }
     
     /**
+     * Reset the map.
+     * 
      * Calls resetMapPane() and resetLegend() to recreate MapPane and the Legend objects, 
      * then calls setContext() to set the empty MapContect (context) on the MapPane and Legend.
      * 

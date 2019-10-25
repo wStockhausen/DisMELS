@@ -125,6 +125,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** 
      * Counter for associated TopComponent "partners".
+     * 
      * The MapViewer instance can close when partners = 0.
      * "Partner" TopComponents should call instance.addParther() after opening
      * the MapViewer instance to indicate their partnership.
@@ -148,6 +149,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** 
      * Increment counter for associated TopComponent "partners".
+     * 
      * The MapViewer instance can close when partners = 0.
      * "Partner" TopComponents should call instance.addParther() after opening
      * the MapViewer instance to indicate their partnership.
@@ -161,6 +163,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** 
      * Decrement counter for associated TopComponent "partners".
+     * 
      * The MapViewer instance can close when partners = 0.
      * "Partner" TopComponents should call instance.addParther() after opening
      * the MapViewer instance to indicate their partnership.
@@ -173,8 +176,10 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     }
 
     /**
-     * Indicates when the MapViewer instance can close. This is true when all 
-     * partners have been removed.  TopComponents which have added themselves as partners
+     * Indicates when the MapViewer instance can close. 
+     * 
+     * This is true when all partners have been removed.  
+     * TopComponents which have added themselves as partners
      * should remove themselves as partners prior to checking this.
      * 
      * @return - boolean indicating whether the instance should be allowed to close. 
@@ -218,7 +223,6 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     @Override
     public void componentOpened() {
         logger.info("Starting componentOpened()");
-//        if (doOnOpen) loadGridFile();
         if (doOnOpen) mapGUI.setGrid();
         logger.info("Finished componentOpened()");
     }
@@ -235,7 +239,8 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /**
      * Gets the  ModelGrid2DMapData associated with the map
-     * @return 
+     * 
+     * @return the ModelGrid2DMapData object
      */
     public ModelGrid2DMapData getGrid2DMapData(){
         return mapGUI.getGridMapData();
@@ -243,7 +248,8 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /**
      * Gets the ModelGrid2D associated with the map
-     * @return 
+     * 
+     * @return the ModelGrid2 object
      */
     public ModelGrid2D getModelGrid(){
         return romsGI.getGrid2D();
@@ -313,7 +319,9 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /**
      * Calls refreshMap() method on the MapGUI_JPanel object (mapGUI) to refresh
-     * the map to the current context. This re-creates the MapPane and Legend objects
+     * the map to the current context. 
+     * 
+     * This re-creates the MapPane and Legend objects
      * in MapGUI_JPanel, and adds the current grid layers to the context.
      */
     public void refreshMap(){
@@ -337,7 +345,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     }
 
     /**
-     * Sets the menu item allowing removal of manual removal of
+     * Sets the menu allowing removal of manual removal of
      * GIS layers from the map.
      * 
      * @param jmu - the JMenu object to set (assign as jmuGISLayers)
@@ -590,6 +598,9 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         }
     }
     
+    /**
+     * Create a polygon shapefile from the land mask for the model grid.
+     */
     public void createMaskShapefile(){
         jfcShape.setDialogTitle("Select output shapefile for land mask");
         int res = jfcShape.showSaveDialog(this);
@@ -615,6 +626,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         }
     }                                                      
     
+    /**
+     * Create a shapefile from a map layer.
+     * 
+     * @param layerName 
+     */
     public void createShapefileFromLayer(String layerName){
          MapLayer layer = mapLayers.get(layerName);
          if (layer!=null){

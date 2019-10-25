@@ -8,18 +8,26 @@ package wts.roms.topcomponents.ModelGridViewer;
 import java.awt.Cursor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureType;
+import org.geotools.feature.IllegalAttributeException;
+import org.geotools.feature.SchemaException;
 import org.geotools.filter.IllegalFilterException;
 import org.geotools.map.DefaultMapLayer;
 import org.geotools.map.MapLayer;
 import org.netbeans.api.progress.ProgressUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.opengis.referencing.operation.TransformException;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.Exceptions;
@@ -30,6 +38,7 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.WindowManager;
+import wts.GIS.shapefile.ShapefileCreator;
 import wts.GIS.styling.ColorBarStyle;
 import wts.GIS.styling.ColorBarStyleCustomizer;
 import wts.roms.gis.MapDataScalar2D;
@@ -113,7 +122,7 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
     private MapLayer scalarLayer = null;
 
     /** file chooser for output shapefiles */
-    JFileChooser jFC = null;
+    private final JFileChooser jfcShape = new JFileChooser();
     
     /** singleton instance of GlobalInfo */
     private GlobalInfo romsGI;
@@ -269,6 +278,34 @@ public final class ModelGridViewerTopComponent extends TopComponent implements P
         logger.info("finished componentClosed()");
     }
 
+    /**
+     * Export the model grid as lines to a shapefile
+     */
+    public void exportGridToShapefile(){
+        jfcShape.setDialogTitle("Select output shapefile for grid lines");
+        int res = jfcShape.showSaveDialog(this);
+        if (res==JFileChooser.APPROVE_OPTION) {
+            try {
+                File fshp = jfcShape.getSelectedFile();                                                      
+                URL url = fshp.toURI().toURL();
+                FeatureCollection fc = tcMapViewer.getGrid2DMapData().getGridLines();
+                ShapefileCreator sc = new ShapefileCreator();
+                sc.setShapefileURL(url);
+                sc.createShapefile(fc);
+            } catch (MalformedURLException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (SchemaException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IllegalAttributeException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (TransformException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
