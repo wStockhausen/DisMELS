@@ -142,7 +142,7 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
         key = PARAM_minTemp;          addParameter(key, Double.class,key);
         key = PARAM_maxTemp;          addParameter(key, Double.class,key);
         key = PARAM_rpw;              addParameter(key, Double.class,key);
-        key = PARAM_TempTakesPrecedence; addParameter(key, Double.class,key);
+        key = PARAM_TempTakesPrecedence; addParameter(key, Boolean.class,key);
     }
     
     @Override
