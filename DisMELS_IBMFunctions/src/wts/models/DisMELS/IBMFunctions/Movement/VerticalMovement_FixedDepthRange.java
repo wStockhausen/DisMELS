@@ -52,9 +52,9 @@ public class VerticalMovement_FixedDepthRange extends AbstractIBMFunction
                                             implements IBMMovementFunctionInterface {
     
     /** function classification */
-    public static final String DEFAULT_type = "Swimming speed";
+    public static final String DEFAULT_type = "Vertical movement";
     /** user-friendly function name */
-    public static final String DEFAULT_name = "Vertical movement";
+    public static final String DEFAULT_name = "Vertical movement within a (fixed) preferred depth range";
     /** function description */
     public static final String DEFAULT_descr = "Vertical movement within a (fixed) preferred depth range";
     /** full description */

@@ -52,16 +52,17 @@ public class VerticalMovement_FixedDepthRangeRelativeToSurfaceBoundaryLayer exte
                                             implements IBMMovementFunctionInterface {
     
     /** function classification */
-    public static final String DEFAULT_type = "Swimming speed";
+    public static final String DEFAULT_type = "Vertical movement";
     /** user-friendly function name */
-    public static final String DEFAULT_name = "Vertical movement";
+    public static final String DEFAULT_name = "Vertical movement within a (fixed) preferred depth range relative to the surface boundary layer";
     /** function description */
-    public static final String DEFAULT_descr = "Vertical movement within a (fixed) preferred depth range";
+    public static final String DEFAULT_descr = "Vertical movement within a (fixed) preferred depth range relative to the surface boundary layer";
     /** full description */
     public static final String DEFAULT_fullDescr = 
             "\n\t**************************************************************************"+
             "\n\t* This class provides an implementation of vertical movement relative to a"+
-            "\n\t* fixed, 'preferred', depth range.  When inside the preferred range, vertical movement"+
+            "\n\t* fixed, 'preferred', depth range defined relative to the surface boundary layer."+
+            "\n\t*  When inside the preferred range, vertical movement"+
             "\n\t* is described as an uncorrelated random walk.  When outside the preferred range,"+
             "\n\t* a vertical swimming speed (externally calculated) is applied"+
             "\n\t* in the direction that would move the individual toward the preferred depth range."+

@@ -60,9 +60,9 @@ public class VerticalMovement_FixedDepthAndTempRange extends AbstractIBMFunction
                                             implements IBMMovementFunctionInterface {
     
     /** function classification */
-    public static final String DEFAULT_type = "Swimming speed";
+    public static final String DEFAULT_type = "Vertical movement";
     /** user-friendly function name */
-    public static final String DEFAULT_name = "Vertical movement";
+    public static final String DEFAULT_name = "Vertical movement within a (fixed) preferred depth/temperature range";
     /** function description */
     public static final String DEFAULT_descr = "Vertical movement within a (fixed) preferred depth/temperature range";
     /** full description */
@@ -146,7 +146,7 @@ public class VerticalMovement_FixedDepthAndTempRange extends AbstractIBMFunction
         key = PARAM_minTemp;          addParameter(key, Double.class,key);
         key = PARAM_maxTemp;          addParameter(key, Double.class,key);
         key = PARAM_rpw;              addParameter(key, Double.class,key);
-        key = PARAM_TempTakesPrecedence; addParameter(key, Double.class,key);
+        key = PARAM_TempTakesPrecedence; addParameter(key, Boolean.class,key);
     }
     
     @Override
