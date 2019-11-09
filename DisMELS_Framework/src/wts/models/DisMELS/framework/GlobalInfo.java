@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
+import wts.roms.model.Interpolator2D;
 import wts.roms.model.Interpolator3D;
 
 /**
@@ -76,6 +77,8 @@ public class GlobalInfo implements LookupListener {
     private LHS_Classes lhsClasses = null;
     /** random number generator */
     final private RandomNumberGenerator rng;
+    /** ROMS 2d interpolator */
+    private Interpolator2D i2d = null;
     /** ROMS 3d interpolator */
     private Interpolator3D i3d = null;
     
@@ -120,6 +123,22 @@ public class GlobalInfo implements LookupListener {
      */
     public wts.models.utilities.CalendarIF getCalendar(){
         return romsGI.getCalendar();
+    }
+    
+    /**
+     * Returns the current Interpolator2D instance.
+     * @return 
+     */
+    public Interpolator2D getInterpolator2D(){
+        return i2d;
+    }
+    
+    /**
+     * Sets a new Interpolator2D instance.
+     * @param newI2D 
+     */
+    public void setInterpolator2D(Interpolator2D newI2D){
+        i2d = newI2D;
     }
     
     /**
@@ -270,6 +289,15 @@ public class GlobalInfo implements LookupListener {
      */
     public String getGridFile(){
         return romsGI.getGridFile();
+    }
+    
+    /**
+     * Gets the current ModelGrid2D object.
+     * 
+     * @return - the ModelGrid2D object
+     */
+    public wts.roms.model.ModelGrid2D getGrid2D(){
+        return romsGI.getGrid2D();
     }
     
     /**

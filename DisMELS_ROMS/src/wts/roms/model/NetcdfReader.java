@@ -193,6 +193,68 @@ public class NetcdfReader implements INetcdfReader {
     }
 
     /**
+     *iTime = 0-based index into time index
+     * @param iTime   - time index
+     * @param iL - vertical layer index
+     * @param varname - netcdf file name
+     * @param name    - internal name used to identify 
+     * @return ModelData object
+     * @throws java.io.IOException 
+     */
+    @Override
+    public ModelData getModelData(int iTime, int iL, String varname, String name) throws IOException {
+        ModelData md = null;
+        try {
+            Variable v = ds.findVariable(varname);
+            if (v!=null) {
+                //rank of underlying data array
+                int r = v.getRank(); 
+                //get the variable dimension names & determine indices
+                String[] dimNames = new String[r];
+                int timeIndex = -1;
+                int sIndex    = -1;
+                int etaIndex  = -1;
+                int xiIndex   = -1;
+                for (int j=0;j<r;j++) {
+                    dimNames[j] = v.getDimension(j).getName();
+                    if (dimNames[j].matches(".*time.*")) timeIndex = j;//has 'time' in the name
+                    if (dimNames[j].startsWith("s"))    sIndex    = j;
+                    if (dimNames[j].startsWith("eta"))  etaIndex  = j;
+                    if (dimNames[j].startsWith("xi"))   xiIndex   = j;
+                }
+                //set the origin and shape arrays with which to extract data
+                //from the variable.
+                int[] shp = v.getShape();
+                int[] origin = (int[]) shp.clone();
+                for (int j=0;j<r;j++) {
+                    origin[j] = 0;
+                    if (j==timeIndex) {
+                        shp[j] = 1;
+                        origin[j] = iTime;
+                    }
+                }
+                //Extract the time-sliced array from the variable.
+                //Note that the array rank remains the same as the 
+                //original.
+                Array a = new Array(v.read(origin,shp));
+                //Set the index names for the array to 
+                //the dimension names from the variable
+                for (int j=0;j<r;j++){
+                    String dm = v.getDimension(j).getName();
+                    a.setIndexName(j,dm);
+                }
+                //Create the ModelData object
+                md = new ModelData(ocean_time.getDouble(ix.set(iTime)), a, name);//'name' is the internal name
+                //Set the index types
+                md.setDimIndices(timeIndex,sIndex,etaIndex,xiIndex);
+            }
+        } catch (InvalidRangeException ex) {
+            ex.printStackTrace();
+        }
+        return md;
+    }
+
+    /**
      * Gets the MaskData object associated with the netcdf file variable 'varname'.
      * 
      * @param varname - netcdf file variable name

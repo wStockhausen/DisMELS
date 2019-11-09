@@ -71,37 +71,6 @@ public class Interpolator2D {
         s111=s211=s121=s221=(double) 1;
     }
     
-//    protected boolean isHalo() throws ArrayIndexOutOfBoundsException {
-//        if (mask==null) return false;//no halo
-//        //otherwise test for halo
-//        halo = false;
-//        Irn = (int) Math.round(xPos);
-//        Jrn = (int) Math.round(yPos);
-//        //missing EW_PERIODIC
-//        //missing NS_PERIODIC
-//
-//        if (mask.getValue(Irn,Jrn)<0.5) {
-//            halo = true;
-//        } else if ((Ir<Irn)&&(mask.getValue(Irn-1,Jrn)<0.5)) {
-//            halo = true;
-//        } else if ((Ir==Irn)&&(mask.getValue(Irn+1,Jrn)<0.5)) {
-//            halo = true;
-//        } else if ((Jr<Jrn)&&(mask.getValue(Irn,Jrn-1)<0.5)) {
-//            halo = true;
-//        } else if ((Jr==Jrn)&&(mask.getValue(Irn,Jrn+1)<0.5)) {
-//            halo = true;
-//        } else if ((Ir<Irn)&&(Jr<Jrn)&&(mask.getValue(Irn-1,Jrn-1)<0.5)) {
-//            halo = true;
-//        } else if ((Ir==Irn)&&(Jr<Jrn)&&(mask.getValue(Irn+1,Jrn-1)<0.5)) {
-//            halo = true;
-//        } else if ((Ir<Irn)&&(Jr==Jrn)&&(mask.getValue(Irn-1,Jrn+1)<0.5)) {
-//            halo = true;
-//        } else if ((Ir==Irn)&&(Jr==Jrn)&&(mask.getValue(Irn+1,Jrn+1)<0.5)) {
-//            halo = true;
-//        }
-//        return halo;
-//    }
-    
     /**
      * Interpolates the value of a (2D) model field (with appropriate mask) to the given position.
      * @param pos        -- position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)

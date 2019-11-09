@@ -31,6 +31,17 @@ public interface INetcdfReader {
     ModelData getModelData(String varname, String name) throws IOException;
 
     /**
+     *iTime = 0-based index into time index
+     * @param iTime   - time index
+     * @param iL - vertical layer index
+     * @param varname - netcdf file name
+     * @param name    - internal name used to identify 
+     * @return ModelData object
+     * @throws java.io.IOException 
+     */
+    public ModelData getModelData(int iTime, int iL, String varname, String name) throws IOException;
+    
+    /**
      * @param varname - netcdf name
      * @param name    - internal name
      * @return ModelData object
