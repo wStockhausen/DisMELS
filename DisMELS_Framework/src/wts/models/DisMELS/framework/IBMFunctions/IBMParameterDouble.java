@@ -4,6 +4,8 @@
  */
 package wts.models.DisMELS.framework.IBMFunctions;
 
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author William.Stockhausen
@@ -38,7 +40,15 @@ public final class IBMParameterDouble extends IBMParameter {
 
     @Override
     public final void setValue(Object value) {
-        this.value = (double) value;
+        try {
+            this.value = (double) value;
+        } catch (java.lang.ClassCastException exc){
+            String str = "Value '"+value.toString()+"' could  not be cast to double\n"+
+                         "for IBMParameterDouble '"+this.name+"'.\n"+
+                         "This probably results from an error in the parameters file. Please fix.";
+            JOptionPane.showMessageDialog(null, str, "Error setting IBMParameterDouble value", JOptionPane.ERROR_MESSAGE);
+            throw(exc);
+        }
     }
 
     public final void setValue(double value) {

@@ -4,6 +4,8 @@
  */
 package wts.models.DisMELS.framework.IBMFunctions;
 
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author William.Stockhausen
@@ -38,7 +40,15 @@ public final class IBMParameterString extends IBMParameter {
 
         @Override
         public void setValue(Object value) {
-            this.value = (String) value;
+            try {
+                this.value = (String) value;
+            } catch (java.lang.ClassCastException exc){
+                String str = "Value '"+value.toString()+"' could  not be cast to String\n"+
+                             "for IBMParameterString '"+this.name+"'.\n"+
+                         "This probably results from an error in the parameters file. Please fix.";
+                JOptionPane.showMessageDialog(null, str, "Error setting IBMParameterString value", JOptionPane.ERROR_MESSAGE);
+                throw(exc);
+            }
         }
 
         public void setValue(String value) {

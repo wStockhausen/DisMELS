@@ -4,6 +4,8 @@
  */
 package wts.models.DisMELS.framework.IBMFunctions;
 
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author William.Stockhausen
@@ -38,7 +40,15 @@ public final class IBMParameterBoolean extends IBMParameter {
 
     @Override
     public final void setValue(Object value) {
-        this.value = (boolean) value;
+        try {
+            this.value = (boolean) value;
+        } catch (java.lang.ClassCastException exc){
+            String str = "Value '"+value.toString()+"' could  not be cast to boolean\n"+
+                         "for IBMParameterBoolean '"+this.name+"'.\n"+
+                         "This probably results from an error in the parameters file. Please fix.";
+            JOptionPane.showMessageDialog(null, str, "Error setting IBMParameterBoolean value", JOptionPane.ERROR_MESSAGE);
+            throw(exc);
+        }
     }
 
     public final void setValue(boolean value) {

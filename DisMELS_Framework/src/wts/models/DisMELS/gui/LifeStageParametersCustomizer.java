@@ -46,7 +46,14 @@ public class LifeStageParametersCustomizer extends javax.swing.JPanel
     public void setObject(Object bean){        
         if (bean instanceof LifeStageParametersInterface){
             obj = (LifeStageParametersInterface) bean;
-            constructUI();
+            try {
+                constructUI();
+            } catch (Exception exc){
+                JOptionPane.showMessageDialog(this, 
+                                              exc.getMessage(),
+                                              "Error constructing parameters customizer: check parameters file.",
+                                              JOptionPane.WARNING_MESSAGE);
+            }
         }
     }
     

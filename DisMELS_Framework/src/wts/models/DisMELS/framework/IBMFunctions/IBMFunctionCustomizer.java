@@ -68,27 +68,35 @@ public class IBMFunctionCustomizer extends javax.swing.JPanel
     public void setObject(Object bean) {
         if (bean instanceof IBMFunctionInterface){
             obj = (IBMFunctionInterface) bean;
-            constructUI();
+            try {
+                constructUI();
+            } catch (Exception exc){
+                logger.warning(exc.getMessage());
+                throw(exc);
+            }
         } else {
             logger.warning("Attempted to construct IBMFunctionCustomizer using object of class "+bean.getClass().getName());
         }
     }
     
     private void constructUI(){
-        logger.info("Constructing UI for "+obj.getFunctionName());
+        logger.info("Constructing UI for "+obj.getClass().getSimpleName()+" ("+obj.getFunctionName()+")");
         this.removeAll();//remove all components
         
         try {
             //get predefined customizer for the object
+            logger.info("trying to get predefined customizer.");
             BeanInfo bi = Introspector.getBeanInfo(obj.getClass());
             BeanDescriptor bd = bi.getBeanDescriptor();
             Class cClass = bd.getCustomizerClass();
             Customizer customizer = (Customizer) cClass.newInstance();
             customizer.setObject(obj);
+            logger.info("got predefined customizer.");
             ((JPanel)customizer).setToolTipText(obj.getDescription());
             this.add((JPanel) customizer,BorderLayout.CENTER);
         } catch (IntrospectionException|InstantiationException|IllegalAccessException|NullPointerException ex){
             //construct a customizer from scratch
+            logger.info("--constructing customizer from scratch.");
             constructCustomizer();
         }
         

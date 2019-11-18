@@ -16,7 +16,7 @@ public class VerticalMovement_FixedOffBottomRangeBeanInfo extends SimpleBeanInfo
     // Bean descriptor//GEN-FIRST:BeanDescriptor
     /*lazy BeanDescriptor*/
     private static BeanDescriptor getBdescriptor(){
-        BeanDescriptor beanDescriptor = new BeanDescriptor  ( wts.models.DisMELS.IBMFunctions.Movement.VerticalMovement_FixedOffBottomRange.class , wts.models.DisMELS.IBMFunctions.Movement.VerticalMovement_FixedOffBottomRange.class ); // NOI18N//GEN-HEADEREND:BeanDescriptor
+        BeanDescriptor beanDescriptor = new BeanDescriptor  ( wts.models.DisMELS.IBMFunctions.Movement.VerticalMovement_FixedOffBottomRange.class , wts.models.DisMELS.IBMFunctions.Movement.VerticalMovement_FixedOffBottomRangeCustomizer.class ); // NOI18N//GEN-HEADEREND:BeanDescriptor
         // Here you can add code for customizing the BeanDescriptor.
 
         return beanDescriptor;     }//GEN-LAST:BeanDescriptor
