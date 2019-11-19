@@ -165,7 +165,7 @@ public class VerticalMovement_FixedDepthRangeCustomizer extends javax.swing.JPan
     }//GEN-LAST:event_jtfMinDepthActionPerformed
 
     private void jtfMaxDepthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfMaxDepthActionPerformed
-        String str = jtfRPW.getText();
+        String str = jtfMaxDepth.getText();
         Double val = Double.parseDouble(str);
         obj.setParameterValue(VerticalMovement_FixedDepthRange.PARAM_maxDepth, val);
     }//GEN-LAST:event_jtfMaxDepthActionPerformed

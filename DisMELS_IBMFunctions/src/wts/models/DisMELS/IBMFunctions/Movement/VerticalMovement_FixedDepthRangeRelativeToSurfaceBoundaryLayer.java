@@ -14,7 +14,7 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
 
 /**
  * This class provides an implementation of vertical movement within a
- * fixed, "preferred", depth range.  
+ * fixed, "preferred", depth range relative to the surface boundary layer.  
  * <p>
  * When inside the preferred depth range, vertical movement is described as an 
  * uncorrelated random walk.  When outside the preferred range, a vertical 
