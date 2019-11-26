@@ -161,7 +161,7 @@ public class ModelControllerBean extends Object
     private transient final FeatureCollection tmpDeadTrks = FeatureCollections.newCollection();
 
     private transient HashMap<String,PrintWriter> pwResultsMap;//map to PrintWriters for results
-    private transient PrintWriter pwConnResults;//PrintWriter for connctivity results
+    private transient HashMap<String,PrintWriter> pwConnResultsMap;//map to PrintWriters for results
     
     private transient String statMessage;
     private transient int statTime;
@@ -641,7 +641,8 @@ public class ModelControllerBean extends Object
     }
     
     protected void initializeOutputFiles() {
-        pwResultsMap = new HashMap<>();
+        pwResultsMap     = new HashMap<>();
+        pwConnResultsMap = new HashMap<>();
         LifeStageAttributesInterface atts = null;
         String file = null;
         LHS_Types info = LHS_Types.getInstance();
@@ -670,6 +671,21 @@ public class ModelControllerBean extends Object
                         JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
                     }
                 }
+                if (!pwConnResultsMap.containsKey(attsClass)){
+                    try {
+                        file = globalInfo.getWorkingDir()+file_ConnResults+"."+lsiClass+".csv";
+                        logger.info("Writing model connectivity results to '"+file+"'");
+                        FileWriter fwConnResults = new FileWriter(file);
+                        PrintWriter pwConnResults = new PrintWriter(fwConnResults);
+                        pwConnResults.println(atts.getCSVHeader());
+                        pwConnResults.println(atts.getCSVHeaderShortNames());
+                        pwConnResults.flush();
+                        pwConnResultsMap.put(lsiClass, pwConnResults);
+                    } catch (IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                        JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex){
                 Exceptions.printStackTrace(ex);
                 JOptionPane.showMessageDialog(null, "Could not create 'test' object. Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
@@ -679,15 +695,6 @@ public class ModelControllerBean extends Object
             } catch (NoSuchMethodException ex){
                 Exceptions.printStackTrace(ex);
             }
-        }
-        try {
-            file = globalInfo.getWorkingDir()+file_ConnResults;
-            logger.info("Writing connectivity results to '"+file+"'");
-            FileWriter fwConnRes = new FileWriter(file);
-            pwConnResults = new PrintWriter(fwConnRes);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-            JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -1116,7 +1123,7 @@ public class ModelControllerBean extends Object
             logger.info("Created "+indivs.size()+" individuals.");
             logger.info("report header: "+indivs.get(0).getReportHeader());
             //pwResults.println(indivs.get(0).getReportHeader());//write header to results file
-            pwConnResults.println(indivs.get(0).getReportHeader());//write header to results file
+            //pwConnResults.println(indivs.get(0).getReportHeader());//write header to results file
             LifeStageInterface lhs;
             it = indivs.listIterator();
             while (it.hasNext()){
@@ -1348,6 +1355,8 @@ public class ModelControllerBean extends Object
     }    
     
     protected void writeToConnectivityFile(LifeStageInterface lhs) {
+        String className = LHS_Types.getInstance().getType(lhs.getTypeName()).getLHSClass();
+        PrintWriter pwConnResults = pwConnResultsMap.get(className);
         pwConnResults.println(lhs.getReport());
     }
  
@@ -1359,7 +1368,8 @@ public class ModelControllerBean extends Object
             if (lhs.getAttributes().isActive()) writeToConnectivityFile(lhs);
         }
         it = null;
-        pwConnResults.flush();
+        Iterator<String> itr = pwConnResultsMap.keySet().iterator();
+        while (itr.hasNext()) pwConnResultsMap.get(itr.next()).flush();
     }
  
     protected void writeToReportFile(LifeStageInterface lhs) {
@@ -1381,11 +1391,22 @@ public class ModelControllerBean extends Object
         Iterator<String> itr = pwResultsMap.keySet().iterator();
         while (itr.hasNext()) pwResultsMap.get(itr.next()).flush();
     }
+    
+    /**
+     * Close all files associated with a map of output files
+     * @param hm - map of output files
+     */
+    protected void closeOutputFiles(HashMap<String,PrintWriter> hm){
+        Iterator<String> itr = hm.keySet().iterator();
+        while (itr.hasNext())hm.get(itr.next()).close();
+    }
 
+    /**
+     * Close all output files
+     */
     protected void closeOutputFiles() {
-        Iterator<String> itr = pwResultsMap.keySet().iterator();
-        while (itr.hasNext())pwResultsMap.get(itr.next()).close();
-        pwConnResults.close();
+        closeOutputFiles(pwResultsMap);
+        closeOutputFiles(pwConnResultsMap);
     }
     
     private int mod(int x, int y) {
