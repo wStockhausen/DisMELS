@@ -18,6 +18,8 @@ import org.apache.commons.io.filefilter.SuffixFileFilter;
  * @author WilliamStockhausen
  */
 public class FilesLister {
+    /** flag to log debugging info */
+    public static boolean debug=false;
     /** logger */
     private static final Logger logger = Logger.getLogger(FilesLister.class.getName());
     
@@ -38,21 +40,27 @@ public class FilesLister {
             String dn = FilenameUtils.getFullPath(fn);
             File d = new File(dn);
             String[] fns = d.list();
-            logger.info("FilesLister--file   : '"+fn+"'.");
-            logger.info("FilesLister--folder : '"+dn+"'.");
-            logger.info("FilesLister--found files:");
-            for (String fn1 : fns) logger.info('\t' + fn1);
+            if (debug){
+                logger.info("FilesLister--file   : '"+fn+"'.");
+                logger.info("FilesLister--folder : '"+dn+"'.");
+                logger.info("FilesLister--found files:");
+                for (String fn1 : fns) logger.info('\t' + fn1);
+            }
             IOFileFilter ff = new SuffixFileFilter(ex);
             fns = d.list(ff);
-            logger.info("FilesLister--ext    : '"+ex+"'.");
-            logger.info("FilesLister--found files with ext:");
+            if (debug){
+                logger.info("FilesLister--ext    : '"+ex+"'.");
+                logger.info("FilesLister--found files with ext:");
+            }
             for (int i=0;i<fns.length;i++) {
                 fns[i] = dn+fns[i];//add full path to folder to filename
-                logger.info('\t' + fns[i]);
+                if (debug) logger.info('\t' + fns[i]);
             }
             Arrays.sort(fns);
-            logger.info("sorted files:");
-            for (String fn1 : fns) logger.info('\t' + fn1);
+            if (debug){
+                logger.info("sorted files:");
+                for (String fn1 : fns) logger.info('\t' + fn1);
+            }
             return fns;
         }
         logger.info("file '"+fn+"' DOES NOT EXIST!!");

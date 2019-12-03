@@ -713,7 +713,7 @@ public class ModelControllerBean extends Object
             files_ROMSDatasets = com.wtstockhausen.utils.FilesLister.findFilesWithSameExtension(file_ROMSDataset);
             String msg = "InitializeEnvironment:: available ROMS datasets:";
             for (String file_ROMSDataset : files_ROMSDatasets) msg = msg + "\n \t '" + file_ROMSDataset+"'";
-            logger.info(msg);
+            //logger.info(msg);
             //set "current" ROMS dataset to "first" one
             file_CurrROMSDataset = file_ROMSDataset;
             logger.info("InitializeEnvironment:: current ROMS dataset: '"+file_CurrROMSDataset+"'");
@@ -1150,7 +1150,7 @@ public class ModelControllerBean extends Object
             }
             it = null;
             logger.info(indivs.size()+" individuals initially defined for model run.");
-        } catch( InstantiationException | IllegalAccessException ex) {
+        } catch( InstantiationException | IllegalAccessException | NullPointerException ex) {
             Exceptions.printStackTrace(ex);
         }
     }
