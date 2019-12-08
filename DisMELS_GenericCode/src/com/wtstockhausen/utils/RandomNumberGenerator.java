@@ -6,7 +6,7 @@
 
 /**
  *
- * @author  wstockha
+ * @author  William.Stockhausen
  */
 
 package com.wtstockhausen.utils;
@@ -19,7 +19,7 @@ public class RandomNumberGenerator extends Object implements java.io.Serializabl
     
     private static final String PROP_SEED = "Seed";
     
-    private long seed;
+    private long seed = 0;
     private Random rndgen;
     
     private PropertyChangeSupport propertySupport;
@@ -105,10 +105,10 @@ public class RandomNumberGenerator extends Object implements java.io.Serializabl
     }
     
     public void setSeed(long value) {
-        Long oldValue = new Long(value);
+        Long oldValue = value;
         seed = value;
         rndgen = new Random(seed);
-        propertySupport.firePropertyChange(PROP_SEED, oldValue, new Long(seed));
+        propertySupport.firePropertyChange(PROP_SEED, oldValue, seed);
     }
     
     

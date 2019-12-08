@@ -11,6 +11,7 @@ package wts.models.DisMELS.framework;
 
 import com.wtstockhausen.datasource.ParseCSV;
 import java.awt.Color;
+import java.beans.ExceptionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.geotools.feature.Feature;
 import org.geotools.feature.IllegalAttributeException;
 import org.openide.util.Exceptions;
@@ -42,7 +44,7 @@ import org.openide.util.Lookup;
  * 
  * @author William Stockhausen
  */
-public class LHS_Factory implements PropertyChangeListener {
+public class LHS_Factory implements PropertyChangeListener, ExceptionListener {
     
     /** the singleton instance of this class */
     private static LHS_Factory instance = null;
@@ -384,10 +386,14 @@ public class LHS_Factory implements PropertyChangeListener {
             BufferedInputStream bis = new BufferedInputStream(fis);
             XMLDecoder xd = new XMLDecoder(bis);
             xd.setOwner(instance);
-//            xd.setExceptionListener(instance);
+            xd.setExceptionListener(instance);
             Map<String,LifeStageParametersInterface> map = null;
             logger.info("--reading paramsMap object from XML");
-            map = (Map<String,LifeStageParametersInterface>) xd.readObject();
+            try {
+                map = (Map<String,LifeStageParametersInterface>) xd.readObject();
+            } catch (Exception ex){
+                logger.warning(ex.getMessage());
+            }
             logger.info("--done reading paramsMap object from XML");
             xd.close();
             
@@ -504,7 +510,7 @@ public class LHS_Factory implements PropertyChangeListener {
         Feature feature = null;
         try {
             feature = ftLHS.createFeature();
-        } catch (IllegalAttributeException ex) {
+        } catch (IllegalAttributeException | NullPointerException ex) {
             Exceptions.printStackTrace(ex);
         }
         return feature;
@@ -548,11 +554,17 @@ public class LHS_Factory implements PropertyChangeListener {
      */
     public static LHSPointFeatureTypeNoAtts createPointFeatureTypeNoAtts(String key) 
                         throws InstantiationException, IllegalAccessException {
-        if (instance==null) instance = new LHS_Factory();
-        LHSPointFeatureTypeNoAtts lhs = instance.pointFTsNoAtts.get(key);
-        if (lhs!=null) return lhs; //found it, so return.
-        lhs = new LHSPointFeatureTypeNoAtts(key);//create a new instance
-        instance.pointFTsNoAtts.put(key,lhs);//update map pointFTsNoAtts
+        LHSPointFeatureTypeNoAtts lhs = null;
+        try {
+            if (instance==null) instance = new LHS_Factory();
+            lhs = instance.pointFTsNoAtts.get(key);
+            if (lhs!=null) return lhs; //found it, so return.
+            lhs = new LHSPointFeatureTypeNoAtts(key);//create a new instance
+            instance.pointFTsNoAtts.put(key,lhs);//update map pointFTsNoAtts
+        } catch (NullPointerException ex){
+            ex.printStackTrace();
+            throw ex;
+        }
         return lhs;
     }
     
@@ -1065,5 +1077,16 @@ public class LHS_Factory implements PropertyChangeListener {
         }
         //fire PropertyChange indicating changes.
         propertySupport.firePropertyChange(PROP_RESET,null,null);
+    }
+
+    @Override
+    public void exceptionThrown(Exception e) {
+        StackTraceElement[] stes = e.getStackTrace();
+        String txt = "";
+        for (StackTraceElement ste : stes) {
+            txt = txt + ste.toString() + "\n";
+        }
+        JOptionPane.showMessageDialog(null, txt,"Error in LHS_Factory",JOptionPane.ERROR_MESSAGE);
+        logger.warning(txt);
     }
 }

@@ -156,9 +156,11 @@ public class PowerLawSwimmingSpeedFunction extends AbstractIBMFunction
      */
     @Override
     public Double calculate(Object vars) {
-        double[] dvars = (double[]) vars;//cast object to required double[]
-        double rnd = 0; 
-        if ((rpw>0)&&(dvars[0]>0)) rnd = Math.sqrt(rpw/dvars[0])*rng.computeNormalVariate();
-        return new Double(alpha*Math.pow(dvars[1]/nomZ, beta)+rnd);
+        double[] dvars = (double[]) vars;
+        double rate = alpha*Math.pow(dvars[1]/nomZ, beta);
+        if (rpw<=0) return rate;
+        double rnd = 0.0; 
+        if (dvars[0]>0) rnd = Math.sqrt(rpw/Math.abs(dvars[0]))*rng.computeNormalVariate();
+        return rate+rnd;
     }
 }

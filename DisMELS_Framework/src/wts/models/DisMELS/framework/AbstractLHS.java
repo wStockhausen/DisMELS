@@ -25,10 +25,10 @@ import wts.roms.model.LagrangianParticle;
 public abstract class AbstractLHS implements LifeStageInterface {
     
     //Static fields
-    /* ROMS 3d interpolator object */
+    /** ROMS 3d interpolator object */
     protected static Interpolator3D i3d;
-    /* Random Number Generator */
-    protected static RandomNumberGenerator rng = null;
+    /** Random Number Generator */
+    protected static final RandomNumberGenerator rng = GlobalInfo.getInstance().getRandomNumberGenerator();
     /** tolerance to edge of model grid */
     protected static double tolGridEdge = 0.5;
     
@@ -110,7 +110,6 @@ public abstract class AbstractLHS implements LifeStageInterface {
     protected AbstractLHS(String typeName) {
         this.typeName = typeName;
         id = LHS_Factory.getNewID();
-        if (rng==null) rng = GlobalInfo.getInstance().getRandomNumberGenerator();
         if (i3d==null) i3d = GlobalInfo.getInstance().getInterpolator3D();
     }
     

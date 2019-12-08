@@ -11,11 +11,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -132,10 +135,45 @@ public class GlobalInfo implements LookupListener {
     
     /**
      * Sets a new Interpolator3D instance.
+     * 
+     * NOTE: This instance is explicity set to null in ModelControllerBean when a 
+     * simulation is "cleared" to free up memory. The static reference to this 
+     * instance in AbstractLHS is also explicitly set to null because the instance wold not be 
+     * garbage-collected.
+     * 
+     * References to the GlobalInfo I3D instance in LHS classes that DO NOT inherit 
+     * from AbstractLHS are not explicitly set to null (don't know what these 
+     * classes might be, as they are added as NetBeans modules outside DisMELS itself)
+     * when the simulation is cleared in ModelCOntrollerBean.
+     * 
+     * These classes should implement their own logic to deal with the possibility that
+     * the I3D instance in the GlobalInfo instance has been reset to null.
+     * 
      * @param newI3D 
      */
     public void setInterpolator3D(Interpolator3D newI3D){
         i3d = newI3D;
+        if (i3d==null){
+            logger.info("i3d set to null");
+            Set<Class<? extends LifeStageInterface>> lhss = getLHSClasses();
+            if (lhss!=null){
+                Iterator<Class<? extends LifeStageInterface>> it = lhss.iterator();
+                while(it.hasNext()){
+                    try {
+                        Class<? extends LifeStageInterface> cls = it.next();
+                        logger.info(cls.getName());
+                        Field f = com.wtstockhausen.utils.FieldFinder.getField(cls,"i3d");
+                        try {
+                            f.set(null, i3d);
+                        } catch (IllegalArgumentException | IllegalAccessException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                    } catch (SecurityException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
+            }
+        }
     }
     
     /**

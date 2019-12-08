@@ -536,6 +536,16 @@ public class ModelControllerBean extends Object
     /**
      * Method to clean up biggest memory hogs(?) prior to initializing/running a
      * new model.
+     * 
+     * NOTE: The global Interpolator3D instance in GlobalInfo is set to null. 
+     * The static reference to this I3D instance in AbstractLHS is also explicitly set 
+     * to null here as a convenience, because otherwise the instance wold not be garbage-collected.
+     * 
+     * References to the GlobalInfo I3D instance in LHS classes that DO NOT inherit 
+     * from AbstractLHS are not explicitly set to null (don't know what these 
+     * classes might be, as they are added as NetBeans modules outside DisMELS itself).
+     * These classes should implement their own logic to deal with the possibility that
+     * the I3D instance in the GlobalInfo instance has been reset to null.
      */
     public void cleanup(){
             if (fcStartPoints!=null) fcStartPoints.clear();
@@ -555,8 +565,7 @@ public class ModelControllerBean extends Object
             
             LagrangianParticle.setTracker(null);
             
-            globalInfo.setInterpolator3D(null);//set global instance to null (seems like really bad idea, but need to to clean up memory)
-            AbstractLHS.i3d = null;//set to null to clean up memory
+            globalInfo.setInterpolator3D(null);//set global instance, and all LifeStageInterface subclasses with an "i3d" field to null
             i3dt   = null;
             pe1    = null;
             pe2    = null;
@@ -579,7 +588,14 @@ public class ModelControllerBean extends Object
             } else {
                 globalInfo.setRandomNmberGeneratorSeed(System.currentTimeMillis());
             }
+            logger.info("++Using random number generator "+globalInfo.getRandomNumberGenerator().toString());
             logger.info("++Using random number seed "+globalInfo.getRandomNumberGenerator().getSeed());
+            logger.info("++random number test:");
+            for (int j=0;j<10;j++) {
+                String tst = "    ";
+                for (int i=0;i<10;i++) tst = tst+globalInfo.getRandomNumberGenerator().computeNormalVariate()+" ";
+                logger.info(tst);
+            }
             if (runForward) 
                 timeStep = Math.abs(timeStep);
             else 
