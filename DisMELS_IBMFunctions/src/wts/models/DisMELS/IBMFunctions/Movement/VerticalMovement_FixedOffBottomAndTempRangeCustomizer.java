@@ -31,7 +31,7 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
     }
 
     private void setParameters() {
-        jtfMinDepth.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_minDepth)).getValueAsString());
+        jtfMaxDepth.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_maxDepth)).getValueAsString());
         jtfMinDistanceOffBottom.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_minDistOffBottom)).getValueAsString());
         jtfMaxDistOffBottom.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_maxDistOffBottom)).getValueAsString());
         jtfMinTemp.setText(((IBMParameterDouble)obj.getParameter(VerticalMovement_FixedOffBottomAndTempRange.PARAM_minTemp)).getValueAsString());
@@ -50,7 +50,7 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
 
         jLabel1 = new javax.swing.JLabel();
         jtfRPW = new javax.swing.JTextField();
-        jtfMinDepth = new javax.swing.JTextField();
+        jtfMaxDepth = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         jtfMinDistanceOffBottom = new javax.swing.JTextField();
         jtfMaxDistOffBottom = new javax.swing.JTextField();
@@ -77,11 +77,11 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
             }
         });
 
-        jtfMinDepth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfMinDepth.setText("0");
-        jtfMinDepth.addActionListener(new java.awt.event.ActionListener() {
+        jtfMaxDepth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        jtfMaxDepth.setText("0");
+        jtfMaxDepth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfMinDepthActionPerformed(evt);
+                jtfMaxDepthActionPerformed(evt);
             }
         });
 
@@ -141,7 +141,7 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jtfMinDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jtfMaxDepth, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel2))
                     .addGroup(layout.createSequentialGroup()
@@ -171,7 +171,7 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jtfMinDepth, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jtfMaxDepth, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -205,11 +205,11 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
         obj.setParameterValue(VerticalMovement_FixedOffBottomAndTempRange.PARAM_rpw, val);
     }//GEN-LAST:event_jtfRPWActionPerformed
 
-    private void jtfMinDepthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfMinDepthActionPerformed
-        String str = jtfMinDepth.getText();
+    private void jtfMaxDepthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfMaxDepthActionPerformed
+        String str = jtfMaxDepth.getText();
         Double val = Double.parseDouble(str);
-        obj.setParameterValue(VerticalMovement_FixedOffBottomAndTempRange.PARAM_minDepth, val);
-    }//GEN-LAST:event_jtfMinDepthActionPerformed
+        obj.setParameterValue(VerticalMovement_FixedOffBottomAndTempRange.PARAM_maxDepth, val);
+    }//GEN-LAST:event_jtfMaxDepthActionPerformed
 
     private void jtfMinDistanceOffBottomActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfMinDistanceOffBottomActionPerformed
         String str = jtfMinDistanceOffBottom.getText();
@@ -243,9 +243,9 @@ public class VerticalMovement_FixedOffBottomAndTempRangeCustomizer extends javax
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JCheckBox jchkTempTakesPrecedence;
+    private javax.swing.JTextField jtfMaxDepth;
     private javax.swing.JTextField jtfMaxDistOffBottom;
     private javax.swing.JTextField jtfMaxTemp;
-    private javax.swing.JTextField jtfMinDepth;
     private javax.swing.JTextField jtfMinDistanceOffBottom;
     private javax.swing.JTextField jtfMinTemp;
     private javax.swing.JTextField jtfRPW;

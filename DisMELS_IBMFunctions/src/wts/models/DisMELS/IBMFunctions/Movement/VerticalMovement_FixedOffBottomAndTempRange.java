@@ -23,28 +23,28 @@ import wts.models.DisMELS.framework.IBMFunctions.IBMMovementFunctionInterface;
  * would move the individual toward the preferred depth range. 
  * 
  * <pre>
- * Function type: 
- *      vertical movement
- * Parameters (by key):
- *      minDepth         - Double: min depth (m)
- *      minDistOffBottom - Double: min distance off bottom (m)
- *      maxDistOffBottom - Double: max distance off bottom (m)
- *      minTemp          - Double: min temperature (deg C)
- *      maxTemp          - Double: max temperature (deg C)
- *      rpw              - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
- *      tempTakesPrecedence - Boolean: flag indicating that the temperature range takes precedence over the depth range
- * Variables:
- *      dt      - [0] - integration time step (s)
- *      depth   - [1] - current depth of individual, relative to mean sea level (m)
- *      bathyym - [2] - bathymetric depth at location (m)
- *      temp    - [3] - temperature at location
- *      w       - [4] - active vertical swimming speed outside preferred depth range (m/s)
- * Value:
- *      Double: vertical swimming speed (same units as w)
- * Calculation:
- *      eps  = N(0,sigV) [random draw from a normal distribution)
- *      v    = w*delta(outside preferred depth range) + sqrt(rpw/dt)*eps;
- * </pre>
+ Function type: 
+      vertical movement
+ Parameters (by key):
+      maxDepth         - Double: min depth (m)
+      minDistOffBottom - Double: min distance off bottom (m)
+      maxDistOffBottom - Double: max distance off bottom (m)
+      minTemp          - Double: min temperature (deg C)
+      maxTemp          - Double: max temperature (deg C)
+      rpw              - Double: random walk parameter w/in preferred depth range ([distance]^2/[time])
+      tempTakesPrecedence - Boolean: flag indicating that the temperature range takes precedence over the depth range
+ Variables:
+      dt      - [0] - integration time step (s)
+      depth   - [1] - current depth of individual, relative to mean sea level (m)
+      bathyym - [2] - bathymetric depth at location (m)
+      temp    - [3] - temperature at location
+      w       - [4] - active vertical swimming speed outside preferred depth range (m/s)
+ Value:
+      Double: vertical swimming speed (same units as w)
+ Calculation:
+      eps  = N(0,sigV) [random draw from a normal distribution)
+      v    = w*delta(outside preferred depth range) + sqrt(rpw/dt)*eps;
+ </pre>
  * 
  * @author William Stockhausen
  */
@@ -74,9 +74,9 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
             "\n\t* Function type: "+
             "\n\t*      vertical movement"+
             "\n\t* Parameters (by key):"+
-            "\n\t*      minDepth         - Double:"+
-            "\n\t*      minDistOffBottom - Double:"+
-            "\n\t*      maxDistOffBottom - Double:"+
+            "\n\t*      maxDepth         - Double: max preferred depth, relative to mean sea level (m)"+
+            "\n\t*      minDistOffBottom - Double: min preferred distance off bottom (m)"+
+            "\n\t*      maxDistOffBottom - Double: max preferred distance off bottom (m)"+
             "\n\t*      minTemp          - Double: min temperature (deg C)"+
             "\n\t*      maxTemp          - Double: max temperature (deg C)"+
             "\n\t*      rpw              - Double - random walk parameter w/in preferred depth range ([distance]^2/[time])"+
@@ -104,9 +104,9 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
     public static final int numSubFuncs = 0;
 
     /* name associated with parameter maxDepth */
-    public static final String PARAM_minDepth = "min depth (m)";
+    public static final String PARAM_maxDepth = "max depth (m)";
     /* the parameter's value */
-    protected double minDepth;
+    protected double maxDepth;
     /* name associated with parameter minDistOffBottom */
     public static final String PARAM_minDistOffBottom = "min dsitance off bottom (m)";
     /* the minDistOffBottom parameter's value */
@@ -136,7 +136,7 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
     public VerticalMovement_FixedOffBottomAndTempRange(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
         String key;
-        key = PARAM_minDepth;         addParameter(key, Double.class,key);
+        key = PARAM_maxDepth;         addParameter(key, Double.class,key);
         key = PARAM_minDistOffBottom; addParameter(key, Double.class,key);
         key = PARAM_maxDistOffBottom; addParameter(key, Double.class,key);
         key = PARAM_minTemp;          addParameter(key, Double.class,key);
@@ -168,8 +168,8 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
     public boolean setParameterValue(String param,Object value){
         if (super.setParameterValue(param, value)){
             switch (param) {
-                case PARAM_minDepth:
-                    minDepth = ((Double) value);
+                case PARAM_maxDepth:
+                    maxDepth = ((Double) value);
                     break;
                 case PARAM_minDistOffBottom:
                     minDistOffBottom = ((Double) value);
@@ -220,37 +220,39 @@ public class VerticalMovement_FixedOffBottomAndTempRange extends AbstractIBMFunc
 
         //determine vertical movement & calc indiv. W
         double w = 0;
-        double dob    = bathym - depth;//individual's distance off-bottom
-        double rMxDOB = Math.min(maxDistOffBottom, bathym - minDepth);//realized max preferred distance off bottom
-        double rMnDOB = Math.min(minDistOffBottom, bathym - minDepth);//realized min preferred distance off bottom
-        if (tempTakesPrecedence) {//staying in temp range takes priority
-            if (temp<minTemp) {//too cold, swim up
-                w =  vertSwimmingSpeed*(1.0-Math.exp(-(minTemp-temp)/10.0));
-            } else
-            if (temp>maxTemp) {//too warm, swim down
-                w =  -vertSwimmingSpeed*(1.0-Math.exp(-(temp-maxTemp)/10.0));
-            } else //temp range good but...
-            if (dob<rMnDOB) {//too close to bottom, swim up
-                w = vertSwimmingSpeed*(1.0-Math.exp(-(rMnDOB-dob)/1.0));
-            } else
-            if (dob>rMxDOB) {//too far from bottom, swim down
-                w =  vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/1.0));
+        if (maxDepth<depth){//swim up
+            w =  vertSwimmingSpeed*(1.0-Math.exp(-(depth-maxDepth)/1.0));
+        } else {
+            double dob    = bathym - depth;//individual's distance off-bottom
+            if (tempTakesPrecedence) {//staying in temp range takes priority
+                if (temp<minTemp) {//too cold, swim up
+                    w =  vertSwimmingSpeed*(1.0-Math.exp(-(minTemp-temp)/10.0));
+                } else
+                if (temp>maxTemp) {//too warm, swim down
+                    w =  -vertSwimmingSpeed*(1.0-Math.exp(-(temp-maxTemp)/10.0));
+                } else //temp range good but...
+                if (dob<minDistOffBottom) {//too close to bottom, swim up
+                    w = vertSwimmingSpeed*(1.0-Math.exp(-(minDistOffBottom-dob)/1.0));
+                } else
+                if (dob>maxDistOffBottom) {//too far from bottom, swim down
+                    w =  vertSwimmingSpeed*(1.0-Math.exp(-(dob-maxDistOffBottom)/1.0));
+                }
+                //otherwise, just right
+            } else {//staying in depth range takes priority
+                if (dob<minDistOffBottom) {//too close to bottom, swim up
+                    w = vertSwimmingSpeed*(1.0-Math.exp(-(minDistOffBottom-dob)/1.0));
+                } else
+                if (dob>maxDistOffBottom) {//too far from bottom, swim down
+                    w =  vertSwimmingSpeed*(1.0-Math.exp(-(dob-maxDistOffBottom)/1.0));
+                } else //off-bottom distance good but...
+                if (temp<minTemp) {//too cold, swim up
+                    w =  vertSwimmingSpeed*(1.0-Math.exp(-(minTemp-temp)/10.0));
+                } else
+                if (temp>maxTemp) {//too warm, swim down
+                    w =  -vertSwimmingSpeed*(1.0-Math.exp(-(maxTemp-temp)/10.0));
+                } 
+                //otherwise, just right
             }
-            //otherwise, just right
-        } else {//staying in depth range takes priority
-            if (dob<rMnDOB) {//too close to bottom, swim up
-                w = vertSwimmingSpeed*(1.0-Math.exp(-(rMnDOB-dob)/1.0));
-            } else
-            if (dob>rMxDOB) {//too far from bottom, swim down
-                w =  vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/1.0));
-            } else //off-bottom distance good but...
-            if (temp<minTemp) {//too cold, swim up
-                w =  vertSwimmingSpeed*(1.0-Math.exp(-(minTemp-temp)/10.0));
-            } else
-            if (temp>maxTemp) {//too warm, swim down
-                w =  -vertSwimmingSpeed*(1.0-Math.exp(-(maxTemp-temp)/10.0));
-            } 
-            //otherwise, just right
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
         return w;

@@ -67,7 +67,7 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
             "\n\t* Function type: "+
             "\n\t*      vertical movement"+
             "\n\t* Parameters (by key):"+
-            "\n\t*      minDepth         - Double: min preferred depth, relative to mean sea level (m)"+
+            "\n\t*      maxDepth         - Double: max preferred depth, relative to mean sea level (m)"+
             "\n\t*      minDistOffBottom - Double: min preferred distance off bottom (m)"+
             "\n\t*      maxDistOffBottom - Double: max preferred distance off bottom (m)"+
             "\n\t*      rpw              - Double - random walk parameter w/in preferred depth range ([distance]^2/[time])"+
@@ -93,9 +93,9 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
     public static final int numSubFuncs = 0;
 
     /* name associated with parameter minDepth */
-    public static final String PARAM_maxDepth = "min preferred depth, relative to sea level (m)";
+    public static final String PARAM_maxDepth = "max preferred depth, relative to sea level (m)";
     /* the parameter's value */
-    protected double minDepth;
+    protected double maxDepth;
     /* name associated with parameter minDistOffBottom */
     public static final String PARAM_minDistOffBottom = "min preferred distance off bottom (m)";
     /* the minDistOffBottom parameter's value */
@@ -143,7 +143,7 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
         if (super.setParameterValue(param, value)){
             switch (param) {
                 case PARAM_maxDepth:
-                    minDepth = ((Double) value).doubleValue();
+                    maxDepth = ((Double) value).doubleValue();
                     break;
                 case PARAM_minDistOffBottom:
                     minDistOffBottom = ((Double) value).doubleValue();
@@ -182,14 +182,16 @@ public class VerticalMovement_FixedOffBottomRange extends AbstractIBMFunction
 
         //determine vertical movement & calc indiv. W
         double w = 0;
-        double dob    = bathym - depth;//individual's distance off-bottom
-        double rMxDOB = Math.min(maxDistOffBottom, bathym - minDepth);//realized max preferred distance off bottom
-        double rMnDOB = Math.min(minDistOffBottom, bathym - minDepth);//realized min preferred distance off bottom
-        if (rMxDOB<dob) {//swim down
-            w = -vertSwimmingSpeed*(1.0-Math.exp(-(dob-rMxDOB)/1.0));
-        } else 
-        if (dob<rMnDOB) {//swim up
-            w =  vertSwimmingSpeed*(1.0-Math.exp(-(rMnDOB-dob)/1.0));
+        if (maxDepth<depth){//below max depth, swim up
+            w =  vertSwimmingSpeed*(1.0-Math.exp(-(depth-maxDepth)/1.0));
+        } else {
+            double dob    = bathym - depth;//individual's distance off-bottom
+            if (maxDistOffBottom<dob) {//too far from bottom, swim down
+                w = -vertSwimmingSpeed*(1.0-Math.exp(-(dob-maxDistOffBottom)/1.0));
+            } else 
+            if (dob<minDistOffBottom) {//too close to bottom, swim up
+                w =  vertSwimmingSpeed*(1.0-Math.exp(-(minDistOffBottom-dob)/1.0));
+            }
         }
         if ((rpw>0)&&(adt>0)) w += rng.computeNormalVariate()*Math.sqrt(rpw/adt);//add in ramdom walk
         return w;
