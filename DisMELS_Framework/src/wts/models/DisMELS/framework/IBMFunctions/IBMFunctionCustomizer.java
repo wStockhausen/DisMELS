@@ -111,10 +111,9 @@ public class IBMFunctionCustomizer extends javax.swing.JPanel
         
         jTabbedPane = new javax.swing.JTabbedPane();
         jTabbedPane.setToolTipText(obj.getDescription());
+        this.add(jTabbedPane, java.awt.BorderLayout.CENTER);
         
-        Set<String> pKeys = obj.getParameterNames();
-        Set<String> fKeys = obj.getSubfunctionNames();
-        if (pKeys.isEmpty()&&fKeys.isEmpty()){
+        if (!(obj.hasParameters()||obj.hasSubfunctions())){
             //Construct tab for full description
             JPanel jpDescr = new JPanel();
             jpDescr.setLayout(new java.awt.BorderLayout());        
@@ -132,11 +131,12 @@ public class IBMFunctionCustomizer extends javax.swing.JPanel
             jta.setEditable(false);
             jp1.add(jta,BorderLayout.NORTH);
             return;
-        } else {
-            this.add(jTabbedPane, java.awt.BorderLayout.CENTER);
         }
-        if (!pKeys.isEmpty()){
+        
+        //has parameters or subfunctions        
+        if (obj.hasParameters()){
             //Construct tab for function parameters
+            Set<String> pKeys = obj.getParameterNames();
             jpParameters = new JPanel();
             jpParameters.setLayout(new java.awt.BorderLayout());        
             jTabbedPane.addTab("Parameters", jpParameters); // NOI18N
@@ -167,8 +167,9 @@ public class IBMFunctionCustomizer extends javax.swing.JPanel
             }
         }
         
-        //Construct tabs for subfunctions
-        if (!fKeys.isEmpty()){
+        if (obj.hasSubfunctions()){
+            //Construct tabs for subfunctions
+            Set<String> fKeys = obj.getSubfunctionNames();
             for (String fKey: fKeys) {
                 logger.info("constructing customizer for subfunction key "+fKey);
                 IBMFunctionInterface ifi = obj.getSubfunction(fKey);

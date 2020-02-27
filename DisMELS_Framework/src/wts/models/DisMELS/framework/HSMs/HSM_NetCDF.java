@@ -61,8 +61,15 @@ public class HSM_NetCDF implements HSM_Interface {
     }
 
     public boolean setConnectionString(String conn) throws IOException, InvalidRangeException {
+        if (conn.equals(this.conn)) {return isConnected;}
+        if ((ds!=null)&&(!conn.equals(this.conn))) {ds.close(); ds=null;}//close old connection
+        if (conn.isEmpty()||conn.equalsIgnoreCase("")||conn.equalsIgnoreCase("<none>")){
+            logger.info("No connection string specified.");
+            isConnected=false;
+            return isConnected;
+        }
         try{
-            if ((ds!=null)&&(!conn.equals(this.conn))) {ds.close(); ds=null; isConnected=false;}//close old connection
+            //if we got thhis far, try to open the connection string and create new ds
             ds  = NetcdfDataset.openDataset(conn);
             nx  = ds.findDimension("x").getLength();
             ny  = ds.findDimension("y").getLength();

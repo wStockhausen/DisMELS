@@ -5,7 +5,6 @@
 package wts.models.DisMELS.IBMFunctions.HSMs;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
@@ -112,16 +111,20 @@ public class HSMFunction_NetCDF extends AbstractIBMFunction {
                 case PARAM_fileName:
                     fileName = (String) value;
                     if (hsm==null) hsm = new HSM_NetCDF();
-                    try {
-                        res = hsm.setConnectionString(fileName);
-                    } catch (IOException ex) {
-                        res = false;
-                        String title = "Error in HSMFunction_NetCDF.setParameterValue(param,value)";
-                        String msg = "netCDF file \n\t'"+fileName+"'\nnot found!";
-                        System.out.println(title+"\n"+msg);
-                        javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.ERROR_MESSAGE);
-                    } catch (InvalidRangeException ex) {
-                        System.out.println(ex.toString());
+                    if (fileName.equalsIgnoreCase("")||fileName.equalsIgnoreCase("<none>")){
+                        //do nothing--no file set
+                    } else {
+                        try {
+                            res = hsm.setConnectionString(fileName);
+                        } catch (IOException ex) {
+                            res = false;
+                            String title = "Error in HSMFunction_NetCDF.setParameterValue(param,value)";
+                            String msg = "netCDF file \n\t'"+fileName+"'\nnot found!";
+                            System.out.println(title+"\n"+msg);
+                            javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.ERROR_MESSAGE);
+                        } catch (InvalidRangeException ex) {
+                            System.out.println(ex.toString());
+                        }
                     }
                     break;
             }

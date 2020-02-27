@@ -194,6 +194,9 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
             } catch (InstantiationException | IllegalAccessException | IOException ex) {
                 Exceptions.printStackTrace(ex);
             }
+            String msg = "Loaded parameters file\n"+fnIO;
+            String title = "Parameters info:";
+            javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.INFORMATION_MESSAGE);
         }
         enableLoadAction(true);
 //        logger.info("finished compnonentOpened()");
@@ -287,7 +290,6 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
 
     public void csvListSelectionChanged(ListSelectionEvent evt) {
         try {
-//            logger.info("CSV file selected");
             fnIO = (String) lstIO.getSelectedValue();
             File f = new File(fnIO);
             jfcIO.setSelectedFile(f);
@@ -296,7 +298,6 @@ public final class LHSParametersEditorTopComponent extends TopComponent implemen
             if (fnIO.endsWith(".csv")){
                 paramsMap = LHS_Factory.createParametersFromCSV(f);
             } else {
-                //TODO: finish the method
                 paramsMap = LHS_Factory.createParametersFromXML(f);
             }
             setParametersCustomizer();

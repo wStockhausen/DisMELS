@@ -298,6 +298,9 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
                 File f = new File(fnMCB);
                 xmlLoader.open(f);
                 enableSaveAction(true);
+                String msg = "Loaded model runner file\n"+fnMCB;
+                String title = "Model runner:";
+                javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.INFORMATION_MESSAGE);
             } catch (FileNotFoundException ex) {
                 Exceptions.printStackTrace(ex);
             }

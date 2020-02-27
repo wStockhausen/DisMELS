@@ -55,8 +55,15 @@ public class HSM_NetCDF_InMemory implements HSM_Interface {
     }
 
     public boolean setConnectionString(String conn) throws IOException, InvalidRangeException {
+        if (conn.equals(this.conn)) {return isConnected;}
+        if (conn.isEmpty()||conn.equalsIgnoreCase("")||conn.equalsIgnoreCase("<none>")){
+            logger.info("No connection string specified.");
+            isConnected=false;
+            return isConnected;
+        }
         try{
-            if (conn.equals(this.conn)) {return isConnected;}
+            //if we got thhis far, try to open the connection string and 
+            //read data for HSM
             NetcdfDataset ds          = NetcdfDataset.openDataset(conn);
             ucar.nc2.Variable x_var   = ds.findVariable("x");
             ucar.nc2.Variable y_var   = ds.findVariable("y");
