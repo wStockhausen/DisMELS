@@ -105,12 +105,6 @@ public class ModelGrid2D {
             CriticalVariableInfo cvi = cvis.getVariableInfo(key);
             if (cvi.isSpatialField()) mdMap.put(key,null);//additional field
         }
-        
-//        //create mask map (mkMap)
-//        mkMap.put("mask_rho",null);
-//        mkMap.put("mask_psi",null);
-//        mkMap.put("mask_u",null);
-//        mkMap.put("mask_v",null);
     }
     
     /**

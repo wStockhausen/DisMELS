@@ -73,12 +73,12 @@ public class PhysicalEnvironment {
     public PhysicalEnvironment(int iTime, NetcdfReader nR) 
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                        java.io.IOException {
-        logger.info("starting PhysicalEnvironment(iTime,nR,modGrid3D)");
+        logger.info("starting PhysicalEnvironment(iTime,nR)");
         createFieldMaps();
         this.iTime = iTime;
         this.nR = nR;
         readTimeDependentFields();
-        logger.info("finished PhysicalEnvironment(iTime,nR,modGrid3D)");
+        logger.info("finished PhysicalEnvironment(iTime,nR)");
     }
     
     /**
@@ -137,6 +137,26 @@ public class PhysicalEnvironment {
         Hza.setIndexName(2,"xi_rho");
         Index ima = Hza.getIndex();
         ModelData zeta = getField("zeta");
+        if (zeta==null){
+            /* need to create a zeta field with all 0's */
+            logger.info("creating 'flat' zeta field (SSH)");
+            Array za = Array.factory(double.class,new int[] {M+1,L+1});
+            za.setIndexName(0,"eta_rho");
+            za.setIndexName(1,"xi_rho");
+            Index iza = za.getIndex();
+            for (int eta=0;eta<=M;eta++) {
+                for (int xi=0;xi<=L;xi++) {
+                    za.setDouble(iza.set(eta,xi),0.0);
+                }
+            }
+            logger.info("created array for zeta and set all elements to 0");
+            zeta = new ModelData(ocean_time,za,"zeta");
+            logger.info("created ModelData object for zeta");
+            zeta.setDimIndices(-1, -1, 0, 1);
+            logger.info("finished setDimIndices for zeta");
+            mdMap.put("zeta", zeta);
+            logger.info("created 'flat' zeta ModelData field (SSH)");
+        }
         for (int eta=0;eta<=M;eta++) {
             for (int xi=0;xi<=L;xi++) {
                 zw = computeLayerZs(grid3D.h.getValue(xi,eta),
@@ -375,7 +395,7 @@ public class PhysicalEnvironment {
      * Gets model field based on internal name, not the ROMS alias.
      * 
      * @param fld - the internal name for the field
-     * @return 
+     * @return - ModelData object, or null if no model field matching fld
      */
     public ModelData getField(String fld) {
         ModelData md = mdMap.get(fld);//check model fields

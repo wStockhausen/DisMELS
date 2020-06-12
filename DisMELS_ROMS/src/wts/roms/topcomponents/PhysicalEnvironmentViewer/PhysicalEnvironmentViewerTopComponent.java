@@ -204,6 +204,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         jbNext = new javax.swing.JButton();
         jbPrev = new javax.swing.JButton();
         jbUpdate = new javax.swing.JButton();
+        jbResetAll = new javax.swing.JButton();
         jpOceanTime = new javax.swing.JPanel();
         jspTime = new javax.swing.JSpinner();
         jtfTime = new javax.swing.JTextField();
@@ -305,6 +306,14 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(jbResetAll, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jbResetAll.text")); // NOI18N
+        jbResetAll.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jbResetAll.toolTipText")); // NOI18N
+        jbResetAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbResetAllActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jpNavigationLayout = new javax.swing.GroupLayout(jpNavigation);
         jpNavigation.setLayout(jpNavigationLayout);
         jpNavigationLayout.setHorizontalGroup(
@@ -316,14 +325,17 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 .addComponent(jbPrev, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jbNext, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 122, Short.MAX_VALUE)
+                .addComponent(jbResetAll)
+                .addContainerGap())
         );
         jpNavigationLayout.setVerticalGroup(
             jpNavigationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jpNavigationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jbUpdate)
                 .addComponent(jbPrev, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(jbNext, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jbNext, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jbResetAll))
         );
 
         jpOceanTime.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jpOceanTime.border.title"))); // NOI18N
@@ -350,7 +362,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 .addContainerGap()
                 .addComponent(jspTime, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jtfTime, javax.swing.GroupLayout.DEFAULT_SIZE, 401, Short.MAX_VALUE)
+                .addComponent(jtfTime, javax.swing.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
                 .addContainerGap())
             .addGroup(jpOceanTimeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jpOceanTimeLayout.createSequentialGroup()
@@ -393,7 +405,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         org.openide.awt.Mnemonics.setLocalizedText(jrbScalarK, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbScalarK.text")); // NOI18N
         jrbScalarK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbScalarK.toolTipText")); // NOI18N
 
-        jspScalarK.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(0), null, Integer.valueOf(1)));
+        jspScalarK.setModel(new javax.swing.SpinnerNumberModel(1, 0, null, 1));
         jspScalarK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jspScalarK.toolTipText")); // NOI18N
 
         bgScalarDepthButtons.add(jrbScalarDepth);
@@ -529,31 +541,31 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 .addComponent(jbScalarColorScale)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(sfCustomizer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(260, Short.MAX_VALUE))
+                .addContainerGap(252, Short.MAX_VALUE))
             .addGroup(jpScalarFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jpScalarFieldLayout.createSequentialGroup()
                     .addComponent(jcbScalarVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 624, Short.MAX_VALUE)))
+                    .addGap(0, 604, Short.MAX_VALUE)))
             .addGroup(jpScalarFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jpScalarFieldLayout.createSequentialGroup()
                     .addGap(26, 26, 26)
                     .addComponent(jpScalarDepthSelector, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(539, Short.MAX_VALUE)))
+                    .addContainerGap(524, Short.MAX_VALUE)))
             .addGroup(jpScalarFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jpScalarFieldLayout.createSequentialGroup()
                     .addGap(75, 75, 75)
                     .addComponent(jchkUpdateStyleForSF)
-                    .addContainerGap(546, Short.MAX_VALUE)))
+                    .addContainerGap(533, Short.MAX_VALUE)))
             .addGroup(jpScalarFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jpScalarFieldLayout.createSequentialGroup()
                     .addGap(48, 48, 48)
                     .addComponent(jchkShowSF)
-                    .addContainerGap(573, Short.MAX_VALUE)))
+                    .addContainerGap(560, Short.MAX_VALUE)))
             .addGroup(jpScalarFieldLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jpScalarFieldLayout.createSequentialGroup()
                     .addGap(115, 115, 115)
                     .addComponent(jpScalarRange, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(484, Short.MAX_VALUE)))
+                    .addContainerGap(470, Short.MAX_VALUE)))
         );
 
         jTabbedPane1.addTab(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jpScalarField.TabConstraints.tabTitle"), jpScalarField); // NOI18N
@@ -566,7 +578,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         org.openide.awt.Mnemonics.setLocalizedText(jrbVectorK, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbVectorK.text")); // NOI18N
         jrbVectorK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbVectorK.toolTipText")); // NOI18N
 
-        jspVectorK.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(0), null, Integer.valueOf(1)));
+        jspVectorK.setModel(new javax.swing.SpinnerNumberModel(1, 0, null, 1));
         jspVectorK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jspVectorK.toolTipText")); // NOI18N
 
         bgVectorDepthButtons.add(jrbVectorDepth);
@@ -791,7 +803,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         org.openide.awt.Mnemonics.setLocalizedText(jrbHGradK, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbHGradK.text")); // NOI18N
         jrbHGradK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbHGradK.toolTipText")); // NOI18N
 
-        jspHGradK.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(0), null, Integer.valueOf(1)));
+        jspHGradK.setModel(new javax.swing.SpinnerNumberModel(1, 0, null, 1));
         jspHGradK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jspHGradK.toolTipText")); // NOI18N
 
         bgVectorDepthButtons.add(jrbHGradDepth);
@@ -996,7 +1008,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jpNavigation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 265, Short.MAX_VALUE))
+                .addGap(0, 54, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(jfbDataset, javax.swing.GroupLayout.PREFERRED_SIZE, 490, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1015,20 +1027,20 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             .addGroup(layout.createSequentialGroup()
                 .addGap(51, 51, 51)
                 .addComponent(jpNavigation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(778, Short.MAX_VALUE))
+                .addContainerGap(767, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(jfbDataset, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 806, Short.MAX_VALUE)))
+                    .addGap(0, 799, Short.MAX_VALUE)))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addGap(82, 82, 82)
                     .addComponent(jpOceanTime, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(696, Short.MAX_VALUE)))
+                    .addContainerGap(689, Short.MAX_VALUE)))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addGap(160, 160, 160)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 681, Short.MAX_VALUE)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 681, Short.MAX_VALUE)
                     .addContainerGap()))
         );
 
@@ -1044,35 +1056,6 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             setCursor(c);
         }
     }//GEN-LAST:event_jfbDatasetActionPerformed
-
-//    /**
-//     * Loads the 3D model info from the canonical dataset and creates the grid3D
-//     * object.
-//     */
-//    private void load3DInfo(){
-//        logger.info("Reading 3D model info");
-//        ProgressRunnable<Integer> r = new ProgressRunnable<Integer>(){
-//            @Override
-//            public Integer run(ProgressHandle handle) {
-//                try {
-//                    //read grid
-//                    grid3D = new ModelGrid3D(romsGI.getGridFile()); 
-//                    //read canonical dataset from netcdf file
-//                    netcdfReader = new NetcdfReader(romsGI.getCanonicalFile());
-//                    calendar = netcdfReader.getCalendar();
-//                    grid3D.readConstantFields(netcdfReader);
-//                    jfbDataset.setEnabled(true);
-//                    validate();
-//                } catch (IOException ex) {
-//                    Exceptions.printStackTrace(ex);
-//                }
-//                return new Integer(0);
-//            }
-//
-//        };
-//        ProgressHandle h = ProgressHandleFactory.createHandle("Reading ROMS 3D model info...");
-//        ProgressUtils.showProgressDialogAndRunLater(r, h, false);
-//    }
 
     /**
      * Loads the ROMS model dataset specified by jfbDatset.getFilename().
@@ -1404,6 +1387,56 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             validate();
         }
     }//GEN-LAST:event_jbEditHGradScalingActionPerformed
+
+    private void jbResetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbResetAllActionPerformed
+        resetAll();
+    }//GEN-LAST:event_jbResetAllActionPerformed
+    
+    private void resetVariables(){
+        logger.info("Resetting variables to default");
+        jbUpdate.setEnabled(false);
+        jbPrev.setEnabled(false);
+        jbNext.setEnabled(false);
+        jcbScalarVar.removeAllItems();
+        jcbVectorX.removeAllItems();
+        jcbVectorY.removeAllItems();
+        jcbHGradField.removeAllItems();
+        jcbScalarVar.setSelectedIndex(-1);//set to "no item"
+        jcbVectorX.setSelectedIndex(-1);//set to "no item"
+        jcbVectorY.setSelectedIndex(-1);//set to "no item"
+        jcbHGradField.setSelectedIndex(-1);//set to "no item"
+        scalarFld = null;
+        vectorFldX = null;
+        vectorFldY = null;
+        horizGradFld = null;
+        jbUpdate.setEnabled(false);
+        jbPrev.setEnabled(false);
+        jbNext.setEnabled(false);
+        logger.info("Finished resetting variables to default");        
+    }
+    
+    private void resetAll(){
+        logger.info("Resetting state to default");
+        doEvents = false;
+        resetVariables();
+        netcdfReader = null;
+        pe = null;
+        i3d = null;
+        jspTime.setModel(new javax.swing.SpinnerNumberModel());
+        jtfTime.setText("");
+        jtfTime1.setText("");
+        jfbDataset.setFilename("");
+        //reset style and map viewer controls
+        jchkShowSF.setSelected(false); jchkUpdateStyleForSF.setSelected(false);
+        if (scalarLayer!=null) tcMapViewer.removeGISLayer(scalarLayer);
+        jchkShowVF.setSelected(false); jchkUpdateStyleForVF.setSelected(false);
+        if (vectorLayer!=null) tcMapViewer.removeGISLayer(vectorLayer);
+        jchkShowHGrad.setSelected(false); jchkUpdateStyleForHGrad.setSelected(false);
+        if (horizGradLayer!=null) tcMapViewer.removeGISLayer(horizGradLayer);
+        tcMapViewer.repaint();
+        doEvents = true;
+        logger.info("Finished resetting state to default");        
+    }
     
     /**
      * Updates oceantime to jth (0-based) time segment in the current netcdf file.
@@ -1437,24 +1470,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         logger.info("starting setVariables()");
         doEvents = false;
         logger.info("setVariables(): previously selected variables = '"+scalarFld+"', '"+vectorFldX+"', '"+vectorFldY+"', '"+horizGradFld+"'.");
-        jcbScalarVar.removeAllItems();
-        jcbVectorX.removeAllItems();
-        jcbVectorY.removeAllItems();
-        jcbHGradField.removeAllItems();
-        jcbScalarVar.setSelectedIndex(-1);//set to "no item"
-        jcbVectorX.setSelectedIndex(-1);//set to "no item"
-        jcbVectorY.setSelectedIndex(-1);//set to "no item"
-        jcbHGradField.setSelectedIndex(-1);//set to "no item"
-        if (pe==null){
-            logger.info("setVariables(): pe is NULL");
-            scalarFld = null;
-            vectorFldX = null;
-            vectorFldY = null;
-            horizGradFld = null;
-            jbUpdate.setEnabled(false);
-            jbPrev.setEnabled(false);
-            jbNext.setEnabled(false);
-        } else {
+        resetVariables();
+        if (pe!=null){
             logger.info("setVariables(): reading fields from pe");
             TreeSet<String> fields = new TreeSet<>(pe.getFieldNames());
             Iterator<String> vars = fields.iterator();
@@ -1911,6 +1928,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private javax.swing.JButton jbEditVectorScaling;
     private javax.swing.JButton jbNext;
     private javax.swing.JButton jbPrev;
+    private javax.swing.JButton jbResetAll;
     private javax.swing.JButton jbScalarColorScale;
     private javax.swing.JButton jbUpdate;
     private javax.swing.JComboBox jcbHGradField;

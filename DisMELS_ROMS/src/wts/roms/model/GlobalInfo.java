@@ -25,7 +25,7 @@ import wts.models.utilities.CalendarIF;
 import wts.roms.gis.CSCreator;
 
 /**
- * This class provides a repository for global variables for the DisMELS model.
+ * This class provides a repository for ROMS-related global variables for the DisMELS model.
  * 
  * @author William.Stockhausen
  */

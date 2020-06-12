@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import org.netbeans.api.actions.Openable;
 import org.netbeans.api.actions.Savable;
@@ -31,6 +32,7 @@ import wts.roms.gis.CSCreator;
 import wts.roms.model.CriticalGrid2DVariablesInfo;
 import wts.roms.model.CriticalModelVariablesInfo;
 import wts.roms.model.GlobalInfo;
+import wts.roms.model.NetcdfReader;
 import wts.roms.model.OptionalModelVariablesInfo;
 
 /**
@@ -833,6 +835,89 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         }
     }
     
+    /**
+     * Checks the existence of critical 2D variables in the ROMS grid
+     * and reports those that were not present.
+     */
+    public void checkCriticalGrid2DVariables(){
+        if (!romsGI.getGridFile().equals(GlobalInfo.PROP_NotSet)){
+            try {
+                //read dataset from netcdf file
+                NetcdfReader nr = new NetcdfReader(romsGI.getGridFile());
+                CriticalGrid2DVariablesInfo cvis = romsGI.getCriticalGrid2DVariablesInfo();
+                for (String name : cvis.getNames()){
+                    String roms_name = cvis.getNameInROMSDataset(name);
+                    if (nr.findVariable(roms_name)==null){
+                        String warning = "ROMS 2D grid missing critical variable '"+roms_name+"' associated with internal name '"+name+"'";
+                        logger.warning(warning);
+                        JOptionPane.showMessageDialog(null, warning,"Could not find ROMS 2D grid variable",JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            } catch (IOException ex) {
+                logger.info("checkCriticalGrid2DVariables(): finished try UNsuccessfully with IOException");
+                logger.severe(ex.getMessage());
+            } catch (Exception ex){
+                logger.info("checkCriticalGrid2DVariables(): finished try UNsuccessfully with Exception");
+                logger.severe(ex.toString());
+            }           
+        }
+    }
+    
+    /**
+     * Checks the existence of critical model variables in the ROMS grid
+     * and reports those that were not present.
+     */
+    public void checkCriticalModelVariables(){
+        if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            try {
+                //read dataset from netcdf file
+                NetcdfReader nr = new NetcdfReader(romsGI.getCanonicalFile());
+                CriticalModelVariablesInfo cvis = romsGI.getCriticalModelVariablesInfo();
+                for (String name : cvis.getNames()){
+                    String roms_name = cvis.getNameInROMSDataset(name);
+                    if (nr.findVariable(roms_name)==null){
+                        String warning = "ROMS canonical file missing critical variable '"+roms_name+"' associated with internal name '"+name+"'";
+                        logger.warning(warning);
+                        JOptionPane.showMessageDialog(null, warning,"Could not find ROMS canonical file variable",JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            } catch (IOException ex) {
+                logger.info("checkCriticalGrid2DVariables(): finished try UNsuccessfully with IOException");
+                logger.severe(ex.getMessage());
+            } catch (Exception ex){
+                logger.info("checkCriticalGrid2DVariables(): finished try UNsuccessfully with Exception");
+                logger.severe(ex.toString());
+            }           
+        }
+    }
+    
+    /**
+     * Checks the existence of optional model variables in the ROMS grid
+     * and reports those that were not present.
+     */
+    public void checkOptionalModelVariables(){
+        if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+            try {
+                //read dataset from netcdf file
+                NetcdfReader nr = new NetcdfReader(romsGI.getCanonicalFile());
+                OptionalModelVariablesInfo cvis = romsGI.getOptionalModelVariablesInfo();
+                for (String name : cvis.getNames()){
+                    String roms_name = cvis.getNameInROMSDataset(name);
+                    if (nr.findVariable(roms_name)==null){
+                        String warning = "ROMS canonical file missing 'optional' variable '"+roms_name+"' associated with internal name '"+name+"'";
+                        logger.warning(warning);
+                        JOptionPane.showMessageDialog(null, warning,"Could not find ROMS canonical file variable",JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            } catch (IOException ex) {
+                logger.info("checkCriticalGrid2DVariables(): finished try UNsuccessfully with IOException");
+                logger.severe(ex.getMessage());
+            } catch (Exception ex){
+                logger.info("checkCriticalGrid2DVariables(): finished try UNsuccessfully with Exception");
+                logger.severe(ex.toString());
+            }           
+        }
+    }
     //------------------------------------------------------------------------//
     /**
      * Private class to implement open functionality for ROMS properties file
@@ -867,6 +952,9 @@ public final class ROMSInfoEditorTopComponent extends TopComponent implements Pr
         public void save() throws IOException {
             logger.info("--starting InfoSaver.save()");
             String fn = romsGI.getWorkingDir()+File.separator+GlobalInfo.propsFN;
+            //check for missing critical variables
+            checkCriticalGrid2DVariables();
+            checkCriticalModelVariables();
             romsGI.writeProperties(fn);
             logger.info("--finished InfoSaver.save()");
         }
