@@ -46,8 +46,9 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         jtfSec = new javax.swing.JTextField();
 
         jtfYear.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfYear.setText("0000");
         jtfYear.setToolTipText("year");
+        jtfYear.setMinimumSize(new java.awt.Dimension(50, 26));
+        jtfYear.setPreferredSize(new java.awt.Dimension(50, 26));
         jtfYear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfYearActionPerformed(evt);
@@ -61,8 +62,9 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         jLabel1.setRequestFocusEnabled(false);
 
         jtfMonth.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfMonth.setText("00");
         jtfMonth.setToolTipText("month (1-12)");
+        jtfMonth.setMinimumSize(new java.awt.Dimension(28, 26));
+        jtfMonth.setPreferredSize(new java.awt.Dimension(28, 26));
         jtfMonth.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMonthActionPerformed(evt);
@@ -76,8 +78,9 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         jLabel2.setRequestFocusEnabled(false);
 
         jtfDay.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfDay.setText("00");
         jtfDay.setToolTipText("day");
+        jtfDay.setMinimumSize(new java.awt.Dimension(28, 26));
+        jtfDay.setPreferredSize(new java.awt.Dimension(28, 26));
         jtfDay.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfDayActionPerformed(evt);
@@ -85,8 +88,9 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         });
 
         jtfHour.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfHour.setText("00");
         jtfHour.setToolTipText("hour (1-23)");
+        jtfHour.setMinimumSize(new java.awt.Dimension(28, 26));
+        jtfHour.setPreferredSize(new java.awt.Dimension(28, 26));
         jtfHour.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfHourActionPerformed(evt);
@@ -97,8 +101,9 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         jLabel3.setText(":");
 
         jtfMin.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfMin.setText("00");
         jtfMin.setToolTipText("minutes");
+        jtfMin.setMinimumSize(new java.awt.Dimension(28, 26));
+        jtfMin.setPreferredSize(new java.awt.Dimension(28, 26));
         jtfMin.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfMinActionPerformed(evt);
@@ -109,9 +114,9 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         jLabel4.setText(":");
 
         jtfSec.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jtfSec.setText("00");
         jtfSec.setToolTipText("seconds");
-        jtfSec.setPreferredSize(new java.awt.Dimension(26, 22));
+        jtfSec.setMinimumSize(new java.awt.Dimension(28, 26));
+        jtfSec.setPreferredSize(new java.awt.Dimension(28, 26));
         jtfSec.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfSecActionPerformed(evt);
@@ -123,25 +128,25 @@ public class DateTimeCustomizer extends javax.swing.JPanel
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(jtfYear, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 35, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jtfYear, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 50, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jtfMonth, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jtfMonth, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 28, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jtfDay, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jtfDay, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 28, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(17, 17, 17)
-                .add(jtfHour, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jtfHour, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 28, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jtfMin, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jtfMin, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 28, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jLabel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jtfSec, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(jtfSec, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 28, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
