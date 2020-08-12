@@ -388,11 +388,31 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
                 type = csvDS.getValueAt(currRow, i).toString();
                 try {
                     if (colName.equalsIgnoreCase("startTime")) {
+                        //ocean time as long number
                         long strt = oc.to_long(csvDS.getValueAt(currRow, i));
                         mcb.setStartTime(strt);
                         CalendarIF cal = GlobalInfo.getInstance().getCalendar();
                         cal.setTimeOffset(strt);
                         str = "\t Start time = "+strt+" ("+cal.getDateTimeString()+")\n";
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("startDate")) {
+                        //ocean time as date string
+                        String dt = (String) csvDS.getValueAt(currRow, i);
+                        String[] strp = dt.split(" ");//split date/time
+                        String[] strd = strp[0].split("-");//split date part
+                        String[] strt = strp[1].split(":");//split time part
+                        int yr = Integer.parseInt(strd[0]);
+                        int mo = Integer.parseInt(strd[1]);
+                        int dy = Integer.parseInt(strd[2]);
+                        int hr = Integer.parseInt(strt[0]);
+                        int mi = Integer.parseInt(strt[1]);
+                        int sc = Integer.parseInt(strt[2]);
+                        CalendarIF cal = GlobalInfo.getInstance().getCalendar();
+                        cal.setDate(yr, mo, dy, hr, mi, sc);
+                        long start = oc.to_long(cal.getTimeOffset());
+                        mcb.setStartTime(start);
+                        str = "\t Start time = "+start+" ("+cal.getDateTimeString()+")\n";
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("file_ROMSDataset")) {
