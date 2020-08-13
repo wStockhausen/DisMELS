@@ -422,13 +422,14 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
      */
     private void initializeModel(){
         logger.info("Initializing model");
+        mcb.cleanup();//call to clean up in case it hasn't been done already
         jbInitializeModel.setEnabled(false);
-        fcStartPoints.clear();
-        fcEndPoints.clear();
-        fcTracks.clear();
-        fcDeadPoints.clear();
-        fcDeadTracks.clear();
-        System.gc();
+//        fcStartPoints.clear();
+//        fcEndPoints.clear();
+//        fcTracks.clear();
+//        fcDeadPoints.clear();
+//        fcDeadTracks.clear();
+//        System.gc();
         try {
             mcb.setStartPointsFC(fcStartPoints);
             mcb.setEndPointsFC(fcEndPoints);

@@ -266,7 +266,6 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
         mcb.setGUIMode(false);//really only need to do this once
         if (currRow<rowCnt) {
             String colName = "";
-            String type = "";
             String str = "";
             ObjectConverter oc = ObjectConverter.getInstance();
             String subDirFN = (String) csvDS.getValueAt(currRow, 0);
@@ -275,46 +274,93 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             boolean setResFN = true;
             for (int i=1;i<csvDS.getColumnCount();i++) {
                 colName = csvDS.getColumnName(i);
-                type = csvDS.getValueAt(currRow, i).toString();
                 try {
                     if (colName.equalsIgnoreCase("startTime")) {
-                        long strt = oc.to_long(csvDS.getValueAt(currRow, i));
-                        mcb.setStartTime(strt);
-                        CalendarIF cal = GlobalInfo.getInstance().getCalendar();
-                        cal.setTimeOffset(strt);
-                        str = "\t Start time = "+strt+" ("+cal.getDateTimeString()+")\n";
+                        str = (String) csvDS.getValueAt(currRow, i);
+                        if (!str.isEmpty()) {
+                            long strt = oc.to_long(str);
+                            mcb.setStartTime(strt);
+                            CalendarIF cal = GlobalInfo.getInstance().getCalendar();
+                            cal.setTimeOffset(strt);
+                            str = "\t Start time = "+strt+" ("+cal.getDateTimeString()+")\n";
+                        } else {
+                            str = "\t ERROR: 'startTime' at row "+i+" is blank!\n";
+                        }
+                        jTextArea.append(str);
+                    } else
+                    if (colName.equalsIgnoreCase("startDate")) {
+                        //ocean time as date string
+                        String dt = (String) csvDS.getValueAt(currRow, i);
+                        if (!dt.isEmpty()) {
+                            String[] strp = dt.split(" ");//split date/time
+                            String[] strd = strp[0].split("-");//split date part
+                            String[] strt = strp[1].split(":");//split time part
+                            int yr = Integer.parseInt(strd[0]);
+                            int mo = Integer.parseInt(strd[1]);
+                            int dy = Integer.parseInt(strd[2]);
+                            int hr = Integer.parseInt(strt[0]);
+                            int mi = Integer.parseInt(strt[1]);
+                            int sc = Integer.parseInt(strt[2]);
+                            CalendarIF cal = GlobalInfo.getInstance().getCalendar();
+                            cal.setDate(yr, mo, dy, hr, mi, sc);
+                            long start = oc.to_long(cal.getTimeOffset());
+                            mcb.setStartTime(start);
+                            str = "\t Start time = "+start+" ("+cal.getDateTimeString()+")\n";
+                        } else {
+                            str = "\t ERROR: 'startDate' at row "+i+" is blank!\n";
+                        }
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("file_ROMSDataset")) {
                         String fn = (String) csvDS.getValueAt(currRow, i);
-                        mcb.setFile_ROMSDataset(fn);
-                        str = "\t ROMS dataset      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        if (!fn.isEmpty()) {
+                            mcb.setFile_ROMSDataset(fn);
+                            str = "\t ROMS dataset      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        } else {
+                            str = "\t ERROR: 'file_ROMSDataset' at row "+i+" is blank!\n";
+                        }
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("file_Results")) {
                         String fn = (String) csvDS.getValueAt(currRow, i);
-                        mcb.setFile_Results(fn);
-                        setResFN = false;
-                        str = "\t Results file      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        if (!fn.isEmpty()) {
+                            mcb.setFile_Results(fn);
+                            setResFN = false;
+                            str = "\t Results file      = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        } else {
+                            str = "\t ERROR: 'file_Results' at row "+i+" is blank!\n";
+                        }
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("file_ConnResults")) {
                         String fn = (String) csvDS.getValueAt(currRow, i);
-                        mcb.setFile_ConnResults(fn);
-                        setResFN = false;
-                        str = "\t Connectivity file = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        if (!fn.isEmpty()) {
+                            mcb.setFile_ConnResults(fn);
+                            setResFN = false;
+                            str = "\t Connectivity file = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        } else {
+                            str = "\t ERROR: 'file_ConnResults' at row "+i+" is blank!\n";
+                        }
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("file_Parameters")) {
                         String fn = (String) csvDS.getValueAt(currRow, i);
-                        mcb.setFile_Params(fn);
-                        str = "\t Parameters file   = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        if (!fn.isEmpty()) {
+                            mcb.setFile_Params(fn);
+                            str = "\t Parameters file   = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        } else {
+                            str = "\t ERROR: 'file_Parameters' at row "+i+" is blank!\n";
+                        }
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("file_InitialAttributes")) {
                         String fn = (String) csvDS.getValueAt(currRow, i);
-                        mcb.setFile_InitialAttributes(fn);
-                        str = "\t Init atts file    = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        if (!fn.isEmpty()) {
+                            mcb.setFile_InitialAttributes(fn);
+                            str = "\t Init atts file    = "+csvDS.getValueAt(currRow, i).toString()+"\n";
+                        } else {
+                            str = "\t ERROR: 'file_InitialAttributes' at row "+i+" is blank!\n";
+                        }
                         jTextArea.append(str);
                     } else
                     if (colName.equalsIgnoreCase("ntEnvironModel")) {
@@ -336,11 +382,19 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
                         jTextArea.append(str);
                     }
                 } catch (java.lang.NumberFormatException ex){
-                    logger.info("Error formatting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
-                    throw ex;
+                    String type = csvDS.getValueAt(currRow, i).toString();
+                    str = "Error formatting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type;
+                    logger.info(str);
+                    jTextArea.append("ERROR: "+str+"\n");
                 } catch (java.lang.ClassCastException ex){
-                    logger.info("Error casting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
-                    throw ex;
+                    String type = csvDS.getValueAt(currRow, i).toString();
+                    str = "Error casting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type;
+                    logger.info(str);
+                    jTextArea.append("ERROR: "+str+"\n");
+                } catch (java.lang.NullPointerException ex){
+                    str = "Null pointer exception reading column '"+colName+"', row "+i+".";
+                    logger.info(str);
+                    jTextArea.append("ERROR: "+str+"\n");
                 }
             }
             if (setResFN) {
@@ -375,7 +429,6 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
         if (currRow<rowCnt) {
             LHS_Factory.resetID(0);
             String colName = "";
-            String type = "";
             String str = "";
             ObjectConverter oc = ObjectConverter.getInstance();
             String subDirFN = (String) csvDS.getValueAt(currRow, 0);
@@ -385,7 +438,6 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
             boolean setResFN = true;
             for (int i=1;i<csvDS.getColumnCount();i++) {
                 colName = csvDS.getColumnName(i);
-                type = csvDS.getValueAt(currRow, i).toString();
                 try {
                     if (colName.equalsIgnoreCase("startTime")) {
                         //ocean time as long number
@@ -466,15 +518,20 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
                         jTextArea.append(str);
                     }
                 } catch (java.lang.NumberFormatException ex){
+                    String type = csvDS.getValueAt(currRow, i).toString();
                     logger.info("Error formatting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
                     throw ex;
                 } catch (java.lang.ClassCastException ex){
+                    String type = csvDS.getValueAt(currRow, i).toString();
                     logger.info("Error casting column '"+colName+"' with "+csvDS.getValueAt(currRow, i).toString()+" to type "+type);
+                    throw ex;
+                } catch (java.lang.NullPointerException ex){
+                    logger.info("Null pointer exception reading column '"+colName+"', row "+i+".");
                     throw ex;
                 }
             }
             if (setResFN) {
-                //results file NOT set in batch file, so create one in a NEW subdirectory using the base name                
+                //results files NOT set in batch file, so create ones in a NEW subdirectory using the base name                
                 String subDir = GlobalInfo.getInstance().getWorkingDir()+subDirFN+File.separator;
                 new File(subDir).mkdir();//create subdirectory
                 File f = new File(mcb.getFile_Results());
@@ -554,7 +611,7 @@ public final class BatchModeModelRunnerTopComponent extends TopComponent impleme
                 }
             }
         });
-        progressHandle.start(mcb.getNtEnvironModel()*mcb.getNtBioModel());;
+        progressHandle.start(mcb.getNtEnvironModel()*mcb.getNtBioModel());
         timer.start();
         task.go();
     }
