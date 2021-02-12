@@ -677,7 +677,7 @@ public class ModelControllerBean extends Object
                         file = globalInfo.getWorkingDir()+file_Results+"."+lsiClass+".csv";
                         logger.info("Writing model results to '"+file+"'");
                         FileWriter fwResults = new FileWriter(file);
-                        PrintWriter pwResults = new PrintWriter(fwResults);
+                        PrintWriter pwResults = new PrintWriter(fwResults,true);//enabled automatic flushing after each println call
                         pwResults.println(atts.getCSVHeader());
                         pwResults.println(atts.getCSVHeaderShortNames());
                         pwResults.flush();
@@ -692,7 +692,7 @@ public class ModelControllerBean extends Object
                         file = globalInfo.getWorkingDir()+file_ConnResults+"."+lsiClass+".csv";
                         logger.info("Writing model connectivity results to '"+file+"'");
                         FileWriter fwConnResults = new FileWriter(file);
-                        PrintWriter pwConnResults = new PrintWriter(fwConnResults);
+                        PrintWriter pwConnResults = new PrintWriter(fwConnResults,true);//enabled automatic flushing after each println call
                         pwConnResults.println(atts.getCSVHeader());
                         pwConnResults.println(atts.getCSVHeaderShortNames());
                         pwConnResults.flush();
@@ -1014,9 +1014,16 @@ public class ModelControllerBean extends Object
      */
     protected void tryNext() throws IOException {
         file_CurrROMSDataset = getNextFilename();
-        logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
-        netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
-        pe2 = new PhysicalEnvironment(0,netcdfReader);
+        if (!file_CurrROMSDataset.isEmpty()){
+            logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
+            netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
+            pe2 = new PhysicalEnvironment(0,netcdfReader);
+        } else {
+            logger.severe("No new netCDF file available!");
+            JOptionPane.showMessageDialog(null, "Stopping. No new netcdf file available.", 
+                                          "Number of time steps too long.", JOptionPane.ERROR_MESSAGE);
+            throw(new IOException("No new netcdf file available. Number of time steps too long."));
+        }
     }
  
     /**
@@ -1026,18 +1033,6 @@ public class ModelControllerBean extends Object
      * @return String - next ROMS dataset filename
      */
     protected String getNextFilename() {
-//        int n = file_CurrROMSDataset.length();
-//        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
-//        String idx = file_CurrROMSDataset.substring(n-7,n-3);
-//        //logger.info("idx = "+idx);
-//        int ndx = Integer.parseInt(idx);
-//        char[] idxc = String.valueOf(ndx+1).toCharArray();
-//        //logger.info("new index = "+String.valueOf(idxc));
-//        char[] dfnc = file_CurrROMSDataset.toCharArray();
-//        for (int i=idxc.length;i>0;i--) {
-//            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
-//        }
-//        return String.valueOf(dfnc);
         logger.info("in getNextFilename()");
         if (indx_CurrROMSDataset<(files_ROMSDatasets.length-1)){
             indx_CurrROMSDataset++;
@@ -1055,18 +1050,6 @@ public class ModelControllerBean extends Object
      * @return String - previous ROMS dataset filename
      */
     protected String getPreviousFilename() {
-//        int n = file_CurrROMSDataset.length();
-//        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
-//        String idx = file_CurrROMSDataset.substring(n-7,n-3);
-//        //logger.info("idx = "+idx);
-//        int ndx = Integer.parseInt(idx);
-//        char[] idxc = String.valueOf(ndx-1).toCharArray();
-//        //logger.info("new index = "+String.valueOf(idxc));
-//        char[] dfnc = file_CurrROMSDataset.toCharArray();
-//        for (int i=idxc.length;i>0;i--) {
-//            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
-//        }
-//        return String.valueOf(dfnc);
         logger.info("in getPreviousFilename()");
         if (indx_CurrROMSDataset>0){
             indx_CurrROMSDataset--;
@@ -1492,10 +1475,14 @@ public class ModelControllerBean extends Object
                 }
             }
         }
-        writeToConnectivityFile();//write final results to connectivity file
-        closeOutputFiles();
+        finish();
         logger.info("Run time (min) = "+
                            (System.currentTimeMillis()-systime)/(60.0*1000));
+    }
+    
+    public void finish(){
+        writeToConnectivityFile();//write final results to connectivity file
+        closeOutputFiles();
     }
     
     public ModelTaskIF getInitModelTask() {
@@ -1631,6 +1618,7 @@ public class ModelControllerBean extends Object
                     run(ntEnvironModel,timeStep,ntBioModel);                    
                 }  catch (Exception ex){
                    Exceptions.printStackTrace(ex);
+                   finish();
                    done = true;
                  }
                 done = true;

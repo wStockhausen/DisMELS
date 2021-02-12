@@ -717,7 +717,7 @@ public class LHS_Factory implements PropertyChangeListener, ExceptionListener {
      *  Returns instance of the next LHS class initialized with attributes oldAtts
      *  associated with the given key.
      * @param key     - type name of the LHS for which to create the next LHS
-     * @param oldAtts - the attributes with which to initialize the new instance
+     * @param oldLHS - the life stage instance with which to initialize the new instance
      * @return - instance of next LHS class with associated type name
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
