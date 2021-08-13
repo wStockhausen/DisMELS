@@ -675,10 +675,13 @@ public class LHS_Factory implements PropertyChangeListener, ExceptionListener {
     }
         
     /**
-     *  Returns a "default" instance of the output LHS class 
-     *  associated with the given key.
-     * @param key - type name of the LHS for which to create an output LHS
-     * @return    - instance of output class with output type name
+     *  Returns a list of "vanilla" instances for the output LHS classes 
+     *  associated with the given input key.
+     * 
+     * @param key - type name of the LHS from which to create output LHSs
+     * 
+     * @return - List<LifeStageInterface> of output classes instances for key = type name.
+     * 
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
@@ -714,8 +717,11 @@ public class LHS_Factory implements PropertyChangeListener, ExceptionListener {
     }
     
     /**
-     *  Returns instance of the next LHS class initialized with attributes oldAtts
+     *  Returns instance of the next LHS class initialized with LifeStageInterface oldLHS
      *  associated with the given key.
+     * 
+     * This calls setInfoFromIndividual(oldLHS) on the new LSI objects.
+     * 
      * @param key     - type name of the LHS for which to create the next LHS
      * @param oldLHS - the life stage instance with which to initialize the new instance
      * @return - instance of next LHS class with associated type name

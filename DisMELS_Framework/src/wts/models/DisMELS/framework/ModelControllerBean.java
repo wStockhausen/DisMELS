@@ -149,6 +149,8 @@ public class ModelControllerBean extends Object
     private transient List<LifeStageInterface> indivs;
     private transient Iterator<LifeStageInterface> it;
     
+    private transient double startTimeBio;//time at which biology starts
+    
     private transient FeatureCollection fcStartPoints = null;
     private transient FeatureCollection fcEndPoints   = null;
     private transient FeatureCollection fcTracks      = null;
@@ -163,8 +165,8 @@ public class ModelControllerBean extends Object
     private transient HashMap<String,PrintWriter> pwResultsMap;//map to PrintWriters for results
     private transient HashMap<String,PrintWriter> pwConnResultsMap;//map to PrintWriters for results
     
-    private transient String statMessage;
-    private transient int statTime;
+    private transient String statMessage;//message for progress bar
+    private transient int statTime;      //counter for progress bar
     
     /** step counter for updating animation */ 
     private int animCtr;
@@ -626,12 +628,15 @@ public class ModelControllerBean extends Object
             statMessage = "Initializing output files";
             logger.info(statMessage);
             initializeOutputFiles();
+            
             statMessage = "Initializing environment";
             logger.info(statMessage);
             initializeEnvironment();
+            
             statMessage = "Initializing biology";
             logger.info(statMessage);
             initializeBioModel();
+            
             statMessage="Finished initialization";
         } catch (FileNotFoundException ex) {
             statMessage="Initialization halted: FileNotFoundException thrown";
@@ -964,7 +969,7 @@ public class ModelControllerBean extends Object
         }
     }
  
-    protected void timestepEnvironment() throws IOException {
+    protected void timestepEnvironmentForwards() throws IOException {
         logger.info("Time-stepping environment...");
         if (pe2.getOceanTime()<=time) {
             pe1 = pe2;
@@ -978,11 +983,13 @@ public class ModelControllerBean extends Object
                 tryNext();
             }
         }
-        pet = null;
-        System.gc();//TODO: is this necessary?
-        pet = PhysicalEnvironment.interpolate(time,pe1,pe2);
-        i3dt.setPhysicalEnvironment(pet);
-        logger.info("Environment interpolated to time: "+pet.getOceanTime());
+        if (startTimeBio<pe2.getOceanTime()){
+            pet = null;
+            System.gc();//TODO: is this necessary?
+            pet = PhysicalEnvironment.interpolate(time,pe1,pe2);
+            i3dt.setPhysicalEnvironment(pet);
+            logger.info("Environment interpolated to time: "+pet.getOceanTime());
+        }
     }
  
     protected void timestepEnvironmentBackwards() throws IOException {
@@ -1087,12 +1094,34 @@ public class ModelControllerBean extends Object
         pe2 = new PhysicalEnvironment(nt-1,netcdfReader);
     }
   
+    public void getStartTimeBio() throws FileNotFoundException, IOException {
+        startTimeBio = Double.MAX_VALUE;
+        try {
+            String file = globalInfo.getWorkingDir()+file_InitialAttributes;
+            List<LifeStageAttributesInterface> lst = LHS_Factory.createAttributesFromCSV(file);
+            Iterator<LifeStageAttributesInterface> it = lst.iterator();
+            while(it.hasNext()){
+                LifeStageAttributesInterface lsai = it.next();
+                double st = lsai.getStartTime();//startTime in s if st>0; increment in days if st < 0
+                if (st==0) {
+                    st = startTime;//set to model start time
+                } else if (st<0) {
+                    //use st as start increment in days relative to model start time
+                    if (runForward) 
+                        st = startTime-86400*st;
+                    else
+                        st = startTime+86400*st;
+                }
+                startTimeBio = Math.min(startTimeBio, st);
+            }
+            logger.info("startTimeBio = "+startTimeBio);
+        } catch( InstantiationException | IllegalAccessException | NullPointerException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+    
     protected void initializeBioModel() throws FileNotFoundException, IOException {
-//        LagrangianParticleTracker lpt = new LagrangianParticleTracker(i3dt);
-//        lpt.setTimeStep(timeStep/ntBioModel);
-//        LagrangianParticle.setTracker(lpt);
-//        globalInfo.setInterpolator3D(i3dt);
-        
+        if (runForward) startTimeBio = Double.MAX_VALUE; else startTimeBio = -Double.MAX_VALUE;
         try {
             //create map of LHSParameters 
             Map<String,LifeStageParametersInterface> mapLSPs = null;
@@ -1129,14 +1158,17 @@ public class ModelControllerBean extends Object
                 lhs = it.next();
                 double st = lhs.getStartTime();//startTime in s if st>0; increment in days if st < 0
                 if (st==0) {
-                    lhs.setStartTime(startTime);//set to model start time}
+                    st = startTime;//set to model start time}
                 } else if (st<0) {
                     //use st as start increment in days relative to model start time
                     if (runForward) 
-                        lhs.setStartTime(startTime-86400*st);
+                        st = startTime-86400*st;
                     else
-                        lhs.setStartTime(startTime+86400*st);
+                        st = startTime+86400*st;
                 }
+                if (runForward) startTimeBio = Math.min(startTimeBio, st);
+                else            startTimeBio = Math.max(startTimeBio, st);
+                lhs.setStartTime(st);
             }
             if (guiMode) {
                 it = indivs.listIterator();
@@ -1148,7 +1180,11 @@ public class ModelControllerBean extends Object
                 tmpStrtPts.clear();
             }
             it = null;
+            long to = globalInfo.getCalendar().getTimeOffset();
+            globalInfo.getCalendar().setTimeOffset((long) startTimeBio);
             logger.info(indivs.size()+" individuals initially defined for model run.");
+            logger.info("startTimeBio = "+globalInfo.getCalendar().getDateTimeString());
+            globalInfo.getCalendar().setTimeOffset(to);
         } catch( InstantiationException | IllegalAccessException | NullPointerException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -1439,36 +1475,43 @@ public class ModelControllerBean extends Object
         double systime = System.currentTimeMillis();
         double dtp = dt/nLPTsteps;
         for (int t=0;t<nTimes;t++) {//loop over environmental model timesteps
-            //timestep indivs using current environment at fast timestep
-            for (int j=0;j<nLPTsteps;j++) {//loop over biological model timesteps
-                stpCtr++;
-//                if (debug||LagrangianParticleTracker.debug||Interpolator3D.debug)
-//                    logger.info("step "+stpCtr+", time = "+time+"; "+animCtr+"; "+resCtr+"; "+lhsStageTransCtr);
-                updateAnimation  = (animCtr==0);
-                updateResults    = (resCtr==0);
-                updateStageTrans = (lhsStageTransCtr==0);
-//                logger.info("animCtr = "+animCtr+" "+updateAnimation+" "+animationRate);
-                timestepBioModel(dtp);
-                time=time+dtp;
+            if ((runForward&&(startTimeBio<(time+dt)))||(!runForward&&((time-dt)<startTimeBio))){
+                //timestep indivs using current environment at fast timestep
+                for (int j=0;j<nLPTsteps;j++) {//loop over biological model timesteps
+                    stpCtr++;
+    //                if (debug||LagrangianParticleTracker.debug||Interpolator3D.debug)
+    //                    logger.info("step "+stpCtr+", time = "+time+"; "+animCtr+"; "+resCtr+"; "+lhsStageTransCtr);
+                    updateAnimation  = (animCtr==0);
+                    updateResults    = (resCtr==0);
+                    updateStageTrans = (lhsStageTransCtr==0);
+    //                logger.info("animCtr = "+animCtr+" "+updateAnimation+" "+animationRate);
+                    timestepBioModel(dtp);
+                    time=time+dtp;
+                    globalInfo.getCalendar().setTimeOffset((long) time);
+                    animCtr          = mod(animCtr+1,animationRate);
+                    resCtr           = mod(resCtr+1,resultsRate);
+                    lhsStageTransCtr = mod(lhsStageTransCtr+1,lhsStageTransRate);
+                    statTime++;
+                    statMessage = "Env. model step "+t;
+    //                logger.info(" date is "+globalInfo.getCalendar().getDateTimeString());
+    //                logger.info(" doy = "+globalInfo.getCalendar().getYearDay()+
+    //                                   ". Is it daylight? "+DaylightFunctions.isDaylight(-163.0,55.0,globalInfo.getCalendar().getYearDay()));
+                }
+                if (!writeFast) writeToReportFile();
+            } else {
+                time     += dt;
                 globalInfo.getCalendar().setTimeOffset((long) time);
-                animCtr          = mod(animCtr+1,animationRate);
-                resCtr           = mod(resCtr+1,resultsRate);
-                lhsStageTransCtr = mod(lhsStageTransCtr+1,lhsStageTransRate);
-                statTime++;
+                statTime += nLPTsteps;
                 statMessage = "Env. model step "+t;
-//                logger.info(" date is "+globalInfo.getCalendar().getDateTimeString());
-//                logger.info(" doy = "+globalInfo.getCalendar().getYearDay()+
-//                                   ". Is it daylight? "+DaylightFunctions.isDaylight(-163.0,55.0,globalInfo.getCalendar().getYearDay()));
             }
-            if (!writeFast) writeToReportFile();
             logger.info("t = "+t+"; updated time is "+time+
                                " date is "+globalInfo.getCalendar().getDateTimeString()+
                                " constantEnv = "+fixedEnvironment);
             logger.info("Current number of individuals: "+indivs.size());
             if (!fixedEnvironment) {
                 try {
-                    if (runForward) timestepEnvironment();
-                    else timestepEnvironmentBackwards();
+                    if (runForward) timestepEnvironmentForwards();
+                    else            timestepEnvironmentBackwards();
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                     throw(ex);

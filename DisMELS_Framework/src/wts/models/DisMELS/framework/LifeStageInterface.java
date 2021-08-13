@@ -68,6 +68,7 @@ public interface LifeStageInterface extends Cloneable, Serializable {
 
     /**
      * Returns the instance id.
+     * @return 
      */
     long getID();
 
@@ -81,6 +82,7 @@ public interface LifeStageInterface extends Cloneable, Serializable {
      * Gets the last projected position in the track of the instance.
      *
      * @param coordType - type of coordinates requested (e.g. grid or lat/lon)
+     * 
      * @return - last proejcted position as Coordinate
      */
     Coordinate getLastPosition(int coordType);
@@ -88,6 +90,10 @@ public interface LifeStageInterface extends Cloneable, Serializable {
     /**
      * Returns a list of new individuals created by this instance
      * due to transitions to the next life history stage within the last dt.
+     * 
+     * @param dt
+     * 
+     * @return List<LifeStageInterface>
      */
     List<LifeStageInterface> getMetamorphosedIndividuals(double dt);
 

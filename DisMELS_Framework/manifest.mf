@@ -4,6 +4,6 @@ OpenIDE-Module-Install: wts/models/DisMELS/netbeans/Installer.class
 OpenIDE-Module-Layer: wts/models/DisMELS/framework/layer.xml
 OpenIDE-Module-Localizing-Bundle: wts/models/DisMELS/framework/Bundle.properties
 OpenIDE-Module-Requires: org.openide.windows.WindowManager
-OpenIDE-Module-Specification-Version: 20191207.0
+OpenIDE-Module-Specification-Version: 20210628.0
 
 

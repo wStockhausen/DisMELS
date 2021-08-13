@@ -600,6 +600,9 @@ public class Interpolator3D extends Interpolator2D {
     
     /**
      * Calculate the physical depth corresponding to the input grid position.
+     * 
+     * The physical depth is measured from the equilibrium sea surface, with
+     * z increasing upwards (i.e., z = -d, where d increases with depth).
      *
      * @return--physical depth corresponding to vertical grid position.
      * @param pos--position vector in grid units (0<I<L,0<J<M,0<K<N)
