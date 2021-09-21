@@ -142,20 +142,28 @@ public class Interpolator3D extends Interpolator2D {
             throw new UnsupportedOperationException("Interpolator3D.interpolateValue(double[],String,String,int) cannot be used because pe is null!!");
         }
         //set interpolation field
-        if (pos.length<3) {
-            //use the function in Interpolator2D
-            v = super.interpolateValue(pos, modelField, maskField, interpType);
-            return v;
-        }
+//        if (pos.length<3) {
+//            //use the function in Interpolator2D
+//            v = super.interpolateValue(pos, modelField, maskField, interpType);
+//            return v;
+//        }
+//        ModelData mdp = pe.getField(modelField);
+//        if (mdp.getRank()<3){
+//            //try 2d interpolator again
+//            v = super.interpolateValue(pos, modelField, maskField, interpType);
+//            return v;
+//        }
+//        
+//        MaskData  mkp = (MaskData) GlobalInfo.getInstance().getGrid2D().getGridField(maskField);
+                  
         ModelData mdp = pe.getField(modelField);
-        if (mdp.getRank()<3){
-            //try 2d interpolator again
-            v = super.interpolateValue(pos, modelField, maskField, interpType);
+        MaskData  mkp = (MaskData) GlobalInfo.getInstance().getGrid2D().getGridField(maskField);
+        if ((pos.length<3)||(mdp.getRank()<3)) {
+            //use the function in Interpolator2D
+            v = super.interpolateValue2D(pos, mdp, mkp, interpType);
             return v;
         }
         
-        MaskData  mkp = (MaskData) GlobalInfo.getInstance().getGrid2D().getGridField(maskField);
-                  
         //interpolate field
         v = interpolateValue3D(pos,mdp,mkp,interpType);
         return v;

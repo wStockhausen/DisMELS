@@ -1749,7 +1749,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             MapDataInterfaceVectorBase vmd;
             //remove last vector map layer
             if (vectorLayer!=null) {
-                logger.info("Remmoving vector layer to map: "+vectorLayer.getTitle());
+                logger.info("Removing vector layer to map: "+vectorLayer.getTitle());
                 tcMapViewer.removeGISLayer(vectorLayer);
                 logger.info("Removed vector layer to map: "+vectorLayer.getTitle());
                 vectorLayer=null;
@@ -1832,6 +1832,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         } catch (Exception ex) {
             logger.severe("updateVectorMapLayer(): Error updating vector layer: unspecified");
             logger.severe(ex.toString());
+            logger.severe(ex.getMessage());
         }
     }
 
