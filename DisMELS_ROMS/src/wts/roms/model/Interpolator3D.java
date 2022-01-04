@@ -589,21 +589,36 @@ public class Interpolator3D extends Interpolator2D {
      * scale the physical vertical velocity to grid units.
      *
      * @return wScale such that w(grid units) = w(physical units)/wScale.
+     * 
      * @param pos-- double[] with {xi,eta,K) where xi, eta, K are in grid coordinates
-     * @param delz--double = W*dT in physical units (m)
+     * @param delz--double = W*dt in physical units (m)
+     * 
+     * Note that wScale will be -/+ infinity if \cr
+     *   pos[2]=0 and delz<0 or \cr
+     *   pos[2]=N and delz>0 \cr
+     * but that is ok.
      */
     public double calcWscale(double[] pos, double delz) throws ArrayIndexOutOfBoundsException {
-        double K0 = pos[2];
-        double z0 = calcZfromK(pos[0],pos[1],pos[2]);
-        double z1 = z0+delz;
-        double K1 = calcKfromZ(pos[0],pos[1],z1);
-        v  = delz/(K1-K0);
-        if (debug||Double.isNaN(v)) {
-            logger.info("calcWscale: "+v);
-            logger.info("\tpos = "+pos[0]+", "+pos[1]+", "+pos[2]+", "+delz);
-            logger.info("\tz1: "+z1+", z0: "+z0+", K1= "+K1+" K0 = "+K0);
+        double wScale  = 1.0;//default if delz=0
+        if (Math.abs(delz)>0) {
+            double K0 = pos[2];
+            double z0 = calcZfromK(pos[0],pos[1],pos[2]);
+            double z1 = z0+delz;
+            double K1 = calcKfromZ(pos[0],pos[1],z1);
+            wScale = delz/(K1-K0);
+            if (debug||(Double.isNaN(wScale))) {
+                logger.info("I3D.calcWscale: "+wScale);
+                logger.info("\tpos = "+pos[0]+", "+pos[1]+", "+pos[2]+", "+delz);
+                logger.info("\tz1: "+z1+", z0: "+z0+", K1= "+K1+" K0 = "+K0);
+            }
+        } else {
+            //do nothing (wScale=1)
+            if (debug){
+                logger.info("I3D.calcWscale: "+wScale);
+                logger.info("\tpos = "+pos[0]+", "+pos[1]+", "+pos[2]+", "+delz);
+            }
         }
-        return v;
+        return wScale;
     }
     
     /**

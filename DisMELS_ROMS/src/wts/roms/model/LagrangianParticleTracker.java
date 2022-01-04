@@ -129,15 +129,23 @@ public class LagrangianParticleTracker {
      * 
      * @param pos - position in grid coordinates (xi,eta,K)
      * @param w   - vertical velocity (in physical units [m/s])
-     * @return 
+     * 
+     * @return wScale - scaling to grid coordinates
+     * 
+     * Note that wScale will be -/+ infinity if \cr
+     *   pos[2]=0 and w<0 or \cr
+     *   pos[2]=N and w>0 \cr
+     * but that is ok.
      */
     public double calcWscale(double[] pos,double w) {
-        double s = i3d.calcWscale(pos,w*dt);
-        if (Double.isNaN(s)) {
-            throw new java.lang.UnknownError("LPT: W scale calculated NaN using "+
-                                              pos[0]+", "+pos[1]+", "+pos[2]+", "+w*dt);
+        double wScale = i3d.calcWscale(pos,w*dt);
+        if (Double.isNaN(wScale)) {
+            String msg = "Problem in LPT.calcWscale(pos,w): wScale is NaN: \n"+
+                          "pos = "+pos[0]+", "+pos[1]+", "+pos[2]+
+                          "w, dt, wScale = "+w+", "+dt+", "+wScale;
+            logger.warning(msg);
         }
-        return s;
+        return wScale;
     }
     
     /**

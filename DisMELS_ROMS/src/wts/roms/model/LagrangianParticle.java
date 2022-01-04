@@ -307,24 +307,47 @@ public class LagrangianParticle implements Cloneable {
      * @param m --index at which to set W: for LagrangianParticle lp,
      *              use lp.getN() if setting before doPredictorStep()
      *              use lp.getNP1() if setting before doCorrectorStep()
+     * 
+     * This function throws an ArithmeticException if w is not finite.
      */
     public void setW(double w, int m) {
-        if (w!=0) {
-            double[] pos = new double[] {trackData[IXGRD][m],
-                                         trackData[IYGRD][m],
-                                         trackData[IZGRD][m]};
-            double wScale = lpt.calcWscale(pos,w);
-            if (Math.abs(wScale)>0) {
-                trackData[IW][m] = w/wScale;
+        double wScale = 1;//value if w=0
+        if (Double.isFinite(w)){
+            if (Math.abs(w)>0) {
+                double[] pos = new double[] {trackData[IXGRD][m],
+                                             trackData[IYGRD][m],
+                                             trackData[IZGRD][m]};
+                wScale = lpt.calcWscale(pos,w);
+                if (Double.isFinite(wScale)){
+                    if (Math.abs(wScale)>0) {
+                        trackData[IW][m] = w/wScale;
+                    } else {
+                        trackData[IW][m] = 0;
+                    }
+                } else {
+                    if (!Double.isNaN(wScale)){
+                        //particle is at bottom or top of grid and trying to move outside it,
+                        //so set w to 0 to prevent this
+                        trackData[IW][m] = 0;
+                    } else {
+                        //generated a NaN somehow
+                        String msg = "LagrangianParticle.setW(w,m): wScale is NaN\n"+
+                                     "w, trackData[IW][m] = "+w+", "+trackData[IW][m]+"\n"+
+                                     "wScale = "+wScale;
+                        throw new java.lang.ArithmeticException(msg);
+                    }
+                }
             } else {
                 trackData[IW][m] = 0;
             }
             if (debug) {
                 logger.info("in LagrangianParticle.setW(w,m)");
-                logger.info("w, wScale, tw = "+w+", "+wScale+", "+trackData[IW][m]);
+                logger.info("w, wScale, trackData[IW][m] = "+w+", "+wScale+", "+trackData[IW][m]);
             }
         } else {
-            trackData[IW][m] = 0;
+            String msg = "Problem in LagrangianParticle.setW(w,m) with w="+w;
+            logger.warning(msg);
+            throw new java.lang.ArithmeticException(msg);
         }
     }
 

@@ -133,6 +133,10 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private String vectorFldX = null;
     /** name of vector field y component to map */
     private String vectorFldY = null;
+    /** flag for 3d vector field x component */
+    private Boolean vectorFldXis3D = null;
+    /** flag for 3d vector field y component */
+    private Boolean vectorFldYis3D = null;
     /** feature collection for the scalar map layer */
     private FeatureCollection vectorFC = null;
     /**style for the scalar map layer */
@@ -140,8 +144,10 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     /** the vector map layer */
     private MapLayer vectorLayer    = null;
 
-    /** name of scalar field to map */
+    /** name of scalar field to map as a horizontal gradient */
     private String horizGradFld = null;
+    /** flag for 3d scalar field to map as horizontal gradient */
+    private Boolean horizGradFldis3D = null;
     /** feature collection for the scalar map layer */
     private FeatureCollection horizGradFC = null;
     /**style for the horizontal gradient map layer */
@@ -199,6 +205,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
         bgScalarDepthButtons = new javax.swing.ButtonGroup();
         bgVectorDepthButtons = new javax.swing.ButtonGroup();
+        bgHGradDepthButtons = new javax.swing.ButtonGroup();
         jfbDataset = new com.wtstockhausen.beans.swing.JFilenameBean();
         jpNavigation = new javax.swing.JPanel();
         jbNext = new javax.swing.JButton();
@@ -575,6 +582,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         jpVectorDepthSelector.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jpVectorDepthSelector.border.title"))); // NOI18N
 
         bgVectorDepthButtons.add(jrbVectorK);
+        jrbVectorK.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(jrbVectorK, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbVectorK.text")); // NOI18N
         jrbVectorK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbVectorK.toolTipText")); // NOI18N
 
@@ -798,7 +806,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
         jpHGradDepthSelector.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jpHGradDepthSelector.border.title"))); // NOI18N
 
-        bgVectorDepthButtons.add(jrbHGradK);
+        bgHGradDepthButtons.add(jrbHGradK);
         jrbHGradK.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(jrbHGradK, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbHGradK.text")); // NOI18N
         jrbHGradK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbHGradK.toolTipText")); // NOI18N
@@ -806,7 +814,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
         jspHGradK.setModel(new javax.swing.SpinnerNumberModel(1, 0, null, 1));
         jspHGradK.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jspHGradK.toolTipText")); // NOI18N
 
-        bgVectorDepthButtons.add(jrbHGradDepth);
+        bgHGradDepthButtons.add(jrbHGradDepth);
         org.openide.awt.Mnemonics.setLocalizedText(jrbHGradDepth, org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbHGradDepth.text")); // NOI18N
         jrbHGradDepth.setToolTipText(org.openide.util.NbBundle.getMessage(PhysicalEnvironmentViewerTopComponent.class, "PhysicalEnvironmentViewerTopComponent.jrbHGradDepth.toolTipText")); // NOI18N
 
@@ -1219,6 +1227,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jcbVectorXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVectorXActionPerformed
         if (doEvents) {
             logger.info("starting jcbVectorXActionPerformed(): "+evt.toString() );
+            vectorFldXis3D = null;//set null in case of problems with selected/typed field name
             ModelGrid3D grid3D = romsGI.getGrid3D();
             if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
@@ -1234,6 +1243,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                         md = grid3D.getGridField(strFld);
                         hasK = false;
                     }
+                    vectorFldXis3D = hasK;
                     this.jpVectorDepthSelector.setEnabled(hasK);
                     this.jpVectorDepthSelector.setVisible(hasK);
                     if (hasK) {
@@ -1264,6 +1274,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     private void jcbVectorYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbVectorYActionPerformed
         if (doEvents) {
             logger.info("starting jcbVectorYActionPerformed(): "+evt.toString() );
+            vectorFldYis3D = null;//set null in case of problems with selected/typed field name
             ModelGrid3D grid3D = romsGI.getGrid3D();
             if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
@@ -1279,6 +1290,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                         md = grid3D.getGridField(strFld);
                         hasK = false;
                     }
+                    vectorFldYis3D = hasK;
                     this.jpVectorDepthSelector.setEnabled(hasK);
                     this.jpVectorDepthSelector.setVisible(hasK);
                     if (hasK) {
@@ -1331,6 +1343,8 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
 
     private void jcbHGradFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbHGradFieldActionPerformed
         if (doEvents) {
+            logger.info("starting jcbHGradFieldActionPerformed(): "+evt.toString() );
+            horizGradFldis3D = null;
             ModelGrid3D grid3D = romsGI.getGrid3D();
             if ((grid3D==null)||!grid3D.hasVerticalGridInfo()) return;
             try {
@@ -1345,8 +1359,9 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                         md = grid3D.getGridField(strFld);
                         hasK = false;
                     }
-                    this.jpHGradDepthSelector.setEnabled(hasK);
-                    this.jpHGradDepthSelector.setVisible(hasK);
+                    horizGradFldis3D = hasK;
+                    jpHGradDepthSelector.setEnabled(hasK);
+                    jpHGradDepthSelector.setVisible(hasK);
                     if (hasK) {
                         int vertType = md.getVertPosType();
                         SpinnerNumberModel nm = (SpinnerNumberModel) jspHGradK.getModel();
@@ -1665,67 +1680,71 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
             MapDataInterfaceVectorBase hgmd;
             //remove last map layer
             if (horizGradLayer!=null) tcMapViewer.removeGISLayer(horizGradLayer);
-            //create new vector style, if required
-            boolean wasNull = false;
-            //create feature collection
-            FeatureCollection fc;
-            if (jpHGradDepthSelector.isVisible()) {
-                //ModelData is 3D
-                hgmd = new MapDataGradientHorizontal3D(md,i3d,cal.getDate());
-                logger.info("created hgmd3D");
-                if (horizGradStyle==null){
-                    logger.info("--Creating a new horizontal gradient style");
-                    FeatureType ft = hgmd.getFeatureType();
-                    horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
-                    hgCustomizer.setObject(horizGradStyle);
-                    hgCustomizer.repaint();
-                    wasNull = true;
-                }
-                hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
-                logger.info("--set style on hgmd3D");
-                if (jrbHGradK.isSelected()) {
-                    int k = ((Integer)jspHGradK.getValue());
-                    fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(k);
-                    logger.info("--created feature collection on layer "+k);
+            if (horizGradFldis3D!=null){
+                //create new vector style, if required
+                boolean wasNull = false;
+                //create feature collection
+                FeatureCollection fc;
+                if (horizGradFldis3D) {
+                    //ModelData is 3D
+                    hgmd = new MapDataGradientHorizontal3D(md,i3d,cal.getDate());
+                    logger.info("created hgmd3D");
+                    if (horizGradStyle==null){
+                        logger.info("--Creating a new horizontal gradient style");
+                        FeatureType ft = hgmd.getFeatureType();
+                        horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
+                        hgCustomizer.setObject(horizGradStyle);
+                        hgCustomizer.repaint();
+                        wasNull = true;
+                    }
+                    hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
+                    logger.info("--set style on hgmd3D");
+                    if (jrbHGradK.isSelected()) {
+                        int k = ((Integer)jspHGradK.getValue());
+                        fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(k);
+                        logger.info("--created feature collection on layer "+k);
+                    } else {
+                        double d = Double.parseDouble(jtfHGradDepth.getText());
+                        fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(-d);
+                        logger.info("--created feature collection at depth "+d);
+                    }
                 } else {
-                    double d = Double.parseDouble(jtfHGradDepth.getText());
-                    fc = ((MapDataGradientHorizontal3D)hgmd).createFeatureCollection(-d);
-                    logger.info("--created feature collection at depth "+d);
+                    //ModelData is 2D
+                    hgmd = new MapDataGradientHorizontal2D(md,cal.getDate());
+                    logger.info("created hgmd2D");
+                    if (horizGradStyle==null){
+                        logger.info("--Creating a new horizontal gradient style");
+                        FeatureType ft = hgmd.getFeatureType();
+                        horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
+                        hgCustomizer.setObject(horizGradStyle);
+                        hgCustomizer.repaint();
+                        wasNull = true;
+                    }
+                    hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
+                    logger.info("--set style on hgmd2D");
+                    fc = ((MapDataGradientHorizontal2D)hgmd).createFeatureCollection();
+                    logger.info("--created feature collection");
+                }
+                double mx = hgmd.getMax();
+                NumberFormat frmt = NumberFormat.getNumberInstance();
+                frmt.setMinimumFractionDigits(0);
+                frmt.setMaximumFractionDigits(10);
+                jtfHGradMinMag.setText(frmt.format(hgmd.getMin()));
+                jtfHGradMaxMag.setText(frmt.format(hgmd.getMax()));
+                if (wasNull||jchkUpdateStyleForHGrad.isSelected()){
+                    horizGradStyle.setMin(hgmd.getMin());//must be done AFTER feature collection is created
+                    horizGradStyle.setMax(hgmd.getMax());
+                }
+                horizGradStyle.updateStyle();
+                //create new layer
+                horizGradLayer = new DefaultMapLayer(fc,horizGradStyle,hgmd.getName());
+                if (horizGradLayer!=null) {
+                    tcMapViewer.addGISLayer(horizGradLayer);//paint on top
+                } else {
+                    logger.severe("Could not create horizGradLayer");
                 }
             } else {
-                //ModelData is 2D
-                hgmd = new MapDataGradientHorizontal2D(md,cal.getDate());
-                logger.info("created hgmd2D");
-                if (horizGradStyle==null){
-                    logger.info("--Creating a new horizontal gradient style");
-                    FeatureType ft = hgmd.getFeatureType();
-                    horizGradStyle = new VectorStyle(ft,"Geometry","magnitude","angle");
-                    hgCustomizer.setObject(horizGradStyle);
-                    hgCustomizer.repaint();
-                    wasNull = true;
-                }
-                hgmd.setStyle(horizGradStyle);//must set this before creating feature collection
-                logger.info("--set style on hgmd2D");
-                fc = ((MapDataGradientHorizontal2D)hgmd).createFeatureCollection();
-                logger.info("--created feature collection");
-            }
-            double mx = hgmd.getMax();
-            NumberFormat frmt = NumberFormat.getNumberInstance();
-            frmt.setMinimumFractionDigits(0);
-            frmt.setMaximumFractionDigits(10);
-            jtfHGradMinMag.setText(frmt.format(hgmd.getMin()));
-            jtfHGradMaxMag.setText(frmt.format(hgmd.getMax()));
-            if (wasNull||jchkUpdateStyleForHGrad.isSelected()){
-                horizGradStyle.setMin(hgmd.getMin());//must be done AFTER feature collection is created
-                horizGradStyle.setMax(hgmd.getMax());
-            }
-            horizGradStyle.updateStyle();
-            //create new layer
-            horizGradLayer = new DefaultMapLayer(fc,horizGradStyle,hgmd.getName());
-            if (horizGradLayer!=null) {
-                tcMapViewer.addGISLayer(horizGradLayer);//paint on top
-            } else {
-                logger.severe("Could not create horizGradLayer");
+                logger.info("No horizGradLayer to add to map");
             }
         } catch (IOException ex) {
             logger.severe(ex.getMessage());
@@ -1754,77 +1773,86 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
                 logger.info("Removed vector layer to map: "+vectorLayer.getTitle());
                 vectorLayer=null;
             }
-            //create new vector style, if required
-            boolean wasNull = false;
-            //create feature collection
-            FeatureCollection fc;
-            if (jpVectorDepthSelector.isVisible()) {
-                //ModelData is 3D
-                vmd = new MapDataVector3D(strX,strY,i3d,cal.getDate());
-                logger.info("created 3D vmd");
-                if (vectorStyle==null){
-                    logger.info("Creating a new vector style");
-                    FeatureType ft = vmd.getFeatureType();
-                    vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
-                    vfCustomizer.setObject(vectorStyle);
-                    vfCustomizer.repaint();
-                    wasNull = true;
-                } else {
-                    if (vectorStyle.mustUpdateStyle()){
-                        logger.info("Updating existing vector style");
-                        vectorStyle.updateStyle();
-                    }
-                }
-                vmd.setStyle(vectorStyle);//must set this before creating feature collection
-                logger.info("set style on vmd");
-                if (jrbVectorK.isSelected()) {
-                    int k = ((Integer)jspVectorK.getValue()).intValue();
-                    logger.info("creating vector feature collection for vertical grid "+k);
-                    fc = ((MapDataVector3D)vmd).createFeatureCollection(k);
-                } else {
-                    double d = Double.parseDouble(jtfVectorDepth.getText());
-                    logger.info("creating vector feature collection for depth "+d);
-                    fc = ((MapDataVector3D)vmd).createFeatureCollection(-d);
-                }
-                if (fc==null) logger.severe("updateVectorMapLayer(): Could not create feature collection from MapDataVector3D");
-            } else {
-                //ModelData is 2D
-                vmd = new MapDataVector2D(strX,strY,cal.getDate());
-                logger.info("created 2D vmd");
-                if (vectorStyle==null){
-                    logger.info("Creating a new vector style");
-                    FeatureType ft = vmd.getFeatureType();
-                    vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
-                    vfCustomizer.setObject(vectorStyle);
-                    vfCustomizer.repaint();
-                    wasNull = true;
-                } else {
-                    if (vectorStyle.mustUpdateStyle()){
-                        logger.info("Updating existing vector style");
-                        vectorStyle.updateStyle();
-                    }
-                }
-                vmd.setStyle(vectorStyle);//must set this before creating feature collection
-                logger.info("set style on vmd");
-                logger.info("creating 2D vector feature collection");
-                fc = ((MapDataVector2D)vmd).createFeatureCollection();
-                if (fc==null) logger.severe("updateVectorMapLayer(): Could not create feature collection from MapDataVector2D");
+            if (vectorFldXis3D!=vectorFldYis3D){
+                logger.info("Cannot map vector fields: fields are incompatible");
+                return;
             }
-            jtfMinVel.setText(frmt.format(vmd.getMin()));
-            jtfMaxVel.setText(frmt.format(vmd.getMax()));
-            if (wasNull||jchkUpdateStyleForVF.isSelected()){
-                vectorStyle.setMin(vmd.getMin());//must be done AFTER feature collection is created
-                vectorStyle.setMax(vmd.getMax());
-            }
-            vectorStyle.updateStyle();
-            //create new layer
-            vectorLayer = new DefaultMapLayer(fc,vectorStyle,vmd.getName());
-            if (vectorLayer!=null) {
-                logger.info("Adding vector layer to map: "+vectorLayer.getTitle());
-                tcMapViewer.addGISLayer(vectorLayer);//paint on top
-                logger.info("Added vector layer to map: "+vectorLayer.getTitle());
+            if ((vectorFldXis3D!=null)){
+                //create new vector style, if required
+                logger.info("Starting to map vector fields");
+                boolean wasNull = false;
+                //create feature collection
+                FeatureCollection fc;
+                if (vectorFldXis3D) {
+                    //ModelData is 3D
+                    vmd = new MapDataVector3D(strX,strY,i3d,cal.getDate());
+                    logger.info("created 3D vmd");
+                    if (vectorStyle==null){
+                        logger.info("Creating a new vector style");
+                        FeatureType ft = vmd.getFeatureType();
+                        vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
+                        vfCustomizer.setObject(vectorStyle);
+                        vfCustomizer.repaint();
+                        wasNull = true;
+                    } else {
+                        if (vectorStyle.mustUpdateStyle()){
+                            logger.info("Updating existing vector style");
+                            vectorStyle.updateStyle();
+                        }
+                    }
+                    vmd.setStyle(vectorStyle);//must set this before creating feature collection
+                    logger.info("set style on vmd");
+                    if (jrbVectorK.isSelected()) {
+                        int k = ((Integer)jspVectorK.getValue()).intValue();
+                        logger.info("creating vector feature collection for vertical grid "+k);
+                        fc = ((MapDataVector3D)vmd).createFeatureCollection(k);
+                    } else {
+                        double d = Double.parseDouble(jtfVectorDepth.getText());
+                        logger.info("creating vector feature collection for depth "+d);
+                        fc = ((MapDataVector3D)vmd).createFeatureCollection(-d);
+                    }
+                    if (fc==null) logger.severe("updateVectorMapLayer(): Could not create feature collection from MapDataVector3D");
+                } else {
+                    //ModelData is 2D
+                    vmd = new MapDataVector2D(strX,strY,cal.getDate());
+                    logger.info("created 2D vmd");
+                    if (vectorStyle==null){
+                        logger.info("Creating a new vector style");
+                        FeatureType ft = vmd.getFeatureType();
+                        vectorStyle = new VectorStyle(ft,"Geometry","speed","angle");
+                        vfCustomizer.setObject(vectorStyle);
+                        vfCustomizer.repaint();
+                        wasNull = true;
+                    } else {
+                        if (vectorStyle.mustUpdateStyle()){
+                            logger.info("Updating existing vector style");
+                            vectorStyle.updateStyle();
+                        }
+                    }
+                    vmd.setStyle(vectorStyle);//must set this before creating feature collection
+                    logger.info("set style on vmd");
+                    logger.info("creating 2D vector feature collection");
+                    fc = ((MapDataVector2D)vmd).createFeatureCollection();
+                    if (fc==null) logger.severe("updateVectorMapLayer(): Could not create feature collection from MapDataVector2D");
+                }
+                jtfMinVel.setText(frmt.format(vmd.getMin()));
+                jtfMaxVel.setText(frmt.format(vmd.getMax()));
+                if (wasNull||jchkUpdateStyleForVF.isSelected()){
+                    vectorStyle.setMin(vmd.getMin());//must be done AFTER feature collection is created
+                    vectorStyle.setMax(vmd.getMax());
+                }
+                vectorStyle.updateStyle();
+                //create new layer
+                vectorLayer = new DefaultMapLayer(fc,vectorStyle,vmd.getName());
+                if (vectorLayer!=null) {
+                    logger.info("Adding vector layer to map: "+vectorLayer.getTitle());
+                    tcMapViewer.addGISLayer(vectorLayer);//paint on top
+                    logger.info("Added vector layer to map: "+vectorLayer.getTitle());
+                } else {
+                    logger.severe("updateVectorMapLayer(): vectorLayer = null");
+                }
             } else {
-                logger.severe("updateVectorMapLayer(): vectorLayer = null");
+                logger.info("Not adding a vector layer: field names may be mis-specified");
             }
         } catch (IOException ex) {
             logger.severe("updateVectorMapLayer(): Error updating vector layer: could not read file!");
@@ -1911,6 +1939,7 @@ public final class PhysicalEnvironmentViewerTopComponent extends TopComponent im
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.ButtonGroup bgHGradDepthButtons;
     private javax.swing.ButtonGroup bgScalarDepthButtons;
     private javax.swing.ButtonGroup bgVectorDepthButtons;
     private wts.GIS.styling.VectorStyleCustomizer hgCustomizer;
