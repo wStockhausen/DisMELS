@@ -23,7 +23,6 @@ public class Interpolator3D extends Interpolator2D {
     public static boolean interpolateLikeROMS = false;
     
     PhysicalEnvironment pe;
-    ModelGrid3D grid;
     double zPos;
     int    K,k1,k2,N;
     double r1,r2;
@@ -31,6 +30,18 @@ public class Interpolator3D extends Interpolator2D {
     double s112,s122,s212,s222;
     /** logger for class */
     private static final Logger logger = Logger.getLogger(Interpolator3D.class.getName());
+    
+    /**
+     * Creates a new instance of Interpolator3D
+     *
+     */
+    public Interpolator3D() {
+        super();
+        logger.info("Starting Interpolator3D()");
+        this.pe    = null;
+        if (interpolateLikeROMS) logger.info("\n\nInterploator3D:  Warning: likeOldROMS is true!!\n\n");
+        logger.info("Finished Interpolator3D()");
+    }
 
     /**
      * Creates a new instance of Interpolator3D
@@ -38,32 +49,21 @@ public class Interpolator3D extends Interpolator2D {
      * @param pe--PhysicalEnvironment instance to use for interpolations
      */
     public Interpolator3D(PhysicalEnvironment pe) {
-        super(pe.getGrid());
-        this.pe = pe;
-        this.grid = pe.getGrid();
+        super();
+        logger.info("Starting Interpolator3D(pe)");
+        this.pe    = pe;
         if (interpolateLikeROMS) logger.info("\n\nInterploator3D:  Warning: likeOldROMS is true!!\n\n");
+        logger.info("Finished Interpolator3D(pe)");
     }
     
     /**
-     * Creates a new instance of Interpolator3D
-     *
-     * @param pe--PhysicalEnvironment instance to use for interpolations
+     * Returns the model grid (via the GlobalInfo).
+     * 
+     * @return -- ModelGrid3D object
      */
-    public Interpolator3D(ModelGrid3D grid) {
-        super(grid);
-        this.pe   = null;
-        this.grid = grid;
-        if (interpolateLikeROMS) logger.info("\n\nInterploator3D:  Warning: likeOldROMS is true!!\n\n");
-    }
-
-    /**
-     * Returns the ModelGrid3D object used to define the 3d geometry 
-     * for interpolations.
-     *
-     * @return--grid ModelGrid3D object
-     */
-    public ModelGrid3D getGrid() {
-        return grid;
+    @Override
+    public ModelGrid3D getGrid(){
+        return GlobalInfo.getInstance().getGrid3D();
     }
 
     /**
@@ -81,9 +81,7 @@ public class Interpolator3D extends Interpolator2D {
      * @param PhysicalEnvironment object
      */
     public void setPhysicalEnvironment(PhysicalEnvironment pe) {
-        super.setGrid(pe.getGrid());
         this.pe = pe;
-        grid = pe.getGrid();
         if (interpolateLikeROMS) logger.info("\n\nInterploator3D:  Warning: likeOldROMS is true!!\n\n");
     }
     
@@ -112,7 +110,7 @@ public class Interpolator3D extends Interpolator2D {
     
     /**
      * Interpolates a 3D model field (with appropriate mask) to the given position.
-     * @param -- pos position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
+     * @param pos -- position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
      * @param modelField -- name of model field to interpolate
      * @param interpType -- flag to interpolate values directly (=INTERP_VAL) or 
      *                      to interpolate "slopes" (=INTERP_SLOPE)
@@ -128,9 +126,9 @@ public class Interpolator3D extends Interpolator2D {
     
     /**
      * Interpolates a 3D model field (with appropriate mask) to the given position.
-     * @param -- pos position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
+     * @param pos -- position vector [x,y,z] in grid units (0<x<L,0<y<M,0<z<N)
      * @param modelField -- name of model field to interpolate
-     * @param modelField -- name of mask field for interpolation
+     * @param maskField -- name of mask field for interpolation
      * @param interpType -- flag to interpolate values directly (=INTERP_VAL) or 
      *                      to interpolate "slopes" (=INTERP_SLOPE)
      * @return value of field at given position or NaN
@@ -144,20 +142,28 @@ public class Interpolator3D extends Interpolator2D {
             throw new UnsupportedOperationException("Interpolator3D.interpolateValue(double[],String,String,int) cannot be used because pe is null!!");
         }
         //set interpolation field
-        if (pos.length<3) {
-            //use the function in Interpolator2D
-            v = super.interpolateValue(pos, modelField, maskField, interpType);
-            return v;
-        }
+//        if (pos.length<3) {
+//            //use the function in Interpolator2D
+//            v = super.interpolateValue(pos, modelField, maskField, interpType);
+//            return v;
+//        }
+//        ModelData mdp = pe.getField(modelField);
+//        if (mdp.getRank()<3){
+//            //try 2d interpolator again
+//            v = super.interpolateValue(pos, modelField, maskField, interpType);
+//            return v;
+//        }
+//        
+//        MaskData  mkp = (MaskData) GlobalInfo.getInstance().getGrid2D().getGridField(maskField);
+                  
         ModelData mdp = pe.getField(modelField);
-        if (mdp.getRank()<3){
-            //try 2d interpolator again
-            v = super.interpolateValue(pos, modelField, maskField, interpType);
+        MaskData  mkp = (MaskData) GlobalInfo.getInstance().getGrid2D().getGridField(maskField);
+        if ((pos.length<3)||(mdp.getRank()<3)) {
+            //use the function in Interpolator2D
+            v = super.interpolateValue2D(pos, mdp, mkp, interpType);
             return v;
         }
         
-        MaskData  mkp = grid.getGridMask(maskField);
-                  
         //interpolate field
         v = interpolateValue3D(pos,mdp,mkp,interpType);
         return v;
@@ -176,7 +182,7 @@ public class Interpolator3D extends Interpolator2D {
      */
     public double interpolateValue3D(double[] pos, 
                                      ModelData mdp, 
-                                     ModelData maskp,
+                                     MaskData maskp,
                                      int interpType) throws ArrayIndexOutOfBoundsException {
         if (pos.length<3) {
             //use the function in Interpolator2D
@@ -228,11 +234,11 @@ public class Interpolator3D extends Interpolator2D {
         Mm = md.getMm();
         //interpolate value using appropriate grid
         if (md.getHorzPosType()==ModelTypes.HORZ_POSTYPE_RHO) 
-            {interpOnRhoColumns();} else
+            {interpOnRhoColumns(GlobalInfo.getInstance().getGrid3D());} else
         if (md.getHorzPosType()==ModelTypes.HORZ_POSTYPE_U)   
-            {interpOnUColumns();} else
+            {interpOnUColumns(GlobalInfo.getInstance().getGrid3D());} else
         if (md.getHorzPosType()==ModelTypes.HORZ_POSTYPE_V)   
-            {interpOnVColumns();} 
+            {interpOnVColumns(GlobalInfo.getInstance().getGrid3D());} 
             
 //        if (debug && halo) debug();
         
@@ -244,7 +250,7 @@ public class Interpolator3D extends Interpolator2D {
         return v;
     }
 
-    private void interpOnRhoColumns() throws ArrayIndexOutOfBoundsException {
+    private void interpOnRhoColumns(ModelGrid3D grid) throws ArrayIndexOutOfBoundsException {
         if (debug) logger.info("Interpolating on Rho columns");
         int Ir = (int) Math.floor(xPos);
         int Jr = (int) Math.floor(yPos);
@@ -352,7 +358,7 @@ public class Interpolator3D extends Interpolator2D {
         }
     }
     
-    private void interpOnUColumns() throws ArrayIndexOutOfBoundsException {
+    private void interpOnUColumns(ModelGrid3D grid) throws ArrayIndexOutOfBoundsException {
         if (debug) logger.info("Interpolating on U columns");
         int Iu = (int) Math.floor(xPos+0.5);
         int Ju = (int) Math.floor(yPos);
@@ -416,6 +422,7 @@ public class Interpolator3D extends Interpolator2D {
         }
         if (Double.isNaN(v)) {
             logger.info("Interpolator3D: interpolated U-cell NaN value for field "+md.getName()+"\n"
+                              +"\txPos = "+xPos+", yPos = "+yPos+", zPos = "+zPos+"\n"
                               +"\tp1 = "+p1+", q1 = "+q1+", r1 = "+r1+"\n"
                               +"\tp2 = "+p2+", q2 = "+q2+", r2 = "+r2+"\n"
                               +"\tmask was "+m12+", "+m22+"\n"
@@ -432,7 +439,7 @@ public class Interpolator3D extends Interpolator2D {
         }
     }
 
-    private void interpOnVColumns() throws ArrayIndexOutOfBoundsException {
+    private void interpOnVColumns(ModelGrid3D grid) throws ArrayIndexOutOfBoundsException {
         if (debug) logger.info("Interpolating on V columns");
         int Iv = (int) Math.floor(xPos);
         int Jv = (int) Math.floor(yPos+0.5);
@@ -496,6 +503,7 @@ public class Interpolator3D extends Interpolator2D {
 
         if (Double.isNaN(v)) {
             logger.info("Interpolator3D: interpolated V-cell NaN value for field "+md.getName()+"\n"
+                              +"\txPos = "+xPos+", yPos = "+yPos+", zPos = "+zPos+"\n"
                               +"\tp1 = "+p1+", q1 = "+q1+", r1 = "+r1+"\n"
                               +"\tp2 = "+p2+", q2 = "+q2+", r2 = "+r2+"\n"
                               +"\tmask was "+m12+", "+m22+"\n"
@@ -525,6 +533,7 @@ public class Interpolator3D extends Interpolator2D {
      *@return K--vertical grid corrdinate (0<=K<=N; if z<-Bathymetric Depth or z>Sea Surface Height, K = NaN)
      */
     public double calcKfromZ(double I, double J, double z) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double K = -1;
         int N = grid.getN();
         double[] pos = new double[] {I,J};
@@ -553,6 +562,7 @@ public class Interpolator3D extends Interpolator2D {
      *@param K--vertical grid position.
      */
     public double calcZfromK(double I, double J, double K) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double z = 0;
         double[] pos = new double[] {I,J};
         double bd = interpolateBathymetricDepth(pos);
@@ -579,25 +589,43 @@ public class Interpolator3D extends Interpolator2D {
      * scale the physical vertical velocity to grid units.
      *
      * @return wScale such that w(grid units) = w(physical units)/wScale.
+     * 
      * @param pos-- double[] with {xi,eta,K) where xi, eta, K are in grid coordinates
-     * @param delz--double = W*dT in physical units (m)
+     * @param delz--double = W*dt in physical units (m)
+     * 
+     * Note that wScale will be -/+ infinity if \cr
+     *   pos[2]=0 and delz<0 or \cr
+     *   pos[2]=N and delz>0 \cr
+     * but that is ok.
      */
     public double calcWscale(double[] pos, double delz) throws ArrayIndexOutOfBoundsException {
-        double K0 = pos[2];
-        double z0 = calcZfromK(pos[0],pos[1],pos[2]);
-        double z1 = z0+delz;
-        double K1 = calcKfromZ(pos[0],pos[1],z1);
-        v  = delz/(K1-K0);
-        if (debug||Double.isNaN(v)) {
-            logger.info("calcWscale: "+v);
-            logger.info("\tpos = "+pos[0]+", "+pos[1]+", "+pos[2]+", "+delz);
-            logger.info("\tz1: "+z1+", z0: "+z0+", K1= "+K1+" K0 = "+K0);
+        double wScale  = 1.0;//default if delz=0
+        if (Math.abs(delz)>0) {
+            double K0 = pos[2];
+            double z0 = calcZfromK(pos[0],pos[1],pos[2]);
+            double z1 = z0+delz;
+            double K1 = calcKfromZ(pos[0],pos[1],z1);
+            wScale = delz/(K1-K0);
+            if (debug||(Double.isNaN(wScale))) {
+                logger.info("I3D.calcWscale: "+wScale);
+                logger.info("\tpos = "+pos[0]+", "+pos[1]+", "+pos[2]+", "+delz);
+                logger.info("\tz1: "+z1+", z0: "+z0+", K1= "+K1+" K0 = "+K0);
+            }
+        } else {
+            //do nothing (wScale=1)
+            if (debug){
+                logger.info("I3D.calcWscale: "+wScale);
+                logger.info("\tpos = "+pos[0]+", "+pos[1]+", "+pos[2]+", "+delz);
+            }
         }
-        return v;
+        return wScale;
     }
     
     /**
      * Calculate the physical depth corresponding to the input grid position.
+     * 
+     * The physical depth is measured from the equilibrium sea surface, with
+     * z increasing upwards (i.e., z = -d, where d increases with depth).
      *
      * @return--physical depth corresponding to vertical grid position.
      * @param pos--position vector in grid units (0<I<L,0<J<M,0<K<N)
@@ -606,6 +634,7 @@ public class Interpolator3D extends Interpolator2D {
         //initialize values
         initializeParameters();
         
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         N = grid.getN();
         K = (int) Math.floor(pos[2]);
         k2 = Math.min(Math.max(K+1,0),N);
@@ -693,29 +722,76 @@ public class Interpolator3D extends Interpolator2D {
    }
 
     public double interpolateTemperature(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double t = interpolateValue3D(pos,pe.getField("temp"),grid.mask_rho,INTERP_VAL);
         return t;
     }
 
     public double interpolateSalinity(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double s = interpolateValue3D(pos,pe.getField("salt"),grid.mask_rho,INTERP_VAL);
         return s;
     }
 
     public double interpolateSSH(double[] pos) throws ArrayIndexOutOfBoundsException {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         double s = interpolateValue2D(pos,pe.getField("zeta"),grid.mask_rho,INTERP_VAL);
         return s;
     }
 
+    /**
+     * Calculates the horizontal gradient of a model field and returns the results
+     * in physical units (i.e., [field units]/m), not grid units.
+     * 
+     * @param pos - position at which to calculate gradient
+     * @param modelField - "internal" DisMElS name of field to use
+     * @param interpType - interpolation type (use one of the Interpolator2D.INTERP_ constants)
+     * 
+     * @return 
+     */
+    @Override
+    public double[] calcHorizGradient(double[] pos, String modelField, int interpType){
+        ModelData md = pe.getField(modelField);
+        if (md==null) md = GlobalInfo.getInstance().getGrid3D().getGridField(modelField);
+        String maskField = GlobalInfo.getInstance().getMaskForField(modelField);
+        MaskData mk = (MaskData) GlobalInfo.getInstance().getGrid3D().getGridField(maskField);
+        return calcHorizGradient(pos,md,mk,interpType);
+    }
+    
     /**
      * Returns true if position (in grid coordinates) is within the given tolerance
      * of the edge of the model grid (regarded as [1:Lm, 1:Mm]).
      * 
      * @param pos         - position in grid coordinates to test
      * @param tolGridEdge - max distance in grid coordinates that results in true
+     * 
      * @return            - true or false
      */
     public boolean isAtGridEdge(double[] pos, double tolGridEdge) {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         return ((pos[0]<tolGridEdge)||((grid.getLm()-tolGridEdge)<pos[0])||(pos[1]<tolGridEdge)||((grid.getMm()-tolGridEdge)<pos[1]));
+    }
+
+    /**
+     * Returns a grid cell id string for an input position, accounting for
+     * location relative to the grid edge.
+     * 
+     * @param pos         - position in grid coordinates to test
+     * @param tolGridEdge - max distance in grid coordinates that results in true
+     * @return            - grid cell id string
+     */
+    public String getGridCellID(double[] pos, double tolGridEdge) {
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
+        
+        String gx = ""+Math.round(pos[0]);
+        if ((pos[0]<tolGridEdge)) gx = "-0";
+        else if ((grid.getLm()-tolGridEdge)<pos[0]) gx = "+"+Math.round(pos[0]);
+        
+        String gy = ""+Math.round(pos[1]);
+        if ((pos[1]<tolGridEdge)) gy = "0-"; else
+        if ((grid.getMm()-tolGridEdge)<pos[1]) gy = Math.round(pos[1])+"+";
+        
+        String s = gx + "_" + gy;
+        return s;
     }
 }

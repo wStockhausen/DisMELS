@@ -6,6 +6,8 @@
     </Component>
     <Component class="javax.swing.ButtonGroup" name="bgVectorDepthButtons">
     </Component>
+    <Component class="javax.swing.ButtonGroup" name="bgHGradDepthButtons">
+    </Component>
   </NonVisualComponents>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="1"/>
@@ -22,9 +24,9 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" attributes="0">
+          <Group type="102" alignment="0" attributes="0">
               <Component id="jpNavigation" min="-2" max="-2" attributes="1"/>
-              <EmptySpace min="0" pref="265" max="32767" attributes="0"/>
+              <EmptySpace min="0" pref="54" max="32767" attributes="0"/>
           </Group>
           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
@@ -51,19 +53,19 @@
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" pref="51" max="-2" attributes="0"/>
               <Component id="jpNavigation" min="-2" max="-2" attributes="0"/>
-              <EmptySpace pref="778" max="32767" attributes="0"/>
+              <EmptySpace pref="767" max="32767" attributes="0"/>
           </Group>
           <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
                   <Component id="jfbDataset" min="-2" pref="48" max="-2" attributes="0"/>
-                  <EmptySpace min="0" pref="806" max="32767" attributes="0"/>
+                  <EmptySpace min="0" pref="799" max="32767" attributes="0"/>
               </Group>
           </Group>
           <Group type="103" rootIndex="2" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace min="-2" pref="82" max="-2" attributes="0"/>
                   <Component id="jpOceanTime" min="-2" pref="76" max="-2" attributes="1"/>
-                  <EmptySpace pref="696" max="32767" attributes="0"/>
+                  <EmptySpace pref="689" max="32767" attributes="0"/>
               </Group>
           </Group>
           <Group type="103" rootIndex="3" groupAlignment="0" attributes="0">
@@ -105,7 +107,9 @@
                   <Component id="jbPrev" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jbNext" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="14" max="32767" attributes="0"/>
+                  <EmptySpace pref="122" max="32767" attributes="0"/>
+                  <Component id="jbResetAll" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -115,6 +119,7 @@
                   <Component id="jbUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jbPrev" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jbNext" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jbResetAll" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -182,6 +187,19 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbUpdateActionPerformed"/>
           </Events>
         </Component>
+        <Component class="javax.swing.JButton" name="jbResetAll">
+          <Properties>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="wts/roms/topcomponents/PhysicalEnvironmentViewer/Bundle.properties" key="PhysicalEnvironmentViewerTopComponent.jbResetAll.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="wts/roms/topcomponents/PhysicalEnvironmentViewer/Bundle.properties" key="PhysicalEnvironmentViewerTopComponent.jbResetAll.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbResetAllActionPerformed"/>
+          </Events>
+        </Component>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JPanel" name="jpOceanTime">
@@ -202,7 +220,7 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jspTime" min="-2" pref="51" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jtfTime" pref="401" max="32767" attributes="0"/>
+                  <Component id="jtfTime" pref="405" max="32767" attributes="0"/>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
               </Group>
               <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
@@ -349,40 +367,40 @@
                       <Component id="jbScalarColorScale" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="sfCustomizer" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="260" max="32767" attributes="0"/>
+                      <EmptySpace pref="252" max="32767" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="jcbScalarVar" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="624" max="32767" attributes="0"/>
+                          <EmptySpace min="0" pref="604" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <Group type="103" rootIndex="2" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
                           <Component id="jpScalarDepthSelector" min="-2" max="-2" attributes="1"/>
-                          <EmptySpace pref="539" max="32767" attributes="0"/>
+                          <EmptySpace pref="524" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <Group type="103" rootIndex="3" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="75" max="-2" attributes="0"/>
                           <Component id="jchkUpdateStyleForSF" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="546" max="32767" attributes="0"/>
+                          <EmptySpace pref="533" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <Group type="103" rootIndex="4" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="48" max="-2" attributes="0"/>
                           <Component id="jchkShowSF" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="573" max="32767" attributes="0"/>
+                          <EmptySpace pref="560" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <Group type="103" rootIndex="5" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="115" max="-2" attributes="0"/>
                           <Component id="jpScalarRange" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="484" max="32767" attributes="0"/>
+                          <EmptySpace pref="470" max="32767" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -767,6 +785,7 @@
                     <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
                       <ComponentRef name="bgVectorDepthButtons"/>
                     </Property>
+                    <Property name="selected" type="boolean" value="true"/>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                       <ResourceString bundle="wts/roms/topcomponents/PhysicalEnvironmentViewer/Bundle.properties" key="PhysicalEnvironmentViewerTopComponent.jrbVectorK.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
                     </Property>
@@ -992,7 +1011,7 @@
                       <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                              <Component id="vsCustomizer" min="-2" max="-2" attributes="0"/>
+                              <Component id="vfCustomizer" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
@@ -1004,7 +1023,7 @@
                       <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                              <Component id="vsCustomizer" min="-2" max="-2" attributes="0"/>
+                              <Component id="vfCustomizer" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
@@ -1012,7 +1031,7 @@
                 </DimensionLayout>
               </Layout>
               <SubComponents>
-                <Component class="wts.GIS.styling.VectorStyleCustomizer" name="vsCustomizer">
+                <Component class="wts.GIS.styling.VectorStyleCustomizer" name="vfCustomizer">
                 </Component>
               </SubComponents>
             </Container>
@@ -1157,7 +1176,7 @@
                 <Component class="javax.swing.JRadioButton" name="jrbHGradK">
                   <Properties>
                     <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
-                      <ComponentRef name="bgVectorDepthButtons"/>
+                      <ComponentRef name="bgHGradDepthButtons"/>
                     </Property>
                     <Property name="selected" type="boolean" value="true"/>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
@@ -1181,7 +1200,7 @@
                 <Component class="javax.swing.JRadioButton" name="jrbHGradDepth">
                   <Properties>
                     <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
-                      <ComponentRef name="bgVectorDepthButtons"/>
+                      <ComponentRef name="bgHGradDepthButtons"/>
                     </Property>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                       <ResourceString bundle="wts/roms/topcomponents/PhysicalEnvironmentViewer/Bundle.properties" key="PhysicalEnvironmentViewerTopComponent.jrbHGradDepth.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>

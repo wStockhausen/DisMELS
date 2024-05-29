@@ -4,6 +4,7 @@
  */
 package wts.roms.model;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.Customizer;
@@ -14,7 +15,6 @@ import java.util.*;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import org.openide.util.Exceptions;
 
 /**
  * Customizer for OptionalModelVariablesInfo objects.
@@ -36,11 +36,15 @@ public class OptionalModelVariablesInfoCustomizer extends javax.swing.JPanel
     private OptionalModelVariablesInfo obj = null;
     /** map from variable name to customizer */
     private final Map<String,OptionalVariableInfoCustomizer> mapOVIC;
+    /** the GlobalInfo object */
+    private final GlobalInfo romsGI;
+    
     /**
      * Creates new form OptionalModelVariablesInfoCustomizer
      */
     public OptionalModelVariablesInfoCustomizer() {
         mapOVIC = new HashMap<>(20); 
+        romsGI = GlobalInfo.getInstance();
         initComponents();
     }
 
@@ -146,25 +150,32 @@ public class OptionalModelVariablesInfoCustomizer extends javax.swing.JPanel
     @Override
     public void setObject(Object bean) {
         if (bean instanceof OptionalModelVariablesInfo){
-            logger.info("Setting object "+bean.toString());
+            logger.info("---Setting object "+bean.toString());
             obj = (OptionalModelVariablesInfo) bean;
             setObject();
+            logger.info("---Set object "+bean.toString());
         }
     }
 
     private void setObject(){
+        logger.info("starting SetObject()");
+        obj.removePropertyChangeListener(this);
         mapOVIC.clear();
-        jpVariables.removeAll();
+        jpVariables.removeAll();//remove all ovi customizers
         jpVariables.add(oviCustomizer);//this functions as a header
-        Set<String> names = obj.getNames();
+        Set<String> names = obj.getNames(); //names of existing ovi's
         for (String name: names){
             logger.info("Found optional variable "+name);
             OptionalVariableInfo ovi = obj.getVariableInfo(name);
             addOVI(ovi);
         }
         setROMSVariables();
+        setEnabled(!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet));
+        setVisible(!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet));
         validate();
         repaint();
+        obj.addPropertyChangeListener(this);
+        logger.info("finished SetObject()");
     }
 
     /**
@@ -175,6 +186,7 @@ public class OptionalModelVariablesInfoCustomizer extends javax.swing.JPanel
      */
     private void addOVI(OptionalVariableInfo ovi){
         String name = ovi.getName();
+        logger.info("Adding ovi "+name);
         if (name==null) mapOVIC.remove(null);//remove previous customizer associted w/ null
         obj.addVariable(ovi);
         OptionalVariableInfoCustomizer ovic = mapOVIC.get(name);
@@ -204,27 +216,41 @@ public class OptionalModelVariablesInfoCustomizer extends javax.swing.JPanel
         OptionalVariableInfoCustomizer ovic = mapOVIC.remove(name);
         jpVariables.remove(ovic);
         validate();
+        logger.info("Removed ovi "+name);
     }
     
     /**
-     * Sets the variables listed in jcbROMSvariables by reading them from the
-     * canonical file given in the GlobalInfo singleton.
+     * Sets the variable names listed in jcbROMSvariables by reading them from the
+     * grid file given in the GlobalInfo singleton.
      */
     private void setROMSVariables(){
         jcbROMSvariables.removeAllItems();
-        GlobalInfo globalInfo = GlobalInfo.getInstance();
-        if (!globalInfo.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
+        if (!romsGI.getCanonicalFile().equals(GlobalInfo.PROP_NotSet)){
             try {
-                NetcdfReader nR = new NetcdfReader(globalInfo.getCanonicalFile());
+                NetcdfReader nR = new NetcdfReader(romsGI.getCanonicalFile());
                 String[] romsNames = nR.getVariableNames();
                 Set<String> names = new TreeSet<>();
-                names.addAll(Arrays.asList(romsNames));
+                for (String romsName: romsNames) names.add(romsName);
                 Iterator<String> it = names.iterator();
                 while (it.hasNext()) jcbROMSvariables.addItem(it.next());
             } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+                logger.severe(ex.getLocalizedMessage());
             }
         }
+    }
+
+    /**
+     * Enable/disable all sub-components
+     * @param b 
+     */
+    @Override
+    public void setEnabled(boolean b){
+        super.setEnabled(b);
+        Component[] comps = getComponents();
+        for (Component c: comps){
+            c.setEnabled(b);
+        }
+        repaint();
     }
     
     /**
@@ -235,29 +261,14 @@ public class OptionalModelVariablesInfoCustomizer extends javax.swing.JPanel
      */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+//        logger.info("PropertyChange event: "+evt.toString());
         if (evt.getPropertyName().equals(GlobalInfo.PROP_CanonicalFile)){
-            setROMSVariables();
-            validate();
-        } else 
-        if (evt.getPropertyName().equals(GlobalInfo.PROP_ModelOVI_ADDED)){
-            logger.info("PROP_ModelOVI_ADDED detected");
-        } else 
-        if (evt.getPropertyName().equals(GlobalInfo.PROP_ModelOVI_REMOVED)){
-            logger.info("PROP_ModelOVI_REMOVED detected");
-        } else 
-        if (evt.getPropertyName().equals(GlobalInfo.PROP_ModelOVI_RENAMED)){
-            logger.info("PROP_ModelOVI_RENAMED detected");
-            String oldName = (String)evt.getOldValue();
-            String newName = (String)evt.getNewValue();
-            //remove customizer associated with old name
-            OptionalVariableInfoCustomizer ovic = mapOVIC.remove(oldName);
-            //associate customizer with new name
-            mapOVIC.put(newName,ovic);
-        } else 
-        if (evt.getPropertyName().equals(GlobalInfo.PROP_ModelOVI_RESET)){
-            logger.info("PROP_ModelOVI_RESET detected");
-            setObject(evt.getNewValue());
-        } 
+            logger.info("PropertyChange: "+evt.toString());
+            setObject();//reset object to register changes
+        } else if (evt.getPropertyName().equals(OptionalModelVariablesInfo.PROP_RESET)){
+            logger.info("PropertyChange: "+evt.toString());
+            setObject();//reset object
+        }
     }
     
     private class ContextMenu implements ActionListener {

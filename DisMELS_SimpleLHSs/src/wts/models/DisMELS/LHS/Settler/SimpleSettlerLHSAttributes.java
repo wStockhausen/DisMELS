@@ -45,17 +45,9 @@ public class SimpleSettlerLHSAttributes extends AbstractSimpleLHSAttributes {
      */
     @Override
     public Object clone() {
-        SimpleSettlerLHSAttributes clone = null;
-        try {
-            clone = (SimpleSettlerLHSAttributes) super.clone();
-            clone.map = (HashMap<String,Object>) map.clone();
-            for (int i=0;i<keys.length;i++) {
-                clone.setValue(keys[i],this.getValue(keys[i]));
-            }
-            clone.propertySupport = new PropertyChangeSupport(clone);
-        } catch (CloneNotSupportedException ex) {
-            ex.printStackTrace();
-        }
+        SimpleSettlerLHSAttributes clone = new SimpleSettlerLHSAttributes(typeName);
+        for (String key: keys) clone.setValue(key,this.getValue(key));
+        clone.propertySupport = new PropertyChangeSupport(clone);
         return clone;
     }
 

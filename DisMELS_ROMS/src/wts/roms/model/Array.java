@@ -11,9 +11,11 @@ import ucar.ma2.IndexIterator;
 /**
  * This class encapsulates the new version (as of ToolsUI_4.2) of
  * ucar.ma2.Array to reinstate the deleted methods
+ * <pre>
  *      getIndexName(int i)
- *      setIndexName(
- * @author wstockhausen
+ *      setIndexName(int i, String name)
+ * </pre>
+ * @author William Stockhausen
  */
 public class Array {
     

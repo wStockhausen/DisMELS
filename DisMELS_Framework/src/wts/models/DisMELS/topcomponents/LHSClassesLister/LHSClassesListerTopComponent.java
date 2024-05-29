@@ -32,8 +32,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "LHSClassesListerTopComponent")
 @Messages({
     "CTL_LHSClassesListerAction=Life stage classes",
-    "CTL_LHSClassesListerTopComponent=Life stage classes",
-    "HINT_LHSClassesListerTopComponent=These are the available life stage classes."
+    "CTL_LHSClassesListerTopComponent=Java classes for IBM Life Stages",
+    "HINT_LHSClassesListerTopComponent=These are the available classes for IBM life stages."
 })
 public final class LHSClassesListerTopComponent extends TopComponent implements LookupListener {
     

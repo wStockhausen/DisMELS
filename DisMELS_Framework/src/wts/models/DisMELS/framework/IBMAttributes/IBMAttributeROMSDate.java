@@ -75,7 +75,7 @@ public class IBMAttributeROMSDate extends IBMAttribute {
     }
 
     @Override
-    public void parseValue(String str) {        
+    public final void parseValue(String str) {        
         Date dt;
         double refTime = refDate.getTime();//ref time in ms
         try {

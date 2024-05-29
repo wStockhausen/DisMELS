@@ -62,7 +62,7 @@ public class LHS_Types extends Object
     }
     
 //    /** */
-    /** the map of LHS names to LHS_Types */
+    /** the map of LHS type names to LHS_Types */
     private Map<String,LHS_Type> mapTypes = new LinkedHashMap<>(16);
     
     /** the global info singleton */
@@ -139,10 +139,6 @@ public class LHS_Types extends Object
         setTypes(map1);
     }
     
-//    public Map<String,LHS_Type> getTypes() {
-//        return mapTypes;//TODO: do we really want to return this or a shallow copy of it?
-//    }
-//    
     private void setTypes(Map<String,LHS_Type> newMap) {
         Map<String,LHS_Type> oldMap = mapTypes;
         mapTypes = newMap;
@@ -162,25 +158,54 @@ public class LHS_Types extends Object
         propertySupport.firePropertyChange(PROP_types, null, null);
     }
     
+    /**
+     * Gets the set of keys (life stage type names) for the map of life stage types.
+     * 
+     * @return 
+     */
     public Set<String> getKeys() {
         return mapTypes.keySet();
     }
     
+    /**
+     * Add a life stage type to the map of types. The key for this life stage
+     * is taken from the type's LHS name.
+     * 
+     * @param type 
+     */
     public void addType(LHS_Type type) {
         type.addPropertyChangeListener(this);
         mapTypes.put(type.getLHSName(),type);
         propertySupport.firePropertyChange(PROP_addType,null,type);
     }
     
+    /**
+     * Gets the LHS_Type object associated with the given key (type name)
+     * from the map of LHS_Types.
+     * 
+     * @param key - the type name
+     * 
+     * @return 
+     */
     public LHS_Type getType(String key) {
         return mapTypes.get(key);
     }
     
+    /**
+     * Removes the LHS_Type associated with the key (type name) from the 
+     * map of LHS_Types.
+     * 
+     * @param key 
+     */
     public void removeType(String key) {
         LHS_Type type = mapTypes.get(key);
         removeType(type);
     }
-    
+    /**
+     * Removes the given LHS_Type from the map of LHS_Types.
+     * 
+     * @param type 
+     */
     public void removeType(LHS_Type type) {
         type.removePropertyChangeListener(this);
         mapTypes.remove(type.getLHSName());//remove key & object

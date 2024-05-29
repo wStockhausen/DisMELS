@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import javax.swing.*;
 import org.openide.util.*;
 import org.openide.util.actions.Presenter;
-import wts.roms.topcomponents.MapViewer.MapViewerTopComponent;
 
 /**
  *

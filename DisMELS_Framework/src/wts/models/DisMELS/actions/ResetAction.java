@@ -5,8 +5,6 @@
 package wts.models.DisMELS.actions;
 
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import org.openide.util.*;

@@ -56,7 +56,7 @@
                 <Property name="rows" type="int" value="0"/>
               </Layout>
               <SubComponents>
-                <Component class="wts.roms.model.CriticalVariableInfoCustomizer" name="criticalVariableInfoCustomizer1">
+                <Component class="wts.roms.model.CriticalVariableInfoCustomizer" name="cviCustomizer">
                   <Properties>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>

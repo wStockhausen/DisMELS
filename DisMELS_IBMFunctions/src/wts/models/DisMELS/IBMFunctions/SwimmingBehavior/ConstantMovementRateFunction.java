@@ -5,6 +5,7 @@
 package wts.models.DisMELS.IBMFunctions.SwimmingBehavior;
 
 import com.wtstockhausen.utils.RandomNumberGenerator;
+import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 import wts.models.DisMELS.framework.GlobalInfo;
@@ -75,6 +76,8 @@ public class ConstantMovementRateFunction extends AbstractIBMFunction
     /** value of random walk parameter */
     private double rpw = 0;
     
+    public static final Logger logger = Logger.getLogger(ConstantMovementRateFunction.class.getName());
+    
     /** constructor for class */
     public ConstantMovementRateFunction(){
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
@@ -107,10 +110,10 @@ public class ConstantMovementRateFunction extends AbstractIBMFunction
         if (super.setParameterValue(param, value)){
             switch (param) {
                 case PARAM_rate:
-                    rate    = ((Double) value).doubleValue();
+                    rate    = ((Double) value);
                     break;
                 case PARAM_rpw:
-                    rpw    = ((Double) value).doubleValue();
+                    rpw    = ((Double) value);
                     break;
             }
             return true;
@@ -126,9 +129,12 @@ public class ConstantMovementRateFunction extends AbstractIBMFunction
      */
     @Override
     public Double calculate(Object vars) {
-        double[] dvars = (double[]) vars;
-        double rnd = 0; 
-        if ((rpw>0)&&(dvars[0]>0)) rnd = Math.sqrt(rpw/Math.abs(dvars[0]))*rng.computeNormalVariate();
-        return new Double(rate+rnd);
+        if (rpw<=0) return rate;
+        double dt = ((double[]) vars)[0];
+        double rnd = 0.0; 
+        if (dt>0) rnd = Math.sqrt(rpw/Math.abs(dt))*rng.computeNormalVariate();
+//        logger.info("----RNG : "+rng.toString()+"----seed: "+rng.getSeed());
+//        logger.info("------value: "+rnd);
+        return rate+rnd;
     }
 }

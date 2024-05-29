@@ -30,7 +30,6 @@ import org.geotools.filter.GeometryFilter;
 import org.geotools.filter.IllegalFilterException;
 import org.geotools.map.DefaultMapLayer;
 import org.geotools.map.MapLayer;
-import org.geotools.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.renderer.j2d.GeoMouseEvent;
 import org.geotools.styling.*;
 import org.netbeans.api.actions.Openable;
@@ -41,6 +40,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.openide.awt.ActionID;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
+import org.openide.util.LookupEvent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
@@ -74,8 +74,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "LHSAttributesEditorTopComponent")
 @Messages({
     "CTL_LHSAttributesEditorAction=LHSAttributesEditor",
-    "CTL_LHSAttributesEditorTopComponent=LHS Attributes Editor",
-    "HINT_LHSAttributesEditorTopComponent=LHS Attributes Editor"
+    "CTL_LHSAttributesEditorTopComponent=Initial Attributes Editor",
+    "HINT_LHSAttributesEditorTopComponent=Initial Attributes Editor window"
 })
 public final class LHSAttributesEditorTopComponent extends TopComponent implements PropertyChangeListener {
     
@@ -90,7 +90,9 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     /** */
     public static final String PROP_ATTRIBUTES = "attributes";
     
-    public static boolean debug = false;
+    /** flag to turn on debug info */
+    public static boolean debug = true;
+    /** logger to print debug info */
     private static final Logger logger = Logger.getLogger(LHSAttributesEditorTopComponent.class.getName());
 
     /**
@@ -129,21 +131,21 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     /** output file name */
     private String fnCSV = "";
     /** file chooser for image files */
-    private JFileChooser imgJFC = new JFileChooser();
+    private final JFileChooser imgJFC = new JFileChooser();
     /** file chooser for output csv files */
-    private JFileChooser jfcCSV = new JFileChooser();    
+    private final JFileChooser jfcCSV = new JFileChooser();    
     /** file chooser for GIS layers */
-    private JFileChooser jfcLayer = new JFileChooser();
+    private final JFileChooser jfcLayer = new JFileChooser();
 
     /** release parameters array object */
-    private ReleaseParametersArray rpa = new ReleaseParametersArray();
+    private final ReleaseParametersArray rpa = new ReleaseParametersArray();
 
     /** */
     private Feature feature;
     /** The feature type for the current LHS*/
     private LHSPointFeatureType ftLHS = null;
     /** feature collection containing the last points added to the map */
-    private FeatureCollection fcLastAddedPoints = FeatureCollections.newCollection();
+    private final FeatureCollection fcLastAddedPoints = FeatureCollections.newCollection();
     /** feature collection containing the all points added to the map */
     private FeatureCollection fcStartPoints;
     
@@ -151,9 +153,9 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     private MapLayer startPointsLayer = null;
 
     /** a Geotools 2.0 FilterFactory */
-    private FilterFactory filterFactory = FilterFactory.createFilterFactory();
+    private final FilterFactory filterFactory = FilterFactory.createFilterFactory();
     /** a Geotools 2.0 StyleBuilder object */
-    private StyleBuilder sb = new StyleBuilder();
+    private final StyleBuilder sb = new StyleBuilder();
     
     /** flag for mouse clicks/drag to zoom on mapGUI */
     private boolean mouseZooms = true;
@@ -163,22 +165,29 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     private boolean mouseAddsIndividualsToPolygon = false;
     /** flag indicating mouse is being dragged */
     private boolean isDragging = false;
+    
+    /** adapter for mouse motion events */
+    MouseMotionAdapter mouseMotionAdapter = null;
+    /** adapter for mouse events (press, release) */
+    MouseAdapter mouseAdapter = null;
     /** instance variable for GeoMouseEvent */
     private GeoMouseEvent geoMousePressed;
     
     /** the selected map layer */
     private MapLayer selectedLayer    = null;
     /** collection of the selectable map layers */
-    private Map<String,MapLayer> selectableLayers = new TreeMap<>();
+    private final Map<String,MapLayer> selectableLayers = new TreeMap<>();
     /** JMenu for removing selectable GIS layers */
     JMenu jmuRemoveSelectableGISLayers = null;
     /** JMenu for selecting selectable GIS layer */
-    JMenu jmuSelectedGISLayer = null;
+    JMenu jmuSelectLayerFromSelectableGISLayers = null;
+    /** JMenu to add individuals using all polygons in GIS layer */
+    JMenu jmuAddIndividualsToAllPolygonsInSelectedGISLayer = null;
     /** ButtonGroup for selected map layer */
     ButtonGroup bgSelectableGISLayers = new ButtonGroup();
     
     /** instance content reflecting csvLoader and csvSaver capabilities */
-    private InstanceContent content;
+    private final InstanceContent content;
 
     /** the "key" (i.e., type name) for the selected LHS */
     private String lhsKey = null;
@@ -192,18 +201,13 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     
     /** the singleton instance of the MapViewerTopComponent */
     private MapViewerTopComponent tcMapViewer = null;
+    /** the singleton instance of the ROMS info */
+    private wts.roms.model.GlobalInfo romsGI = null;
     
     /** instance of the private class for saving the initial attributes to csv */
     private CSVSaver csvSaver;
     /** instance of the private class for loading the initial attributes from csv */
     private CSVLoader csvLoader;
-
-    /** flag to perform operations when componentOpened() is called */
-    private boolean doOnOpen = true;
-    
-    private boolean doOnce = true;
-    
-    private LHSPointFeaturesTableModel tableModel = null;
     
     public LHSAttributesEditorTopComponent() {
         if (debug) logger.info("------Start instantiating LHSAttributesEditor");
@@ -302,6 +306,9 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     @Override
     public void componentOpened() {
         if (debug) logger.info("starting LHSAttributesEditor.comphonentOpened()");
+        romsGI.removePropertyChangeListener(this);
+        globalInfo.addPropertyChangeListener(this);
+        LHS_Factory.addPropertyChangeListener(this);
         //make sure MapViewerTopComponent is open
         WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
             @Override
@@ -310,58 +317,41 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                 if (!tcMapViewer.isOpened()) tcMapViewer.open();
                 tcMapViewer.addPartner();
                 if (startPointsLayer!=null) tcMapViewer.addGISLayer(startPointsLayer);
+                tcMapViewer.addGeoMouseMotionListener( mouseMotionAdapter);
+                tcMapViewer.addGeoMouseListener(mouseAdapter);
                 tcMapViewer.requestActive();
                 requestActive();
             }
         });
-        if (doOnOpen){
-            try {
-                setAttributes();
-            } catch (InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-            //make sure MapViewerTopComponent is open
-            WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
-                @Override
-                public void run() {
-                    //hook up mouse listeners
-                    if (doOnce){
-                        tcMapViewer.addGeoMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-                            public void mouseDragged(java.awt.event.MouseEvent evt) {
-                                geoMouseDragged(evt);
-                            }
-                        });
-                        tcMapViewer.addGeoMouseListener(new java.awt.event.MouseAdapter() {
-                            public void mousePressed(java.awt.event.MouseEvent evt) {
-                                geoMousePressed(evt);
-                            }
-                            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                                geoMouseReleased(evt);
-                            }
-                        });
-                        createStartPointsMapLayer(fcStartPoints);
-                    }
-                    doOnce = false;
-                }
-            });
+        try {
+            setAttributes();
+        } catch (InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
+        //create feature collection to map individuals
+        createStartPointsMapLayer();
+        if (debug) logger.info("finished componentOpened()");
     }
 
     @Override
     public void componentClosed() {
-        if (debug) logger.info("starting LHSAttributesEditor.compnonentClosed()");
+        if (debug) logger.info("starting componentClosed()");
         if (startPointsLayer!=null) tcMapViewer.removeGISLayer(startPointsLayer);
         if (!mouseZooms) setMouseZooms();
+        tcMapViewer.removeGeoMouseMotionListener( mouseMotionAdapter);
+        tcMapViewer.removeGeoMouseListener(mouseAdapter);
         tcMapViewer.removePartner();
         if (tcMapViewer.canClose()) tcMapViewer.close();
-        if (debug) logger.info("finished LHSAttributesEditor.compnonentClosed()");
+        romsGI.addPropertyChangeListener(this);
+        LHS_Factory.removePropertyChangeListener(this);
+        globalInfo.removePropertyChangeListener(this);
+        if (debug) logger.info("finished componentClosed()");
     }
 
     private void initComponents1() {
-        doOnOpen = true;
+        if (debug) logger.info("starting initComponents1()");
         globalInfo = GlobalInfo.getInstance();
-        globalInfo.addPropertyChangeListener(this);
-        LHS_Factory.addPropertyChangeListener(this);
+        romsGI = wts.roms.model.GlobalInfo.getInstance();
         String wdFN = globalInfo.getWorkingDir();
         File wdF = new File(wdFN);
 
@@ -385,10 +375,29 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         jfcLayer.setDialogTitle("Open an ESRI polygon shapefile");
         
         lhsSelector.addActionListener(new ActionListener() {
+           @Override
            public void actionPerformed(ActionEvent evt) {
                lhsSelectorActionPerformed(evt);
            }
         });
+        
+        //set up the mouse event adapters
+        mouseMotionAdapter = new java.awt.event.MouseMotionAdapter() {
+                                    @Override
+                                    public void mouseDragged(java.awt.event.MouseEvent evt) {
+                                        geoMouseDragged(evt);
+                                    }
+                                };
+        mouseAdapter = new java.awt.event.MouseAdapter() {
+                            @Override
+                            public void mousePressed(java.awt.event.MouseEvent evt) {
+                                geoMousePressed(evt);
+                            }
+                            @Override
+                            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                                geoMouseReleased(evt);
+                            }
+                        };
         
         //set up the attributes map
         attributesMap = new TreeMap<>();
@@ -396,7 +405,10 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         //set up the release parameters customizer
         rpaCustomizer.setObject(rpa);
         
+        //set up an empty feature collection for individuals
         fcStartPoints = FeatureCollections.newCollection();
+        
+        if (debug) logger.info("finished initComponents1()");
     }
     
     /**
@@ -493,7 +505,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                 Exceptions.printStackTrace(ex);
             }
             tcMapViewer.removeGISLayer(startPointsLayer);
-            createStartPointsMapLayer(fcStartPoints);
+            createStartPointsMapLayer();
             lhsSelector.setEnabled(true);//turns on ActionEvents for lhs selection
         } else if (evt.getPropertyName().equals(LHS_Factory.PROP_RESET)){
             lhsSelector.setEnabled(false);//turns off ActionEvents for lhs selection
@@ -508,7 +520,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                 Exceptions.printStackTrace(ex);
             }
             tcMapViewer.removeGISLayer(startPointsLayer);
-            createStartPointsMapLayer(fcStartPoints);
+            createStartPointsMapLayer();
             lhsSelector.setEnabled(true);//turns on ActionEvents for lhs selection
         }
     }
@@ -530,7 +542,11 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
      */
     public void setSelectedLayer(String layer){
         MapLayer mapLayer = selectableLayers.get(layer);
-        if (mapLayer!=null) selectedLayer = mapLayer;
+        jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(false);
+        if (mapLayer!=null) {
+            selectedLayer = mapLayer;
+            jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
+        }
     }
 
     /**
@@ -594,13 +610,20 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
      * 
      * @param fcEndPoints - the feature collection of start points for live individuals
      */
-    public void createStartPointsMapLayer(FeatureCollection fcStartPoints) {
-        if (startPointsLayer !=null) tcMapViewer.removeGISLayer(startPointsLayer);
-        Style style =  createPointsStyle(StyleBuilder.MARK_CIRCLE);
-        style.setName("IBM start position style");
-        style.setTitle("IBM start position style");
-        startPointsLayer = new DefaultMapLayer(fcStartPoints,style,"Start locations");
-        tcMapViewer.addGISLayer(startPointsLayer);
+    public void createStartPointsMapLayer() {
+        logger.info("started createStartPointsMapLayer(fcStartPoints)");
+        WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
+            @Override
+            public void run() {
+                if (startPointsLayer !=null) tcMapViewer.removeGISLayer(startPointsLayer);
+                Style style =  createPointsStyle(StyleBuilder.MARK_CIRCLE);
+                style.setName("IBM start position style");
+                style.setTitle("IBM start position style");
+                startPointsLayer = new DefaultMapLayer(fcStartPoints,style,"Start locations");
+                tcMapViewer.addGISLayer(startPointsLayer);
+            }
+        });
+        logger.info("finished createStartPointsMapLayer(fcStartPoints)");
     }
 
     /**
@@ -734,6 +757,14 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         isDragging = false;
     }
 
+    /**
+     * Add one individual at the location defined by the Point2D object, or
+     * a grid of individuals in the polygon feature in the selected GIS layer 
+     * which contains the location.
+     * 
+     * @param addIndividual - flag to add a single individual (if true) or grid (if false) 
+     * @param pt - the Point2D object determining the location used
+     */
     public void addIndividuals(final boolean addIndividual, final java.awt.geom.Point2D pt)throws 
                         IllegalAttributeException, TransformException, IntrospectionException, InstantiationException, IllegalAccessException, IOException{
         if (debug) logger.info("Adding individuals!!");
@@ -771,6 +802,80 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         }
     }
 
+    /**
+     * Adds individuals based on the horizontal location given by the point.  Multiple individuals
+     * can be added if a vertical and/or temporal grid is specified, so a FeatureCollection is returned.
+     * 
+     * @param pt - the horizontal location of the individuals to be added.
+     * @throws IllegalAttributeException
+     * @throws TransformException
+     * @throws IntrospectionException 
+     */
+    private FeatureCollection addPoint(java.awt.geom.Point2D pt)
+        throws IllegalAttributeException, TransformException, IntrospectionException {
+        //Create the feature and add itm to the feature collection
+//        if (debug) logger.info("Adding point");
+        FeatureCollection fc = FeatureCollections.newCollection();
+        try {
+            double[] latlon = AlbersNAD83.transformPtoG(new double[]{pt.getX(),pt.getY()});
+            double[] IJ = romsGI.getGrid2D().computeIJfromLL(latlon[1],latlon[0]);
+            //do not create points on land!
+            if (romsGI.getGrid2D().isOnLand(IJ)) return fc;
+        
+            ftLHS.setGeometryFromMap(pt.getX(),pt.getY());
+            LifeStageAttributesInterface aLHSt = (LifeStageAttributesInterface) lhsAttributes.clone();
+            double bd = romsGI.getInterpolator().interpolateBathymetricDepth(IJ);
+            logger.info("creating feature. bathymetric depth = "+bd);
+            aLHSt.setValue(LifeStageAttributesInterface.PROP_bathym, bd);
+            ftLHS.setAttributes(aLHSt);
+            int nt = 1;
+            double dt = 0;
+            //TODO: need to get rpa from LHSAttributesEditor
+            if (rpa.getCreateTemporalGrid()) {
+                nt = rpa.getNumberReleaseTimes();
+                dt = rpa.getDeltaT();//this is in days
+            }
+            int nz = 1;
+            double dz = 0;
+            if (rpa.getCreateVerticalGrid()) {
+                dz = rpa.getDeltaZ();
+                nz = (int)(bd/dz)+1;
+                aLHSt.setValue(LifeStageAttributesInterface.PROP_vertType,Types.VERT_H);
+            }
+            double startTime = ((java.lang.Double) aLHSt.getValue(LifeStageAttributesInterface.PROP_startTime)).doubleValue();
+            double st,zt;
+            for (int it=1;it<=nt;it++) {
+                if (startTime>0){
+                    st = startTime+(it-1)*86400*dt;//start times are in ROMS ocean_time (i.e., seconds)
+                } else {
+                    st = -(it-1)*dt;//start times are in (negative) days relative to MODEL RUNNER start time
+                }
+                aLHSt.setValue(LifeStageAttributesInterface.PROP_startTime,st);
+                for (int iz=0;iz<nz;iz++) {
+                    if (rpa.getCreateVerticalGrid()) {
+                        zt = iz*dz;
+                        aLHSt.setValue(LifeStageAttributesInterface.PROP_vertPos,zt);
+                    }
+                    feature = ftLHS.createFeature();
+                    fc.add(feature);
+                }
+            }
+            ftLHS.setAttributes(lhsAttributes);
+        } catch (CloneNotSupportedException ex) {
+            Exceptions.printStackTrace(ex);
+        }  catch (java.lang.ArrayIndexOutOfBoundsException ex){
+            //catch the exception and return an empty collection
+            logger.info(ex.getMessage());
+        }
+        return fc;
+    }
+    
+    /**
+     * Add individuals in a grid across the rectangle defined by the two input Point2D's.
+     * 
+     * @param pt1 - location of one corner of rectangle as Point2D object 
+     * @param pt2 - location of opposite corner of rectangle as Point2D object 
+     */
     public void addIndividuals(final java.awt.geom.Point2D pt1, final java.awt.geom.Point2D pt2){
         Runnable r = new Runnable(){
             @Override
@@ -793,73 +898,6 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
             }
         };
         ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
-    }
-    
-    /**
-     * Adds individuals based on the horizontal location given by the point.  Multiple individuals
-     * can be added if a vertical and/or temporal grid is specified, so a FeatureCollection is returned.
-     * 
-     * @param pt - the horizontal location of the individuals to be added.
-     * @throws IllegalAttributeException
-     * @throws TransformException
-     * @throws IntrospectionException 
-     */
-    private FeatureCollection addPoint(java.awt.geom.Point2D pt)
-        throws IllegalAttributeException, TransformException, IntrospectionException {
-        //Create the feature and add itm to the feature collection
-//        if (debug) logger.info("Adding point");
-        FeatureCollection fc = FeatureCollections.newCollection();
-        double[] latlon = AlbersNAD83.transformPtoG(new double[]{pt.getX(),pt.getY()});
-        double[] IJ = tcMapViewer.getModelGrid().computeIJfromLL(latlon[1],latlon[0]);
-        //do not create points on land!
-        if (tcMapViewer.getModelGrid().isOnLand(IJ)) return fc;
-        
-        try {
-            ftLHS.setGeometryFromMap(pt.getX(),pt.getY());
-            LifeStageAttributesInterface aLHSt = (LifeStageAttributesInterface) lhsAttributes.clone();
-            ftLHS.setAttributes(aLHSt);
-            int nt = 1;
-            double dt = 0;
-            //TODO: need to get rpa from LHSAttributesEditor
-            if (rpa.getCreateTemporalGrid()) {
-                nt = rpa.getNumberReleaseTimes();
-                dt = rpa.getDeltaT();//this is in days
-            }
-            int nz = 1;
-            double dz = 0;
-            double bd = 0;
-            if (rpa.getCreateVerticalGrid()) {
-                dz = rpa.getDeltaZ();
-                bd = tcMapViewer.interpolateBathymetricDepth(pt.getX(),pt.getY());
-                nz = (int)(bd/dz)+1;
-                aLHSt.setValue(LifeStageAttributesInterface.PROP_vertType,Types.VERT_H);
-            }
-            double startTime = ((java.lang.Double) aLHSt.getValue(LifeStageAttributesInterface.PROP_startTime)).doubleValue();
-            double st,zt;
-            for (int it=1;it<=nt;it++) {
-                if (startTime>0){
-                    st = startTime+(it-1)*86400*dt;//start times are in ROMS ocean_time (i.e., seconds)
-                } else {
-                    st = -(it-1)*dt;//start times are in (negative) days relative to MODEL RUNNER start time
-                }
-                aLHSt.setValue(LifeStageAttributesInterface.PROP_startTime,st);
-                for (int iz=0;iz<nz;iz++) {
-                    if (rpa.getCreateVerticalGrid()) {
-                        zt = iz*dz;
-                        aLHSt.setValue(LifeStageAttributesInterface.PROP_vertPos,zt);
-                    }
-                    feature = ftLHS.createFeature();
-                    fc.add(feature);
-//                    fcStartPoints.add(feature);
-//                    fcLastAddedPoints.add(feature);
-//                    jpFeaturesTable.add(feature);
-                }
-            }
-            ftLHS.setAttributes(lhsAttributes);
-        } catch (CloneNotSupportedException ex) {
-            Exceptions.printStackTrace(ex);
-        }    
-        return fc;
     }
     
     /**
@@ -956,6 +994,91 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
     }
     
     /**
+     * Add one individual at the location defined by the Point2D object, or
+     * a grid of individuals in the polygon feature in the selected GIS layer 
+     * which contains the location.
+     * 
+     * @param addIndividual - flag to add a single individual (if true) or grid (if false) 
+     * @param pt - the Point2D object determining the location used
+     */
+    public void addIndividualsToAllPolygonsInSelectedLayer(){
+        if (selectedLayer!=null){
+            if (debug) logger.info("Adding individuals to ALL POLYGONS in LAYER!!");
+            fcLastAddedPoints.clear();
+            Runnable r = new Runnable(){
+                @Override
+                public void run() {
+                    try {
+                        Cursor c = getCursor();
+                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        validate();
+                        repaint();
+                        if (ftLHS==null) setAttributes();
+                        FeatureCollection fc = addPointsToAllPolygonsInSelectedLayer();
+                        fcStartPoints.addAll(fc);
+                        fcLastAddedPoints.addAll(fc);
+                        jpFeaturesTable.addAll(fc);
+                        enableSaveAction(true);
+                        setCursor(c);
+                    } catch (IllegalAttributeException | TransformException | InstantiationException | IllegalAccessException | IntrospectionException | IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
+            };
+            ProgressUtils.showProgressDialogAndRun(r, "Creating individuals...");
+        }
+    }
+    
+    /**
+     * Adds points (individuals) to all the polygon features in 
+     * the selected polygon layer.
+     * 
+     * @throws IllegalAttributeException
+     * @throws TransformException
+     * @throws IntrospectionException 
+     */
+    public FeatureCollection addPointsToAllPolygonsInSelectedLayer()
+            throws IllegalAttributeException, TransformException, IntrospectionException {
+        FeatureCollection fc = FeatureCollections.newCollection();
+        if (selectedLayer!=null){
+            double dx = rpa.getDeltaX();
+            double dy = rpa.getDeltaY();
+            if (debug) logger.info("addPointsToAllPolygonsInSelectedLayer: Adding points to polygon at spacing "+dx+" x "+dy);
+            try {
+                //get the feature source for the selectable layer
+                FeatureSource fs = getSelectedLayer().getFeatureSource();
+                FeatureCollection selFC = fs.getFeatures();
+                FeatureIterator itSelFC = selFC.features();
+                Point tp = null;
+                GeometryFactory gfac = new GeometryFactory();
+                while (itSelFC.hasNext()) {
+                    //use bounds to define an "array" of potential points to add.  
+                    //For each point that is contained by the feature, 
+                    //add it to the map as a new initial position.
+                    Feature f = itSelFC.next();
+                    Geometry poly = f.getDefaultGeometry();
+                    Envelope e = f.getBounds();
+                    GeometryFilter gf = filterFactory.createGeometryFilter(GeometryFilter.GEOMETRY_CONTAINS);
+                    gf.addLeftGeometry(filterFactory.createLiteralExpression(
+                                            f.getDefaultGeometry())
+                                       );
+                    for (double x=e.getMinX();x<=e.getMaxX();x=x+dx) {
+                        for (double y=e.getMinY();y<=e.getMaxY();y=y+dy) {
+                            tp = gfac.createPoint(new Coordinate(x,y));
+                            if (tp.within(poly)) {
+                                fc.addAll(addPoint(new Point2D.Double(x,y)));
+                            }
+                        }
+                    }
+                }//finished creating FeatureCollection
+            } catch (IllegalFilterException | IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        return(fc);
+    }
+    
+    /**
      * Clears all individuals from fcStartPoints.
      */
     public void clearAllIndividuals(){
@@ -974,19 +1097,39 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
         fcLastAddedPoints.clear();
     }
     
-    public void setSelectableGISLayersMenu(JMenu jmu){
-        jmuSelectedGISLayer = jmu;
+    /**
+     * Sets the JMenu for selecting a GIS layer from among the selectable layers
+     * in order to add individuals via polygons in the layer.
+     * 
+     * @param jmu the JMenuItem
+     */
+    public void setJMenu_SelectLayerFromSelectableGISLayers(JMenu jmu){
+        jmuSelectLayerFromSelectableGISLayers = jmu;
     }
     
-    public void setRemoveSelectableGISLayersMenu(JMenu jmu){
+    /**
+     * Sets the JMenu for removing a GIS layer from among the selectable layers.
+     * 
+     * @param jmu the JMenuItem
+     */
+    public void setJMenu_RemoveSelectableGISLayers(JMenu jmu){
         jmuRemoveSelectableGISLayers = jmu;
+    }
+    
+    /**
+     * Sets the JMenu for adding individuals to all polygons in the selected GIS layer.
+     * 
+     * @param jmu the JMenuItem
+     */
+    public void setJMenu_AddIndividualsToAllPolygonsInSelectedGISLayer(JMenu jmu){
+        jmuAddIndividualsToAllPolygonsInSelectedGISLayer = jmu;
     }
     
     /** 
      * Adds a GIS layer based on a shapefile the user is prompted for.
      */
     public void addSelectableGISLayer(){
-        if (debug) logger.info("Adding GIS Layer");
+        if (debug) logger.info("Adding selectable GIS Layer");
         int res = jfcLayer.showOpenDialog(this);
         if (res==JFileChooser.APPROVE_OPTION) {
             File f = jfcLayer.getSelectedFile();
@@ -1026,36 +1169,63 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                 //TODO: add a notify descriptor dialog here
                 return;
             }
-
+            
             final MapLayer layer = new DefaultMapLayer(source,style,url.getPath());
             tcMapViewer.addGISLayer(layer);
             selectedLayer = layer;
             selectableLayers.put(layer.getTitle(),layer);
+            
+            //add radio button to SelectableGISLayers button group to allow de/re-selection of map layer
             final JRadioButtonMenuItem jrb = new JRadioButtonMenuItem(layer.getTitle());
+            jrb.setActionCommand(layer.getTitle());
             bgSelectableGISLayers.add(jrb);
             jrb.setSelected(true);
             jrb.addActionListener(new java.awt.event.ActionListener(){
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     setSelectedLayer(evt.getActionCommand());
+                    jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
                 }
             });
-            jmuSelectedGISLayer.add(jrb);//add item to menu associated with the action
-            jmuSelectedGISLayer.setEnabled(true);
+            jmuSelectLayerFromSelectableGISLayers.add(jrb);        //add radio button to SelectedGISLayer menu
+            jmuSelectLayerFromSelectableGISLayers.setEnabled(true);//enable menu
+            jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
             
+            
+            //add menu item to RemoveSelectableGISLayer menu to remove layer
             final JMenuItem jmi = new JMenuItem(layer.getTitle());
-            jmi.setText(layer.getTitle());
+            //jmi.setText(layer.getTitle());
             jmi.setActionCommand(layer.getTitle());
             jmi.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     String ac = evt.getActionCommand();
-                    if (debug) logger.info("jmi ActionPerformed for "+ac);
+                    if (debug) logger.info("----------------jmi start actionPerformed for "+ac);
                     //remmove layer identified by action command from the map
                     MapLayer layer = selectableLayers.remove(ac);
                     tcMapViewer.removeGISLayer(layer);
                     //remove the associated menu items 
-                    jmuRemoveSelectableGISLayers.remove(jmi);
-                    if (jrb.isSelected()) selectedLayer = null;
-                    jmuSelectedGISLayer.remove(jrb);
+                    logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectableGISLayers nemu component count before removing jmi=  "+jmuRemoveSelectableGISLayers.getMenuComponentCount());
+                    jmuRemoveSelectableGISLayers.remove((JMenuItem)evt.getSource());
+                    logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectableGISLayers menu component count after removing jmi=  "+jmuRemoveSelectableGISLayers.getMenuComponentCount());
+                    if (jmuRemoveSelectableGISLayers.getMenuComponentCount()==0) jmuRemoveSelectableGISLayers.setEnabled(false);
+                    if (jrb==null){
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: jrb IS NULL!");
+                    } else {
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: jrb.getActionCommand()="+jrb.getActionCommand());
+                        if (jrb.isSelected()) {
+                            logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: jrb was selected, so setting selected layer to null");
+                            selectedLayer = null;
+                            bgSelectableGISLayers.clearSelection();
+                            jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(false);
+                        }
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: removing jrb from jmuSelectLayerFromSelectableGISLayers, bg");
+                        logger.info("--jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectLayerFromSelectableGISLayers menu component count before =  "+jmuSelectLayerFromSelectableGISLayers.getMenuComponentCount());
+                        jmuSelectLayerFromSelectableGISLayers.remove(jrb);
+                        bgSelectableGISLayers.remove(jrb);                        
+                        logger.info("--jmi to RemoveSelectableGISLayer menu ActionPerformed: \n\tjmuSelectLayerFromSelectableGISLayers component menu count after =  "+jmuSelectLayerFromSelectableGISLayers.getMenuComponentCount());
+                        logger.info("jmi to RemoveSelectableGISLayer menu ActionPerformed: removed jrb from jmujmuSelectLayerFromSelectableGISLayers, bg");
+                    }
+                    if (jmuSelectLayerFromSelectableGISLayers.getMenuComponentCount()==0) jmuSelectLayerFromSelectableGISLayers.setEnabled(false);
+                    if (debug) logger.info("----------------jmi end actionPerformed for "+ac);
                 }
             });
             jmi.setEnabled(true);
@@ -1065,6 +1235,7 @@ public final class LHSAttributesEditorTopComponent extends TopComponent implemen
                 jmuRemoveSelectableGISLayers.add(jmi);//add item to menu associated with the action
                 jmuRemoveSelectableGISLayers.setEnabled(true);
             }
+            if (selectedLayer!=null) jmuAddIndividualsToAllPolygonsInSelectedGISLayer.getAction().setEnabled(true);
         } catch (MalformedURLException ex) {
             javax.swing.JOptionPane.showMessageDialog(
                     null,

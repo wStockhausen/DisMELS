@@ -40,7 +40,7 @@ public class LHSSelector_JPanel extends javax.swing.JPanel {
 
         jcbLHS = new javax.swing.JComboBox();
 
-        setBorder(javax.swing.BorderFactory.createTitledBorder("Life history stage types"));
+        setBorder(javax.swing.BorderFactory.createTitledBorder("Life stage"));
 
         jcbLHS.setMaximumRowCount(100);
         jcbLHS.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));

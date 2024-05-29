@@ -1,10 +1,10 @@
-/*
+/**
  * LagrangianParticle.java
  *
  * Created on December 16, 2005, 5:23 PM
  *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
+ * Revisions:
+ * 20171018: 1. Added "noAdvection" flag to implement movement without advection.
  */
 
 package wts.roms.model;
@@ -43,6 +43,9 @@ public class LagrangianParticle implements Cloneable {
     private double[][] trackData;
     int np1,n,nm1,nm2,nm3,nsv;
     
+    /** instance variable flagging motion does not include advection by currents */
+    private boolean noAdvection = false;
+    
     /** logger for class */
     private static final Logger logger = Logger.getLogger(LagrangianParticle.class.getName());
     
@@ -62,6 +65,7 @@ public class LagrangianParticle implements Cloneable {
                     clone.trackData[i][j] = trackData[i][j];
                 }
             }
+            clone.noAdvection = noAdvection;
             if (debug) {
                 logger.info("Cloned track:");
                 lpt.printTrackArray(clone.trackData);
@@ -84,10 +88,13 @@ public class LagrangianParticle implements Cloneable {
     /**
      * Calculates the corrector step in the 4th-order Milne predictor-corrector
      * integration scheme.
-     * @param dt --time step for integration
      */
     public void doCorrectorStep() throws ArrayIndexOutOfBoundsException {
-        lpt.doCorrectorStep(this);
+        if (noAdvection){
+            lpt.doCorrectorStepNoAdvection(this);
+        } else {
+            lpt.doCorrectorStep(this);
+        }
         nsv = nm3;
         nm3 = nm2;
         nm2 = nm1;
@@ -114,10 +121,13 @@ public class LagrangianParticle implements Cloneable {
     /**
      * Calculates the predictor step in the 4th-order Milne predictor-corrector
      * integration scheme.
-     * @param dt --time step for integration.
      */
     public void doPredictorStep() throws ArrayIndexOutOfBoundsException {
-        lpt.doPredictorStep(this);
+        if (noAdvection) {
+            lpt.doPredictorStepNoAdvection(this);
+        } else {
+            lpt.doPredictorStep(this);
+        }
     }
     
     /**
@@ -178,7 +188,6 @@ public class LagrangianParticle implements Cloneable {
      * Performs the predictor-corrector integration. (The integration can also be
      * performed by calling doPredictorStep() followed by a call to doCorrectorStep()
      * with the appropriate parameter values).
-     * @param dt --integration time step.
      */
     public void step() throws ArrayIndexOutOfBoundsException {
         doPredictorStep();
@@ -205,7 +214,11 @@ public class LagrangianParticle implements Cloneable {
             trackData[IV][m] = 0.0;
             trackData[IW][m] = 0.0;
         }
-        lpt.initialize(this);
+        if (noAdvection){
+            lpt.initializeNoAdvection(this);
+        } else {
+            lpt.initialize(this);
+        }
     }
     
     public void setTimeStep(double dt) {
@@ -294,24 +307,47 @@ public class LagrangianParticle implements Cloneable {
      * @param m --index at which to set W: for LagrangianParticle lp,
      *              use lp.getN() if setting before doPredictorStep()
      *              use lp.getNP1() if setting before doCorrectorStep()
+     * 
+     * This function throws an ArithmeticException if w is not finite.
      */
     public void setW(double w, int m) {
-        if (w!=0) {
-            double[] pos = new double[] {trackData[IXGRD][m],
-                                         trackData[IYGRD][m],
-                                         trackData[IZGRD][m]};
-            double wScale = lpt.calcWscale(pos,w);
-            if (Math.abs(wScale)>0) {
-                trackData[IW][m] = w/wScale;
+        double wScale = 1;//value if w=0
+        if (Double.isFinite(w)){
+            if (Math.abs(w)>0) {
+                double[] pos = new double[] {trackData[IXGRD][m],
+                                             trackData[IYGRD][m],
+                                             trackData[IZGRD][m]};
+                wScale = lpt.calcWscale(pos,w);
+                if (Double.isFinite(wScale)){
+                    if (Math.abs(wScale)>0) {
+                        trackData[IW][m] = w/wScale;
+                    } else {
+                        trackData[IW][m] = 0;
+                    }
+                } else {
+                    if (!Double.isNaN(wScale)){
+                        //particle is at bottom or top of grid and trying to move outside it,
+                        //so set w to 0 to prevent this
+                        trackData[IW][m] = 0;
+                    } else {
+                        //generated a NaN somehow
+                        String msg = "LagrangianParticle.setW(w,m): wScale is NaN\n"+
+                                     "w, trackData[IW][m] = "+w+", "+trackData[IW][m]+"\n"+
+                                     "wScale = "+wScale;
+                        throw new java.lang.ArithmeticException(msg);
+                    }
+                }
             } else {
                 trackData[IW][m] = 0;
             }
             if (debug) {
                 logger.info("in LagrangianParticle.setW(w,m)");
-                logger.info("w, wScale, tw = "+w+", "+wScale+", "+trackData[IW][m]);
+                logger.info("w, wScale, trackData[IW][m] = "+w+", "+wScale+", "+trackData[IW][m]);
             }
         } else {
-            trackData[IW][m] = 0;
+            String msg = "Problem in LagrangianParticle.setW(w,m) with w="+w;
+            logger.warning(msg);
+            throw new java.lang.ArithmeticException(msg);
         }
     }
 
@@ -333,4 +369,21 @@ public class LagrangianParticle implements Cloneable {
         return np1;
     }
     
+    /**
+     * Returns value of flag indicating no advection.
+     * 
+     * @return - boolean value
+     */
+    public boolean getNoAdvection(){
+        return noAdvection;
+    }
+    
+    /**
+     * Sets the value for the flag indicating no advection.
+     * 
+     * @param val - bollean value
+     */
+    public void setNoAdvection(boolean val){
+        noAdvection = val;
+    }
 }

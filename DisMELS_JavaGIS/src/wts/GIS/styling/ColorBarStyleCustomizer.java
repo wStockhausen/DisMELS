@@ -5,7 +5,11 @@
 
 /*
  * ColorBarStyleCustomizer.java
- *
+* 
+ * Throws PropertyChangeEvents when the ColorBarStyle bean is changed. Listeners
+ * should check the mustUpdateStyle() method on the edited ColorBarStyle bean
+ * to see if updateStyle() must be called on the bean before it is "used".
+ * 
  * Created on Apr 4, 2009, 10:43:40 AM
  */
 
@@ -13,17 +17,32 @@ package wts.GIS.styling;
 
 import com.wtstockhausen.utils.ColorRamp;
 import java.beans.Customizer;
+import java.beans.PropertyChangeListener;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 /**
- *
+ * Customizer class for ColorBarStyles.
+ * 
+ * Throws PropertyChangeEvents when the ColorBarStyle bean is changed. Listeners
+ * should check the mustUpdateStyle() method on the edited ColorBarStyle bean
+ * to see if updateStyle() must be called on the bean before it is "used".
+ * 
  * @author wstockhausen
  */
 public class ColorBarStyleCustomizer extends javax.swing.JPanel
                                      implements Customizer {
 
+    /**property indicating bean settings have been modified in some form */
+    public static final String PROP_StyleChanged = "wts.GIS.styling.ColorBarStyleCustomizer: StyleChanged";
+            
+    /** the bean instance to be customized */
     private ColorBarStyle obj;
+    /** flag to enable "input" event processing */
     private boolean enableEvents;
+    
+    /** class logger */
+    private static final Logger logger = Logger.getLogger(ColorBarStyleCustomizer.class.getName());
 
     /** Creates new form ColorBarStyleCustomizer */
     public ColorBarStyleCustomizer() {
@@ -231,13 +250,21 @@ public class ColorBarStyleCustomizer extends javax.swing.JPanel
         if (enableEvents) {
             double val = Double.parseDouble(jtfMinCS.getText());
             obj.setMin(val);
+            firePropertyChange(PROP_StyleChanged,obj,obj);
         }
     }//GEN-LAST:event_jtfMinCSActionPerformed
 
     private void jtfMaxCSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfMaxCSActionPerformed
         if (enableEvents) {
+            logger.info("max color scale changed on "+obj.toString());
             double val = Double.parseDouble(jtfMaxCS.getText());
             obj.setMax(val);
+            firePropertyChange(PROP_StyleChanged,obj,obj);
+            logger.info("fired PropertyChangeEvent to:");
+            PropertyChangeListener[] pcls = getPropertyChangeListeners();
+            for (PropertyChangeListener pcl: pcls){
+                logger.info("---"+pcl.toString());
+            }
         }
     }//GEN-LAST:event_jtfMaxCSActionPerformed
 
@@ -246,6 +273,7 @@ public class ColorBarStyleCustomizer extends javax.swing.JPanel
             int nc = ((Integer)jspNumColors.getValue()).intValue();
             obj.setNumberOfColors(nc);
             updateColorBar();
+            firePropertyChange(PROP_StyleChanged,obj,obj);
         }
     }//GEN-LAST:event_jspNumColorsStateChanged
 
@@ -255,21 +283,30 @@ public class ColorBarStyleCustomizer extends javax.swing.JPanel
 
     private void jcbColorRampsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbColorRampsActionPerformed
         if (enableEvents) {
+            logger.info("color ramp changed on "+obj.toString());
             String clrRamp = (String) jcbColorRamps.getSelectedItem();
             obj.setColorRamp(clrRamp);
             updateColorBar();
+            firePropertyChange(PROP_StyleChanged,obj,obj);
+            logger.info("fired PropertyChangeEvent to:");
+            PropertyChangeListener[] pcls = getPropertyChangeListeners();
+            for (PropertyChangeListener pcl: pcls){
+                logger.info("---"+pcl.toString());
+            }
         }
     }//GEN-LAST:event_jcbColorRampsActionPerformed
 
     private void jchkShowLTMinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkShowLTMinActionPerformed
         if (enableEvents) {
             obj.setShowLTMin(jchkShowLTMin.isSelected());
+            firePropertyChange(PROP_StyleChanged,obj,obj);
         }
     }//GEN-LAST:event_jchkShowLTMinActionPerformed
 
     private void jchkShowGTMaxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkShowGTMaxActionPerformed
         if (enableEvents) {
             obj.setShowGTMax(jchkShowGTMax.isSelected());
+            firePropertyChange(PROP_StyleChanged,obj,obj);
         }
     }//GEN-LAST:event_jchkShowGTMaxActionPerformed
 
@@ -286,18 +323,21 @@ public class ColorBarStyleCustomizer extends javax.swing.JPanel
         jColorBar.repaint();
     }
 
+    @Override
     public void setObject(Object bean) {
         if (bean instanceof ColorBarStyle){
+            logger.info("starting setObject() "+bean.toString());
             obj = (ColorBarStyle) bean;
             enableEvents = false;
             jtfMinCS.setText(Double.toString(obj.getMin()));
             jtfMaxCS.setText(Double.toString(obj.getMax()));
-            jspNumColors.setValue(new Integer(obj.getNumberOfColors()));
+            jspNumColors.setValue(obj.getNumberOfColors());
             jcbColorRamps.setSelectedItem(obj.getColorRamp());
             jchkShowLTMin.setSelected(obj.getShowLTMin());
             jchkShowGTMax.setSelected(obj.getShowGTMax());
             updateColorBar();
             enableEvents = true;
+            logger.info("finished setObject() "+bean.toString());
         }
     }
 

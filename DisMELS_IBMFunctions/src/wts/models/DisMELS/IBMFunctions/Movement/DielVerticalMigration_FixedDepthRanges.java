@@ -55,9 +55,9 @@ public class DielVerticalMigration_FixedDepthRanges extends AbstractIBMFunction
                                             implements IBMMovementFunctionInterface {
     
     /** function classification */
-    public static final String DEFAULT_type = "Swimming speed";
+    public static final String DEFAULT_type = "Vertical movement";
     /** user-friendly function name */
-    public static final String DEFAULT_name = "Diel vertical migration";
+    public static final String DEFAULT_name = "Diel vertical migration between (fixed) preferred depth ranges";
     /** function description */
     public static final String DEFAULT_descr = "Diel vertical migration between (fixed) preferred depth ranges";
     /** full description */
@@ -149,14 +149,14 @@ public class DielVerticalMigration_FixedDepthRanges extends AbstractIBMFunction
         super(numParams,numSubFuncs,DEFAULT_type,DEFAULT_name,DEFAULT_descr,DEFAULT_fullDescr);
         String key;
         key = PARAM_hasPreferredDepthRangeDay;  addParameter(key, Boolean.class,key);
-        key = PARAM_willAttachDay;         addParameter(key, Boolean.class,key);
-        key = PARAM_minDepthDay;           addParameter(key, Double.class,key);
-        key = PARAM_maxDepthDay;           addParameter(key, Double.class,key);
+        key = PARAM_willAttachDay;              addParameter(key, Boolean.class,key);
+        key = PARAM_minDepthDay;                addParameter(key, Double.class,key);
+        key = PARAM_maxDepthDay;                addParameter(key, Double.class,key);
         key = PARAM_hasPreferredDepthRangeNight;addParameter(key, Boolean.class,key);
-        key = PARAM_willAttachNight;       addParameter(key, Boolean.class,key);
-        key = PARAM_minDepthNight;         addParameter(key, Double.class,key);
-        key = PARAM_maxDepthNight;         addParameter(key, Double.class,key);
-        key = PARAM_rpw;                   addParameter(key, Double.class,key);
+        key = PARAM_willAttachNight;            addParameter(key, Boolean.class,key);
+        key = PARAM_minDepthNight;              addParameter(key, Double.class,key);
+        key = PARAM_maxDepthNight;              addParameter(key, Double.class,key);
+        key = PARAM_rpw;                        addParameter(key, Double.class,key);
     }
     
     @Override

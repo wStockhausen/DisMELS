@@ -56,9 +56,9 @@ public class AbstractIBMFunctionPersistenceDelegate extends DefaultPersistenceDe
     
     @Override
     protected boolean mutatesTo(Object oldInstance, Object newInstance){
-        logger.info("called mutatesTo on "+oldInstance.toString());
+//        logger.info("called mutatesTo on "+oldInstance.toString());
         boolean b = super.mutatesTo(oldInstance, newInstance);
-        logger.info("result = "+b);
+//        logger.info("result = "+b);
         return b;
     }
 }

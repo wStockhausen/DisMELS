@@ -10,6 +10,7 @@
 package wts.roms.gis;
 
 import java.sql.SQLException;
+import java.util.logging.Logger;
 import org.geotools.cs.AxisInfo;
 import org.geotools.cs.CoordinateSystem;
 import org.geotools.cs.CoordinateSystemAuthorityFactory;
@@ -49,6 +50,8 @@ public class CSCreator {
     
     public static final CoordinateSystemFactory csf = 
             CoordinateSystemFactory.getDefault();
+    
+    private static final Logger logger = Logger.getLogger(CSCreator.class.getName());
 
     public static boolean isValidRegion(String newRegion) {
         boolean res = (newRegion.equals(REGION_ALASKA))||(newRegion.equals(REGION_ROK));
@@ -66,13 +69,13 @@ public class CSCreator {
     }
 
     public static void setRegion(String reg){
-        System.out.println("Setting region to "+reg);
+        logger.info("Setting region to "+reg);
         region = reg;
     }
     
     public static GeographicCoordinateSystem createWGS_84() {
         GeographicCoordinateSystem cs = GeographicCoordinateSystem.WGS84;
-        System.out.println(WGS_84+": \n"+cs.toWKT());
+        logger.info(WGS_84+": "+cs.toWKT());
         return cs;
     }
     
@@ -108,7 +111,7 @@ public class CSCreator {
                 AxisInfo.LONGITUDE,
                 AxisInfo.LATITUDE);
          
-        System.out.println(NAD_83+": \n"+cs.toWKT());
+        logger.info(NAD_83+": "+cs.toWKT());
          
         return cs;
     }
@@ -132,7 +135,7 @@ public class CSCreator {
         for (int i=1;i<pns.length;i++) {
             str = str+"\n\t"+pns[i];
         }
-        System.out.println("Parameter list:"+"\n"+str);
+        logger.info("CSCreator: Parameter list:"+"\n"+str);
         Ellipsoid ellipse = gcs.getHorizontalDatum().getEllipsoid();
         params.setParameter("semi_major",ellipse.getSemiMajorAxis());
         params.setParameter("semi_minor",ellipse.getSemiMinorAxis());
@@ -160,7 +163,7 @@ public class CSCreator {
                 AxisInfo.X,
                 AxisInfo.Y);
         
-        System.out.println("prjCS:\n"+prjCS.toWKT());
+        logger.info("prjCS: "+prjCS.toWKT());
         return prjCS;
     }
     
@@ -169,7 +172,7 @@ public class CSCreator {
         CoordinateSystemAuthorityFactory fac = 
                 CoordinateSystemEPSGFactory.getDefault();
         CoordinateSystem cs = fac.createCoordinateSystem(epsg);
-        System.out.println(cs.toWKT());
+        logger.info(cs.toWKT());
         fac.dispose();
         return cs;
     }

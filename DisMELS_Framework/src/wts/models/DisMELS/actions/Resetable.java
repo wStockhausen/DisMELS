@@ -4,8 +4,6 @@
  */
 package wts.models.DisMELS.actions;
 
-import java.io.IOException;
-
 /**
  *
  * @author William.Stockhausen

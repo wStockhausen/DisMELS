@@ -294,7 +294,7 @@ public abstract class AbstractIBMFunction implements IBMFunctionInterface {
     public final boolean hasSubfunctions(){return !subfuncs.isEmpty();}
     
     /**
-     * Retruns the names of the subfunctions used in this function
+     * Returns the names of the subfunctions used in this function
      * @return 
      */
     @Override

@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  */
 public class LHS_Classes {
     
-    /** HashMap linking LHS types (the keys) to associated classes as LHS_ClassInfo objects (the values) */
+    /** HashMap linking LHS classes (the keys) to associated classes as LHS_ClassInfo objects (the values) */
     private final HashMap<String,LHS_ClassInfo> map = new HashMap<>();
     
     /** Creates a new instance of LHS_Classes */
@@ -45,18 +45,39 @@ public class LHS_Classes {
         }
     }
     
+    /**
+     * Gets the map linking life stage class name (key) to LHS_ClassInfo.
+     * 
+     * @return the map
+     */
     public HashMap<String,LHS_ClassInfo> getMap() {
         return map;
     }
     
+    /**
+     * Gets the set of keys (the life stage class names) to the map of 
+     * keys to LHS_ClassInfo objects.
+     * 
+     * @return the set of keys (class names)
+     */
     public Set<String> getKeys() {
         return map.keySet();
     }
     
+    /**
+     * Gets the LHS_ClassInfo object associated with the given life stage class.
+     * 
+     * @param className
+     * 
+     * @return the LHS_ClassInfo object
+     */
     public LHS_ClassInfo getClassInfo(String className) {
         return map.get(className);
     }
     
+    /**
+     * LHS_ClassInfo class definition. 
+     */
     protected class LHS_ClassInfo {
         /** name of LHS class */
         public String lhsClass;

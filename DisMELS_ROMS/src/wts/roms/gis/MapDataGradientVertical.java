@@ -35,17 +35,19 @@ import org.opengis.referencing.operation.TransformException;
 import wts.GIS.shapefile.ShapefileCreator;
 import wts.GIS.utils.FeatureCollectionUtilities;
 import wts.models.utilities.DateTime;
+import wts.roms.model.GlobalInfo;
 import wts.roms.model.Interpolator3D;
 import wts.roms.model.ModelData;
+import wts.roms.model.ModelGrid3D;
 
 /**
  *
  * @author William Stockhausen
  */
-public class MapDataGradientVertical extends MapDataScalar {
+public class MapDataGradientVertical extends MapDataScalar3D {
     
     /** logger for the class */
-    private static final Logger logger = Logger.getLogger(MapDataVector.class.getName());
+    private static final Logger logger = Logger.getLogger(MapDataVector3D.class.getName());
     
     /**
      * Constructor for the scalar field encapsulated in a ModelData instance.
@@ -61,52 +63,27 @@ public class MapDataGradientVertical extends MapDataScalar {
     }
 
     /**
-     * Constructor for one of the scalar fields encapsulated in a PhysicalEnvironment
-     * instance.  The Interpolator3D instance must encapsulate the PhysicalEnvironment
-     * instance.
-     *
-     * @param fieldName - String representation of field name
-     * @param i3d       - Interpolator3D instance containing a PhysicalEnvironment instance encapsulating the field
-     * @param date - a DateTime instance of the time corresponding to the data
-     *
-     * @throws java.lang.Exception
-     */
-    public MapDataGradientVertical(String fieldName, Interpolator3D i3d, DateTime date) throws Exception {
-        super(fieldName,i3d,date);
-    }
-
-    /**
-     * This function returns a null object because vertical gradients are not 
-     * defined for a 2D field, which is what's assumed here.
-     * 
-     * @return FeatureCollection.
-     */
-    @Override
-    public FeatureCollection createFeatureCollection()
-            throws SchemaException, IllegalAttributeException, TransformException {
-        return null;
-    }
-
-    /**
      * Creates and returns a FeatureCollection for the vertical gradient of the 
      * 3D field sliced at vertical index k.
      * 
+     * @param k
      * @return FeatureCollection.
      */
     @Override
     public FeatureCollection createFeatureCollection(int k)
             throws SchemaException, IllegalAttributeException, TransformException {       
-        //TODO: implement vertical gradient calculations here
+        
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
         double[] srcPts = new double[2];//gt2.1-
         double[] dstPts = new double[2];//gt2.1-
-        Coordinate[] c = null;
-        Polygon p = null;
-        LinearRing lr = null;
-        Feature f = null;
-        double value = 0;
+        Coordinate[] c;
+        Polygon p;
+        LinearRing lr;
+        Feature f;
+        double value;
         //Get coords along lines of constant eta
         int[] jj = new int[] {0,0,1,1,0};
         int[] ii = new int[] {0,1,1,0,0};
@@ -128,7 +105,7 @@ public class MapDataGradientVertical extends MapDataScalar {
                         lr = gf.createLinearRing(c);
                         p = gf.createPolygon(lr,null);
     //                    p = gcst.transformPolygon(gf.createPolygon(lr,null),gf);//gt2.1+
-                        f = ft.create(new Object[] {p,""+i+"_"+j,new Integer(i),new Integer(j),new Double(value)});
+                        f = ft.create(new Object[] {p,""+i+"_"+j, i, j, value});
                         fc.add(f);
                     }
                 }
@@ -150,17 +127,17 @@ public class MapDataGradientVertical extends MapDataScalar {
     @Override
     public FeatureCollection createFeatureCollection(double z)
             throws SchemaException, IllegalAttributeException, TransformException {
-        //TODO: implement vertical gradient calculations here
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
         double[] srcPts = new double[2];//gt2.1-
         double[] dstPts = new double[2];//gt2.1-
-        Coordinate[] c = null;
-        Polygon p = null;
-        LinearRing lr = null;
-        Feature f = null;
-        double value = 0;
+        Coordinate[] c;
+        Polygon p;
+        LinearRing lr;
+        Feature f;
+        double value;
         //Get coords along lines of constant eta
         int[] jj = new int[] {0,0,1,1,0};
         int[] ii = new int[] {0,1,1,0,0};
@@ -237,16 +214,17 @@ public class MapDataGradientVertical extends MapDataScalar {
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,field.getName());
 
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
         double[] srcPts = new double[2];//gt2.1-
         double[] dstPts = new double[2];//gt2.1-
-        Coordinate[] c = null;
-        MultiPolygon mp = null;
-        LinearRing lr = null;
-        Feature f = null;
-        double value = 0;
+        Coordinate[] c;
+        MultiPolygon mp;
+        LinearRing lr;
+        Feature f;
+        double value;
         //Get coords along lines of constant eta
         int[] jj = new int[] {0,0,1,1,0};
         int[] ii = new int[] {0,1,1,0,0};
@@ -268,14 +246,7 @@ public class MapDataGradientVertical extends MapDataScalar {
                         nf++;
                         lr = gf.createLinearRing(c);
                         mp = gf.createMultiPolygon(new Polygon[] {gf.createPolygon(lr,null)});
-                        f = ftp.create(new Object[] {
-                            mp,
-                            ""+i+"_"+j,
-                            new Integer(i),
-                            new Integer(j),
-                            sDate,
-                            kSlice,
-                            new Double(value)});
+                        f = ftp.create(new Object[] {mp, ""+i+"_"+j, i, j, sDate, kSlice, value});
                         fcp.add(f);
                     }
                 }
@@ -295,7 +266,7 @@ public class MapDataGradientVertical extends MapDataScalar {
         //TODO: implement vertical gradient calculations here
         int nf = 0;
         String sDate = date.getDateTimeString();
-        Double zSlice = new Double(z);
+        Double zSlice = z;
         System.out.println("Creating export FeatureCollection for z = "+z+"; date = "+sDate);
         FeatureCollection fcp = FeatureCollections.newCollection();
         //Create feature type for export
@@ -319,16 +290,17 @@ public class MapDataGradientVertical extends MapDataScalar {
                              java.lang.Double.class);
         FeatureType ftp = FeatureTypeFactory.newFeatureType(aTypes,field.getName());
 
+        ModelGrid3D grid = GlobalInfo.getInstance().getGrid3D();
         int Lm = grid.getLm();
         int Mm = grid.getMm();
         double lon,lat;
         double[] srcPts = new double[2];//gt2.1-
         double[] dstPts = new double[2];//gt2.1-
-        Coordinate[] c = null;
-        Polygon p = null;
-        LinearRing lr = null;
-        Feature f = null;
-        double value = 0;
+        Coordinate[] c;
+        Polygon p;
+        LinearRing lr;
+        Feature f;
+        double value;
         //Get coords along lines of constant eta
         int[] jj = new int[] {0,0,1,1,0};
         int[] ii = new int[] {0,1,1,0,0};
@@ -356,12 +328,9 @@ public class MapDataGradientVertical extends MapDataScalar {
                                 p = gf.createPolygon(lr,null);
                                 f = ftp.create(new Object[] {
                                     p,
-                                    ""+i+"_"+j,
-                                    new Integer(i),
-                                    new Integer(j),
+                                    ""+i+"_"+j, i, j,
                                     sDate,
-                                    zSlice,
-                                    new Double(value)});
+                                    zSlice, value});
                                 fcp.add(f);
                             }
                         }
@@ -373,26 +342,6 @@ public class MapDataGradientVertical extends MapDataScalar {
         }
         System.out.println("Created "+nf+" scalar features.");
         return fcp;
-    }
-
-    /**
-     * This function does NOTHING because 2d fields do not have vertical gradients. 
-     *
-     * @param shpFile - String;  IGNORED!!
-     * @param add     - boolean; IGNORED!!
-     *
-     * @throws java.net.MalformedURLException
-     * @throws java.io.IOException
-     * @throws org.geotools.factory.FactoryConfigurationError
-     * @throws org.geotools.feature.SchemaException
-     * @throws org.geotools.feature.IllegalAttributeException
-     * @throws org.opengis.referencing.operation.TransformException
-     */
-    @Override
-    public void exportToShapefile(String shpFile,boolean add)
-            throws MalformedURLException, IOException, FactoryConfigurationError, SchemaException,
-                   IllegalAttributeException, TransformException {
-        //this function does nothing because 2d fields do not have vertical gradients
     }
 
     /**
@@ -446,6 +395,7 @@ public class MapDataGradientVertical extends MapDataScalar {
      * @throws org.geotools.feature.IllegalAttributeException
      * @throws org.opengis.referencing.operation.TransformException
      */
+    @Override
     public void exportToShapefile(double z, String shpFile, boolean add)
             throws MalformedURLException, IOException, FactoryConfigurationError,
                    SchemaException, IllegalAttributeException, TransformException {

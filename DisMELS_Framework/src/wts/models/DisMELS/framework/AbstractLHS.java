@@ -1,10 +1,5 @@
 /*
  * AbstractLHS.java
- *
- * Created on January 19, 2006, 1:58 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
  */
 
 package wts.models.DisMELS.framework;
@@ -18,20 +13,28 @@ import wts.roms.model.Interpolator3D;
 import wts.roms.model.LagrangianParticle;
 
 /**
- *
- * @author William Stockhausen
+ * An abstract base class that provides default implementations for many of the 
+ * methods required to implement LifeStageInterface.
+ * 
+ * The implementations for the methods setAttributes(LifeStageAttributesInterface),
+ * updateAttributes() and updateVariables() cover the attributes identified by keys
+ * in LifeStageAttributesInterface. Subclasses overriding these methods may call
+ * the overriden method on super to obtain this functionality without having to
+ * rewrite it.
  */
 public abstract class AbstractLHS implements LifeStageInterface {
     
     //Static fields
-    /* ROMS 3d interpolator object */
+    /** ROMS 3d interpolator object */
     protected static Interpolator3D i3d;
-    /* Random Number Generator */
-    protected static RandomNumberGenerator rng = null;
+    /** Random Number Generator */
+    protected static final RandomNumberGenerator rng = GlobalInfo.getInstance().getRandomNumberGenerator();
     /** tolerance to edge of model grid */
     protected static double tolGridEdge = 0.5;
     
+    /** String for "," */
     protected static final String cc = ",";
+    /** the output format used for decimal numbers */
     protected static final DecimalFormat decFormat = new DecimalFormat("#.#####");
 
     /**flag to write track info to output file */
@@ -75,26 +78,38 @@ public abstract class AbstractLHS implements LifeStageInterface {
     protected long id = 0;
     
     //fields that reflect attribute values
+    /* active status (individuals have not yet been activated if active=fale and alive=true) */
     protected boolean active=false;
+    /* alive status */
     protected boolean alive=true;
-    protected boolean attached=false;
+    /* time at which individual was "released" in simulation */
     protected double  startTime=0;
+    /* "current" time */
     protected double  time=0;
+    /* current (cumulative) age (days) */
     protected double  age=0;
+    /* time within current life stage (days) */
     protected double  ageInStage=0;
+    /* number of individual's associated with this instance */
     protected double  number=0;
+    /* latitude for individual's location */
     protected double  lat=0;
+    /* longitude for individual's location */
     protected double  lon=0;
+    /* depth at individual's location */
     protected double  depth=0;
+    /* bathymetric depth at individual's location */
+    protected double  bathym=0;
+    /* grid cell id corresponding to individual's location */
     protected String  gridCellID="";
     
     /**
      * Creates a new instance of AbstractLHS
+     * @param typeName
      */
     protected AbstractLHS(String typeName) {
         this.typeName = typeName;
         id = LHS_Factory.getNewID();
-        if (rng==null) rng = GlobalInfo.getInstance().getRandomNumberGenerator();
         if (i3d==null) i3d = GlobalInfo.getInstance().getInterpolator3D();
     }
     
@@ -109,10 +124,10 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
     
     /**
-     * Subclasses can use this method to make sure the attributes object from
+     * Subclasses can use this method to make sure the parameters object from
      * this superclass refers to the one from their class.
      * 
-     * @param subAtts 
+     * @param subParams 
      */
     protected void setParametersFromSubClass(LifeStageParametersInterface subParams){
         params = subParams;
@@ -120,6 +135,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
     
     /**
      *  Returns the instance id.
+     * @return 
      */
     @Override
     public final long getID() {
@@ -194,7 +210,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
      */
     @Override
     public String getTrackAsString(int coordType){
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         if (coordType==COORDINATE_TYPE_PROJECTED) {
             for (Coordinate c : track){
                 strb.append(decFormat.format(c.x));strb.append(":");
@@ -214,6 +230,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
 
     /**
      *  Returns the LHS type for the instance.
+     * @return 
      */
     @Override
     public String getTypeName() {return typeName;}
@@ -221,6 +238,10 @@ public abstract class AbstractLHS implements LifeStageInterface {
 //  Methods inherited from LifeHistoryStageIF  
     /**
      *  This method should be overridden by extending classes.
+     * 
+     * @return - clone of the instance on which it was called
+     * 
+     * @throws java.lang.CloneNotSupportedException
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
@@ -228,7 +249,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
 
     /**
-     * Returns the reportfor the implementing class as a CSV formatted string.
+     * Returns the report for the implementing class as a CSV formatted string.
      *
      * @return - the attributes and track as a csv-formatted String
      */
@@ -254,7 +275,11 @@ public abstract class AbstractLHS implements LifeStageInterface {
         return writeTracksFlag;
     }
     
-    /** Sets flag to write complete track information (if true) */
+    /** 
+     * Sets flag to write complete track information (if true)
+     * 
+     * @param b - the value to set
+     */
     @Override
     public void setWriteTracksFlag(boolean b){
         writeTracksFlag = b;
@@ -271,7 +296,7 @@ public abstract class AbstractLHS implements LifeStageInterface {
             track.add(c);
             trackLL.add(new Coordinate(lon,lat,-depth));
         } else {
-            if (track.size()==0) {
+            if (track.isEmpty()) {
                 //add current location to tracks as 1st coordinate
                 track.add(c);
                 trackLL.add(new Coordinate(lon,lat,-depth));
@@ -295,6 +320,9 @@ public abstract class AbstractLHS implements LifeStageInterface {
      * as well. 
      *  As a side effect, updateVariables() is called to update instance variables.
      *  Instance field "id" is also updated.
+     * 
+     * Subclasses that define new attributes should override this method.
+     * 
      * @param newAtts - should be instance of SimplePelagicLHSAttributes
      */
     @Override
@@ -304,7 +332,6 @@ public abstract class AbstractLHS implements LifeStageInterface {
         key = LifeStageAttributesInterface.PROP_alive;      atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_age;        atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_ageInStage; atts.setValue(key,newAtts.getValue(key));
-        key = LifeStageAttributesInterface.PROP_attached;   atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_gridCellID; atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_horizPos1;  atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_horizPos2;  atts.setValue(key,newAtts.getValue(key));
@@ -317,24 +344,28 @@ public abstract class AbstractLHS implements LifeStageInterface {
         key = LifeStageAttributesInterface.PROP_time;       atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_vertPos;    atts.setValue(key,newAtts.getValue(key));
         key = LifeStageAttributesInterface.PROP_vertType;   atts.setValue(key,newAtts.getValue(key));
+        key = LifeStageAttributesInterface.PROP_bathym;     atts.setValue(key,newAtts.getValue(key));
         id = atts.getValue(LifeStageAttributesInterface.PROP_id, id);
         updateVariables();
     }
     
     /**
-     * Updates attribute values defined for this abstract class. Subclasses should
-     * override this method, possibly calling super.updateAttributes().
+     * Updates attribute values defined for this abstract class. 
+     * 
+     * Subclasses that define new attributes should override this method, 
+     * possibly calling super.updateAttributes().
+     * 
      */
     protected void updateAttributes() {
         //note that the following do not need to be updated
         //  id, parentID, origID, startTime, horizType, vertType
         atts.setValue(LifeStageAttributesInterface.PROP_active,active);
         atts.setValue(LifeStageAttributesInterface.PROP_alive,alive);
-        atts.setValue(LifeStageAttributesInterface.PROP_attached,attached);
         atts.setValue(LifeStageAttributesInterface.PROP_time,time);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
         atts.setValue(LifeStageAttributesInterface.PROP_horizPos2,lat);
         atts.setValue(LifeStageAttributesInterface.PROP_vertPos,depth);
+        atts.setValue(LifeStageAttributesInterface.PROP_bathym,bathym);
         atts.setValue(LifeStageAttributesInterface.PROP_age,age);
         atts.setValue(LifeStageAttributesInterface.PROP_ageInStage,ageInStage);
         atts.setValue(LifeStageAttributesInterface.PROP_number,number);
@@ -342,23 +373,63 @@ public abstract class AbstractLHS implements LifeStageInterface {
     }
 
     /**
-     * Updates local variables from the attributes.  
+     * Updates the following variables from the attributes:
+     *   active, alive, startTime, time, lon, lat, depth, bathym,
+     *   age, ageInStage, number, gridCellID
+     * 
      * The following are NOT updated here:
      *  id, parentID, origID, hType, vType
+     * 
+     * Subclasses that define new variables should override this class.
+     * 
      */
     protected void updateVariables() {
         active     = atts.getValue(LifeStageAttributesInterface.PROP_active,active);
         alive      = atts.getValue(LifeStageAttributesInterface.PROP_alive,alive);
-        attached   = atts.getValue(LifeStageAttributesInterface.PROP_attached,attached);
         startTime  = atts.getValue(LifeStageAttributesInterface.PROP_startTime,startTime);
         time       = atts.getValue(LifeStageAttributesInterface.PROP_time,time);
         lon        = atts.getValue(LifeStageAttributesInterface.PROP_horizPos1,lon);
         lat        = atts.getValue(LifeStageAttributesInterface.PROP_horizPos2,lat);
         depth      = atts.getValue(LifeStageAttributesInterface.PROP_vertPos,depth);
+        bathym     = atts.getValue(LifeStageAttributesInterface.PROP_bathym,bathym);
         age        = atts.getValue(LifeStageAttributesInterface.PROP_age,age);
         ageInStage = atts.getValue(LifeStageAttributesInterface.PROP_ageInStage,ageInStage);
         number     = atts.getValue(LifeStageAttributesInterface.PROP_number,number);
         gridCellID = atts.getValue(LifeStageAttributesInterface.PROP_gridCellID,gridCellID);
     }
-    
+
+    @Override
+    public double getStartTime() {
+        return startTime;
+    }
+
+    @Override
+    public void setStartTime(double newTime) {
+        startTime = newTime;
+        time      = startTime;
+        atts.setValue(LifeStageAttributesInterface.PROP_startTime,startTime);
+        atts.setValue(LifeStageAttributesInterface.PROP_time,time);
+    }
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+
+    @Override
+    public void setActive(boolean b) {
+        active = b;
+        atts.setActive(b);
+    }
+
+    @Override
+    public boolean isAlive() {
+        return alive;
+    }
+
+    @Override
+    public void setAlive(boolean b) {
+        alive = b;
+        atts.setAlive(b);
+    }
 }

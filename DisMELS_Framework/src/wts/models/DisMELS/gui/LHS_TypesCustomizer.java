@@ -216,22 +216,23 @@ public class LHS_TypesCustomizer extends javax.swing.JPanel
      * Add an LHS type to the Types Customizer
      */
     private void addNextType() {
-        LHS_Type newType = new LHS_Type();
         DefaultMutableTreeNode node = 
                 (DefaultMutableTreeNode) jTree.getLastSelectedPathComponent();
         if (node!=null) {
+            DefaultMutableTreeNode child = null;
             LHS_Type type = (LHS_Type) node.getUserObject();
-            newType.setLHSName(type.getNextLHSName());
-            if (!type.getNextLHSClass().isEmpty()) {
-                newType.setLHSClass(type.getNextLHSClass());
+            for (String name : type.getNextLHSNames()){
+                LHS_Type newType = new LHS_Type();
+                newType.setLHSName(name);
+                newType.setLHSClass(type.getNextLHSClass(name));
+                lhsTypes.addType(newType);        
+                child = new DefaultMutableTreeNode(newType,false);
+                tm.insertNodeInto(child,root,root.getChildCount());
             }
+            int i = tm.getIndexOfChild(root,child);//last node created
+            selectNode(i);//select last node
+            repaint();        
         }
-        lhsTypes.addType(newType);        
-        DefaultMutableTreeNode child = new DefaultMutableTreeNode(newType,false);
-        tm.insertNodeInto(child,root,root.getChildCount());
-        int i = tm.getIndexOfChild(root,child);
-        selectNode(i);
-        repaint();        
     }    
     
     private void createTree() {

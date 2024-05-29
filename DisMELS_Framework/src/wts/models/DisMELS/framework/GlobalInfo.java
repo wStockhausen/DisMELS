@@ -7,11 +7,18 @@ package wts.models.DisMELS.framework;
 import com.wtstockhausen.utils.RandomNumberGenerator;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -59,7 +66,7 @@ public class GlobalInfo implements LookupListener {
     private String workingDirFN  = PROP_NotSet;
     
     /** ROMS Global Info object */
-    private wts.roms.model.GlobalInfo romsGI;
+    private final wts.roms.model.GlobalInfo romsGI;
     
     /** lookup result for "plugin" LHS classes */
     transient private Lookup.Result<LifeStageInterface> lkResLHSs = null;
@@ -76,11 +83,11 @@ public class GlobalInfo implements LookupListener {
     private Interpolator3D i3d = null;
     
     /** support for throwing property changes */
-    transient private PropertyChangeSupport propertySupport;
+    private final transient PropertyChangeSupport propertySupport;
     
     /** class-private constructor */
     private GlobalInfo(){
-        logger.info("Instantiating singleton");
+        logger.info("--Instantiating singleton");
         /* look up LHS classes */
         lkResLHSs = Lookup.getDefault().lookupResult(LifeStageInterface.class);
         lkResLHSs.addLookupListener(this);//add info object as listener on LHS class changes
@@ -102,9 +109,20 @@ public class GlobalInfo implements LookupListener {
         
         rng = new RandomNumberGenerator();
         
-        /* set time zone and format reference date */
+        /* get ROMS global info object */
         romsGI = wts.roms.model.GlobalInfo.getInstance();
+        
+        /* add property support */
         propertySupport = new PropertyChangeSupport(this);
+        logger.info("--Instantiated singleton");
+    }
+    
+    /**
+     * Returns the current Calendar instance.
+     * @return 
+     */
+    public wts.models.utilities.CalendarIF getCalendar(){
+        return romsGI.getCalendar();
     }
     
     /**
@@ -117,10 +135,45 @@ public class GlobalInfo implements LookupListener {
     
     /**
      * Sets a new Interpolator3D instance.
+     * 
+     * NOTE: This instance is explicity set to null in ModelControllerBean when a 
+     * simulation is "cleared" to free up memory. The static reference to this 
+     * instance in AbstractLHS is also explicitly set to null because the instance wold not be 
+     * garbage-collected.
+     * 
+     * References to the GlobalInfo I3D instance in LHS classes that DO NOT inherit 
+     * from AbstractLHS are not explicitly set to null (don't know what these 
+     * classes might be, as they are added as NetBeans modules outside DisMELS itself)
+     * when the simulation is cleared in ModelCOntrollerBean.
+     * 
+     * These classes should implement their own logic to deal with the possibility that
+     * the I3D instance in the GlobalInfo instance has been reset to null.
+     * 
      * @param newI3D 
      */
     public void setInterpolator3D(Interpolator3D newI3D){
         i3d = newI3D;
+        if (i3d==null){
+            logger.info("i3d set to null");
+            Set<Class<? extends LifeStageInterface>> lhss = getLHSClasses();
+            if (lhss!=null){
+                Iterator<Class<? extends LifeStageInterface>> it = lhss.iterator();
+                while(it.hasNext()){
+                    try {
+                        Class<? extends LifeStageInterface> cls = it.next();
+                        logger.info(cls.getName());
+                        Field f = com.wtstockhausen.utils.FieldFinder.getField(cls,"i3d");
+                        try {
+                            f.set(null, i3d);
+                        } catch (IllegalArgumentException | IllegalAccessException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                    } catch (SecurityException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
+            }
+        }
     }
     
     /**
@@ -160,21 +213,27 @@ public class GlobalInfo implements LookupListener {
      * @return
      */
     public String getWorkingDir(){
-        return workingDirFN;
+        return romsGI.getWorkingDir();
     }
     
     /**
-     * Sets the working directory.
-     *  Note that this calls LHS_Factory.reset(), 
-     *  which call LHS_Types.readXML() to update the LHS_Types singleton.
-     * @param dir - new plug-ins directory
+     * Sets the working directory (WD).
+     * Effects:
+     *   1. Reads ROMS.properties file in new WD, if the file exists, otherwise
+     *      it uses the current ROMS properties and writes a new ROMS.properties file in the new WD.
+     *   2. Calls LHS_Factory.reset(), which call LHS_Types.readXML(), which reads LHSTypes.xml in the new WD 
+     *      to update the LHS_Types singleton.
+     * 
+     * @param dir - path to new working directory directory
      */
     public void setWorkingDir(String dir){
+        logger.info("setWorkingDir('"+dir+"')");
         String oldVal = workingDirFN;
         workingDirFN = dir;
+        romsGI.setWorkingDir(dir);
         LHS_Types.getInstance().readXML();//read LHS_Types.xml file in dir
         LHS_Factory.reset();              //reset the lhs maps in LHS_Factory 
-        logger.info("Changed working directory to "+workingDirFN);
+        logger.info("Changed working directory to '"+workingDirFN+"'");
         propertySupport.firePropertyChange(PROP_WorkingDirFN, oldVal, workingDirFN);//fire property change to listeners
     }
     
@@ -189,11 +248,9 @@ public class GlobalInfo implements LookupListener {
     /**
      * Sets the reference date using the parsed value of the input string.
      * @param strDate - reference date in string format
-     * @throws ParseException
      */
-    public void setRefDateString(String strDate) throws ParseException {
+    public void setRefDateString(String strDate) {
         romsGI.setRefDateString(strDate);
-        AbstractLHSAttributes.refDate = romsGI.getRefDate();
     }
     
     /**
@@ -254,12 +311,12 @@ public class GlobalInfo implements LookupListener {
     }
     
     /**
-     * Sets the ROMS grid file name.
+     * Gets the current ModelGrid3D object.
      * 
-     * @param file - the new filename
+     * @return - the ModelGrid3D object
      */
-    public void setGridFile(String file){
-        romsGI.setGridFile(file);
+    public wts.roms.model.ModelGrid3D getGrid3D(){
+        return romsGI.getGrid3D();
     }
     
     /**
@@ -269,33 +326,6 @@ public class GlobalInfo implements LookupListener {
      */
     public String getCanonicalFile(){
         return romsGI.getCanonicalFile();
-    }
-    
-    /**
-     * Sets the ROMS model canonical file name.
-     * 
-     * @param file - the new filename
-     */
-    public void setCanonicalFile(String file){
-        romsGI.setCanonicalFile(file);
-    }
-    
-    /**
-     * Gets the ROMS grid file name.
-     * 
-     * @return - the filename 
-     */
-    public String getMapRegion(){
-        return romsGI.getMapRegion();
-    }
-    
-    /**
-     * Sets the ROMS mapValues region.
-     * 
-     * @param region - the new mapValues region
-     */
-    public void setMapRegion(String region){
-        romsGI.setMapRegion(region);
     }
     
     /**
@@ -310,10 +340,41 @@ public class GlobalInfo implements LookupListener {
     /**
      * Sets the seed for the random number generator.
      * 
-     * @param see - the new rng sesed
+     * @param seed - the new rng sesed
      */
     public void setRandomNmberGeneratorSeed(long seed){
         rng.setSeed(seed);
+    }
+
+    /**
+     * Write properties to file represented by fn. Should be called before application
+     * is closed to save current property values.
+     * 
+     * @param fn - the file name
+     */
+    public void writeProperties(String fn) throws IOException{
+        logger.info("Writing properties to "+fn);
+//        String rfn = workingDirFN+File.separator+romsGI.propsFN; 
+//        romsGI.writeProperties(rfn);
+        File f = new File(fn);
+        writeProperties(f);
+        logger.info("Done writing properties to "+fn);
+    }
+
+    /**
+     * Write properties to file f. Should be called before application
+     * is closed to save current property values.
+     * 
+     * @param f - the file name
+     */
+    public void writeProperties(File f) throws IOException{
+        logger.info("Writing properties to "+f.getPath());
+        Properties p = new Properties();
+        writeProperties(p);
+        FileOutputStream fos = new FileOutputStream(f);
+        p.store(fos,null);
+        fos.close();
+        logger.info("Done writing properties to "+f.getPath());
     }
 
     /**
@@ -323,9 +384,38 @@ public class GlobalInfo implements LookupListener {
      * @param p - the Properties object
      */
     public void writeProperties(java.util.Properties p){
-        romsGI.writeProperties(p);
         p.setProperty(this.getClass().getName()+"_version", version);
         p.setProperty(PROP_WorkingDirFN, workingDirFN);
+//        romsGI.writeProperties(p);
+    }
+    
+    /**
+     * Read properties from file represented by fn. Should be called at application startup
+     * to read in previously-saved property values.
+     * 
+     * @param fn - the Properties file name
+     */
+    public void readProperties(String fn) throws IOException{
+        logger.info("--readProperties(String fn): reading properties from "+fn);
+        File f = new File(fn);
+        readProperties(f);
+        logger.info("--readProperties(String fn): done reading properties from "+fn);
+    }
+    
+    /**
+     * Read properties from File f. Should be called at application startup
+     * to read in previously-saved property values.
+     * 
+     * @param f - the File object
+     */
+    public void readProperties(java.io.File f) throws IOException{
+        logger.info("----readProperties(java.io.File f): reading properties from "+f.getAbsolutePath());
+        Properties p = new Properties();
+        FileInputStream fis = new FileInputStream(f);
+        p.load(fis);
+        readProperties(p);
+        fis.close();
+        logger.info("----readProperties(java.io.File f): done reading properties from "+f.getAbsolutePath());
     }
     
     /**
@@ -335,11 +425,11 @@ public class GlobalInfo implements LookupListener {
      * @param p - the Properties object
      */
     public void readProperties(java.util.Properties p){
-        romsGI.readProperties(p);
+        logger.info("------readProperties(java.util.Properties p): reading properties");
         String version = p.getProperty(this.getClass().getName()+"_version");
         if (version.equals(GlobalInfo.version)){
             setWorkingDir(p.getProperty(PROP_WorkingDirFN, workingDirFN));
         }
-        
+        logger.info("------readProperties(java.util.Properties p): done reading properties");        
     }
 }

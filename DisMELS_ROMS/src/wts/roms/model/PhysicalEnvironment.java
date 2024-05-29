@@ -12,6 +12,8 @@ package wts.roms.model;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import ucar.ma2.Index;
 
 /**
@@ -26,7 +28,6 @@ public class PhysicalEnvironment {
     public static boolean updateLayerDepthsLikeROMS = false;
     
     NetcdfReader nR;
-    ModelGrid3D grid3D;
     
     int iTime = -1;
     double ocean_time;
@@ -35,25 +36,30 @@ public class PhysicalEnvironment {
     /** map of all ModelData fields */
     protected final HashMap<String,ModelData> mdMap = new HashMap<>(20);
     
+    /** Class logger */
+    private static final Logger logger = Logger.getLogger(PhysicalEnvironment.class.getName());
+    
     /** Creates a new instance of PhysicalEnvironment */
     public PhysicalEnvironment() {
-        createFieldMap();
+        logger.info("starting PhysicalEnvironment()");
+        createFieldMaps();
+        logger.info("finished PhysicalEnvironment()");
     }
     
     /**
      * Instantiates a PhysicalEnvironment object.
      * 
      * @param nR
-     * @param modGrid3D
      * @throws java.io.IOException 
      */
-    public PhysicalEnvironment(NetcdfReader nR, ModelGrid3D modGrid3D) 
+    public PhysicalEnvironment(NetcdfReader nR) 
                                throws java.io.IOException{
-        createFieldMap();
+        logger.info("starting PhysicalEnvironment(nR)");
+        createFieldMaps();
         this.iTime = 0;
         this.nR = nR;
-        grid3D = modGrid3D;
         readTimeDependentFields();
+        logger.info("finished PhysicalEnvironment(nR)");
     }
     
     /**
@@ -61,31 +67,33 @@ public class PhysicalEnvironment {
      * 
      * @param iTime
      * @param nR
-     * @param modGrid3D
      * @throws java.lang.ArrayIndexOutOfBoundsException
      * @throws java.io.IOException 
      */
-    public PhysicalEnvironment(int iTime, NetcdfReader nR, ModelGrid3D modGrid3D) 
+    public PhysicalEnvironment(int iTime, NetcdfReader nR) 
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                        java.io.IOException {
-        createFieldMap();
+        logger.info("starting PhysicalEnvironment(iTime,nR)");
+        createFieldMaps();
         this.iTime = iTime;
         this.nR = nR;
-        grid3D = modGrid3D;
         readTimeDependentFields();
+        logger.info("finished PhysicalEnvironment(iTime,nR)");
     }
     
     /**
      * Creates the initial map of internal names to model fields.
      */
-    private void createFieldMap(){
+    private void createFieldMaps(){
         GlobalInfo gi = GlobalInfo.getInstance();
         CriticalModelVariablesInfo cvis = gi.getCriticalModelVariablesInfo();
         Iterator<String> keys = cvis.getNames().iterator();
         while (keys.hasNext()){
             String key = keys.next();
             CriticalVariableInfo cvi = cvis.getVariableInfo(key);
-            if (cvi.isSpatialField()) mdMap.put(key,null);//add field
+            if (cvi.isSpatialField()) {
+                mdMap.put(key,null);
+            }//add field
         }
         mdMap.put("Hz",null);//computed field
         mdMap.put("w",null); //computed field
@@ -94,7 +102,9 @@ public class PhysicalEnvironment {
         while (keys.hasNext()){
             String key = keys.next();
             OptionalVariableInfo mvi = mvis.getVariableInfo(key);
-            if (mvi.isSpatialField()) mdMap.put(key,null);//additional field
+            if (mvi.isSpatialField()) {
+                mdMap.put(key,null);
+            }//additional field
         }        
     }
     
@@ -114,8 +124,10 @@ public class PhysicalEnvironment {
      *Compute vertical cell sizes at all horizontal rho points
      */
     public void computeHz() {
+        logger.info("starting computeHz()");
         double[] zw;
         int N,M,L;
+        ModelGrid3D grid3D = GlobalInfo.getInstance().getGrid3D();
         N = grid3D.getN();
         M = grid3D.getM();
         L = grid3D.getL();
@@ -125,6 +137,26 @@ public class PhysicalEnvironment {
         Hza.setIndexName(2,"xi_rho");
         Index ima = Hza.getIndex();
         ModelData zeta = getField("zeta");
+        if (zeta==null){
+            /* need to create a zeta field with all 0's */
+            logger.info("creating 'flat' zeta field (SSH)");
+            Array za = Array.factory(double.class,new int[] {M+1,L+1});
+            za.setIndexName(0,"eta_rho");
+            za.setIndexName(1,"xi_rho");
+            Index iza = za.getIndex();
+            for (int eta=0;eta<=M;eta++) {
+                for (int xi=0;xi<=L;xi++) {
+                    za.setDouble(iza.set(eta,xi),0.0);
+                }
+            }
+            logger.info("created array for zeta and set all elements to 0");
+            zeta = new ModelData(ocean_time,za,"zeta");
+            logger.info("created ModelData object for zeta");
+            zeta.setDimIndices(-1, -1, 0, 1);
+            logger.info("finished setDimIndices for zeta");
+            mdMap.put("zeta", zeta);
+            logger.info("created 'flat' zeta ModelData field (SSH)");
+        }
         for (int eta=0;eta<=M;eta++) {
             for (int xi=0;xi<=L;xi++) {
                 zw = computeLayerZs(grid3D.h.getValue(xi,eta),
@@ -137,6 +169,7 @@ public class PhysicalEnvironment {
         ModelData Hz = new ModelData(ocean_time,Hza,"Hz");
         Hz.setDimIndices(-1,0,1,2);
         mdMap.put("Hz",Hz);
+        logger.info("finished computeHz()");
     }
     
     /**
@@ -148,6 +181,7 @@ public class PhysicalEnvironment {
      *@param zeta--sea surface height (m)
      */
     public double[] computeLayerZs(double bd, double zeta) {
+        ModelGrid3D grid3D = GlobalInfo.getInstance().getGrid3D();
         return grid3D.computeLayerZs(bd,zeta);
     }
     
@@ -155,7 +189,9 @@ public class PhysicalEnvironment {
      * Computes the vertical velocity field W by scaling the omega field.
      */
     public void computeW() {
+        logger.info("starting computeW()");
         int L,M,N;
+        ModelGrid3D grid3D = GlobalInfo.getInstance().getGrid3D();
         L = grid3D.getL();
         M = grid3D.getM();
         N = grid3D.getN();
@@ -179,6 +215,7 @@ public class PhysicalEnvironment {
         ModelData w = new ModelData(ocean_time,Wa,"w");
         w.setDimIndices(-1,0,1,2);
         mdMap.put("w",w);
+        logger.info("finished computeW()");
     }
     
     /**
@@ -208,7 +245,6 @@ public class PhysicalEnvironment {
         PhysicalEnvironment pe = new PhysicalEnvironment();
         pe.iTime = iTime+1;
         pe.nR    = nR;
-        pe.grid3D = grid3D;
         pe.readTimeDependentFields();
         return pe;
     }
@@ -240,18 +276,8 @@ public class PhysicalEnvironment {
         PhysicalEnvironment pe = new PhysicalEnvironment();
         pe.iTime = iTime-1;
         pe.nR    = nR;
-        pe.grid3D = grid3D;
         pe.readTimeDependentFields();
         return pe;
-    }
-
-    /**
-     * Gets the 3D model grid associated with the PhysicalEnvironment instance.
-     * 
-     * @return 
-     */
-    public ModelGrid3D getGrid() {
-        return grid3D;
     }
     
     /**
@@ -269,6 +295,11 @@ public class PhysicalEnvironment {
      * and thus the next() method cannot be used on it.
      * Note: if updateHzLikeROMS is true, then the SSH field (zeta) is copied
      * from pe0, not interpolated using both pe's.
+     * @param t
+     * @param pe0
+     * @param pe1
+     * 
+     * @return 
      */
     public static PhysicalEnvironment interpolate(double t,
                                                   PhysicalEnvironment pe0, 
@@ -285,7 +316,6 @@ public class PhysicalEnvironment {
             ipe = new PhysicalEnvironment();
             ipe.iTime = -1;
             ipe.nR    = null;
-            ipe.grid3D = pe1.grid3D;
 
             ipe.ocean_time = t;
 
@@ -320,6 +350,7 @@ public class PhysicalEnvironment {
     private void readTimeDependentFields() 
                                throws java.lang.ArrayIndexOutOfBoundsException,
                                       java.io.IOException {
+        logger.info("Starting readTimeDependentFields()");
         ocean_time = nR.getOceanTime(iTime);
         Iterator<String> it = mdMap.keySet().iterator();
         GlobalInfo gi = GlobalInfo.getInstance();
@@ -328,19 +359,27 @@ public class PhysicalEnvironment {
         while (it.hasNext()){
             String fld = it.next();
             if (!(fld.equals("w")||fld.equals("Hz"))){
-                System.out.println("PE.readTimeDependentFields: updating "+fld);
+                logger.info("readTimeDependentFields: updating "+fld);
                 String var = cvi.getNameInROMSDataset(fld);
                 if (var!=null) {
                     mdMap.put(fld, nR.getModelData(iTime, var,fld));
                 } else {
                     var = ovi.getNameInROMSDataset(fld);
-                    if (var!=null) mdMap.put(fld, nR.getModelData(iTime, var,fld));
-                }
+                    if (var!=null) {
+                        mdMap.put(fld, nR.getModelData(iTime, var,fld));
+                    } else {
+                        JOptionPane.showMessageDialog(null, 
+                                                      "Problem in PhysicalEnvironment.readTimeDependentFields().", 
+                                                      "Could not read ROMS variable "+var+" for DisMELS field "+fld, 
+                                                      JOptionPane.ERROR_MESSAGE);
+                    }
+                } 
             }
         }
         computeHz();
         computeW();//computes w field from omega.  DO NOT READ IN w from ROMS as it is NOT equivalent!!!! 
         System.gc();//call garbage collection
+        logger.info("Finished readTimeDependentFields()");
     }
     
     /**
@@ -356,11 +395,11 @@ public class PhysicalEnvironment {
      * Gets model field based on internal name, not the ROMS alias.
      * 
      * @param fld - the internal name for the field
-     * @return 
+     * @return - ModelData object, or null if no model field matching fld
      */
     public ModelData getField(String fld) {
         ModelData md = mdMap.get(fld);//check model fields
-        if (md==null) md = grid3D.getGridField(fld);//check grid fields
+        if (md==null) md = GlobalInfo.getInstance().getGrid3D().getGridField(fld);//check grid fields
         return md;
     }
     

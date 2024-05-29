@@ -3,6 +3,36 @@
 <filesystem>
     <folder name="Actions">
         <folder name="File">
+            <file name="wts-roms-actions-OpenAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="org.netbeans.api.actions.Openable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.actions.OpenAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/actions/Bundle#OpenAction.CTL_OpenAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/open.gif"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+            </file>
+            <file name="wts-roms-actions-SaveAsAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="org.netbeans.api.actions.Savable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.actions.SaveAsAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/actions/Bundle#OpenAction.CTL_SaveAsAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+            </file>
+            <file name="wts-roms-actions-ResetAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.roms.actions.Resetable"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.actions.ResetAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/actions/Bundle#ResetAction.CTL_ResetAction"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/undo.gif"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
         </folder>
         <folder name="Tools">
             <file name="wts-roms-topcomponents-MapViewer-AddGISLayerAction.instance">
@@ -16,6 +46,36 @@
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
             <file name="wts-roms-topcomponents-MapViewer-RemoveGISLayerAction.instance"/>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridToShapefileAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.roms.topcomponents.ModelGridViewer.ModelGridViewerTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.topcomponents.ModelGridViewer.ExportGridToShapefileAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/topcomponents/ModelGridViewer/Bundle#ExportGridToShapefileAction.CTL_ExportGridToShapefileAction"/>
+                <!-- attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridLandMaskToShapefileAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.roms.topcomponents.ModelGridViewer.ModelGridViewerTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.topcomponents.ModelGridViewer.ExportGridLandMaskToShapefileAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/topcomponents/ModelGridViewer/Bundle#ExportGridLandMaskToShapefileAction.CTL_ExportGridLandMaskToShapefileAction"/>
+                <!-- attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridBathymetryToShapefileAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="type" stringvalue="wts.roms.topcomponents.ModelGridViewer.ModelGridViewerTopComponent"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="delegate" newvalue="wts.roms.topcomponents.ModelGridViewer.ExportGridBathymetryToShapefileAction"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="wts/roms/topcomponents/ModelGridViewer/Bundle#ExportGridBathymetryToShapefileAction.CTL_ExportGridBathymetryToShapefileAction"/>
+                <!-- attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/-->
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
             <file name="wts-roms-topcomponents-MapViewer-ExportMapAsImageAction.instance">
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
                 <attr name="type" stringvalue="wts.roms.topcomponents.MapViewer.MapViewerTopComponent"/>
@@ -39,6 +99,18 @@
             <file name="wts-roms-topcomponents-MapViewer-RemoveGISLayerAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-MapViewer-RemoveGISLayerAction.instance"/>
                 <attr name="position" intvalue="100"/>
+            </file>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridToShapefileAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-ModelGridViewer-ExportGridToShapefileAction.instance"/>
+                <attr name="position" intvalue="125"/>
+            </file>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridLandMaskToShapefileAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-ModelGridViewer-ExportGridLandMaskToShapefileAction.instance"/>
+                <attr name="position" intvalue="130"/>
+            </file>
+            <file name="wts-roms-topcomponents-ModelGridViewer-ExportGridBathymetryToShapefileAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-ModelGridViewer-ExportGridBathymetryToShapefileAction.instance"/>
+                <attr name="position" intvalue="135"/>
             </file>
             <file name="wts-roms-topcomponents-MapViewer-ExportMapAsImageAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Tools/wts-roms-topcomponents-MapViewer-ExportMapAsImageAction.instance"/>

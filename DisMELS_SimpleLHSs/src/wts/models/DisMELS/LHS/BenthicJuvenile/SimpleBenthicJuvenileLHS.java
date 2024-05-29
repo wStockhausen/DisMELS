@@ -18,8 +18,6 @@ import org.openide.util.lookup.ServiceProvider;
 import wts.models.DisMELS.LHS.Settler.SimpleSettlerLHSAttributes;
 import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHS;
 import wts.models.DisMELS.framework.*;
-import wts.models.utilities.DateTimeFunctions;
-import wts.models.utilities.ModelCalendar;
 import wts.roms.model.LagrangianParticle;
 
 /**
@@ -50,6 +48,8 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             "wts.models.DisMELS.LHS.BenthicAdult.SimpleBenthicAdultLHS"};
     /* Classes for spawned LHS */
     public static final String[] spawnedLHSClasses = new String[]{};
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(SimpleBenthicJuvenileLHS.class.getName());
     
         //Instance fields
             //  Fields hiding ones from superclass
@@ -232,7 +232,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             super.setAttributes(newAtts);
         } else {
             //TODO: should throw an error here
-            System.out.println("SimpleBenthicJuvenileLHS.setAttributes(): no match for attributes type");
+            logger.info("SimpleBenthicJuvenileLHS.setAttributes(): no match for attributes type");
         }
     }
     
@@ -404,18 +404,18 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
     public List<LifeStageInterface> getMetamorphosedIndividuals(double dt) {
         double dtp = 0.25*(dt/DAY_SECS);//use 1/4 timestep (converted from sec to d)
         output.clear();
-        LifeStageInterface nLHS = null;
+        List<LifeStageInterface> nLHSs = null;
         if (((ageInStage+dtp)>=minStageDuration)&&(size>=minStageSize)) {
             if ((numTrans>0)||!isSuperIndividual){
-                nLHS = createNextLHS();
-                if (nLHS!=null) output.add(nLHS);
+                nLHSs = createNextLHSs();
+                if (nLHSs!=null) output.addAll(nLHSs);
             }
         }
         return output;
     }
 
-    private LifeStageInterface createNextLHS() {
-        LifeStageInterface nLHS = null;
+    private List<LifeStageInterface> createNextLHSs() {
+        List<LifeStageInterface> nLHSs = null;
         try {
             //create LHS with "output" stage
             if (isSuperIndividual) {
@@ -429,7 +429,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
                  *          5) set number in new LHS to numTrans for current LHS
                  *          6) reset numTrans in current LHS
                  */
-                nLHS = LHS_Factory.createNextLHSFromSuperIndividual(typeName,this,numTrans);
+                nLHSs = LHS_Factory.createNextLHSsFromSuperIndividual(typeName,this,numTrans);
                 numTrans = 0.0;//reset numTrans to zero
             } else {
                 /** 
@@ -443,14 +443,14 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
                  *          4) copy current LHS origID to new LHS origID
                  *          5) kill current LHS
                  */
-                nLHS = LHS_Factory.createNextLHSFromIndividual(typeName,this);
+                nLHSs = LHS_Factory.createNextLHSsFromIndividual(typeName,this);
                 alive  = false; //allow only 1 transition, so kill this stage
                 active = false; //set stage inactive, also
             }
         } catch (IllegalAccessException | InstantiationException ex) {
             ex.printStackTrace();
         }
-        return nLHS;
+        return nLHSs;
     }
     
     public void initialize() {
@@ -467,7 +467,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
         zPos       = atts.getValue(SimpleBenthicJuvenileLHSAttributes.PROP_vertPos,zPos);
         time       = startTime;
         numTrans   = 0.0; //set numTrans to zero
-        System.out.println(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
+        if (debug) logger.info(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
         if (i3d!=null) {
             double[] IJ = new double[] {xPos,yPos};
             if (hType==Types.HORIZ_XY) {
@@ -478,7 +478,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             }
             double K = 0;  //benthic juvenile starts out on bottom
             double z = i3d.interpolateBathymetricDepth(IJ);
-            System.out.println("Bathymetric depth = "+z);
+            if (debug) logger.info("Bathymetric depth = "+z);
             lp.setIJK(IJ[0],IJ[1],K);
             //reset track array
             track.clear();
@@ -506,7 +506,7 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
             //assume same daytime status, but recalc depth and revise W 
 //            pos = lp.getPredictedIJK();
 //            depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-//            if (debug) System.out.println("Depth after predictor step = "+depth);
+//            if (debug) logger.info("Depth after predictor step = "+depth);
             //w = calcW(dt,lp.getNP1())+r; //set swimming rate for predicted position
             lp.setU(uv[0],lp.getNP1());
             lp.setV(uv[1],lp.getNP1());
@@ -523,9 +523,8 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
         if (i3d.isAtGridEdge(pos,tolGridEdge)){
             alive=false;
             active=false;
-        }
-        if (debug) {
-            System.out.println(toString());
+            gridCellID=i3d.getGridCellID(pos, tolGridEdge);
+            logger.info("Indiv "+id+" exited grid at ["+pos[0]+","+pos[1]+"]: "+gridCellID);
         }
         updateAttributes(); //update the attributes object w/ nmodified values
     }
@@ -579,9 +578,10 @@ public class SimpleBenthicJuvenileLHS extends AbstractSimpleLHS {
     }
 
     private void updatePosition(double[] pos) {
-        depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-        lat   = i3d.interpolateLat(pos);
-        lon   = i3d.interpolateLon(pos);
+        bathym = i3d.interpolateBathymetricDepth(pos);
+        depth  = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
+        lat    = i3d.interpolateLat(pos);
+        lon    = i3d.interpolateLon(pos);
         gridCellID = ""+Math.round(pos[0])+"_"+Math.round(pos[1]);
         updateTrack();
     }

@@ -5,11 +5,8 @@
 package wts.models.DisMELS.netbeans;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -23,13 +20,15 @@ import wts.models.DisMELS.framework.LHS_Types;
 public class Installer extends ModuleInstall {
 
     /** key to retrieve user's home directory from system properties */
-    public static final String userdir = "netbeans.user";
+    public static final String userdirProp = "netbeans.user";
     /** DisMELS properties file name */
-    public static final String props = "DisMELS.properties";
+    public static final String propsFN = "DisMELS.properties";
+    /** full path to userdir */
+    private static String userdir = null;
+    /** full path to DisMELS properties file */
+    private static String propsPath = null;
     /** extensions for copies of properties file */
-    private static final Vector<String> exts = new Vector<String>();//String[]{".3",".2",".1"};
-    /** file separator */
-    public static final String ps = File.separator;
+    private static final Vector<String> exts = new Vector<>();//String[]{".3",".2",".1"};
     private static final Logger logger = Logger.getLogger(Installer.class.getName());
     
     public Installer(){
@@ -42,54 +41,47 @@ public class Installer extends ModuleInstall {
     
     @Override
     public void restored() {
-        logger.info("Restoring module.");
+        logger.info("--Restoring DisMELS modules.");
         super.restored();
+        //get system properties and identify userdirProp
+        Properties sysProps = System.getProperties();
+        for (Object key: sysProps.keySet()){
+            String s = (String) key;
+            logger.info(s+": "+System.getProperty(s));
+        }
+        userdir = System.getProperty(userdirProp);
+        logger.info("Using '"+userdir+"' as user directory");
+        propsPath = userdir+File.separator+propsFN;
+        logger.info("Reading DisMELS properties from '"+propsPath+"'");
+//        JOptionPane.showMessageDialog(null, propsPath, "Reading properties from",JOptionPane.INFORMATION_MESSAGE);
         GlobalInfo g = GlobalInfo.getInstance();
-        Properties p = new Properties();
-        try {
-            Properties sysProps = System.getProperties();
-            for (Object key: sysProps.keySet()){
-                String s = (String) key;
-                logger.info(s+": "+System.getProperty(s));
-            }
-            String path = System.getProperty(userdir);
-            logger.info("Using '"+path+"' as user directory");
-            String pfn = path+ps+props;
-            logger.info("Reading DisMELS properties from '"+pfn+"'");
-            JOptionPane.showMessageDialog(null, pfn, "Reading properties from",JOptionPane.INFORMATION_MESSAGE);
-            File f = new File(pfn);
-            p.load(new FileInputStream(f));
-            g.readProperties(p);
+        try {            
+            g.readProperties(propsPath);//losd DisMELS global properties
         } catch (FileNotFoundException ex) {
-            Exceptions.printStackTrace(ex);
+            logger.info("---\nNote: DisMELS.properties file not found at "+propsPath+"\n---");
+            g.setWorkingDir(userdir);
         } catch (IOException | SecurityException ex) {
             Exceptions.printStackTrace(ex);
+            g.setWorkingDir(userdir);
         }
         LHS_Types.getInstance();
         LHS_Factory.getInstance();
-        logger.info("Restored module.");
+        logger.info("--Restored DisMELS modules.");
     }
     
     @Override
     public boolean closing(){
-        logger.info("Writing properties.");
-        GlobalInfo g = GlobalInfo.getInstance();
-        Properties p = new Properties();
+        logger.info("Writing DisMELS properties.");
         try {
-            String path = System.getProperty(userdir);
-            logger.info("Using '"+path+"' as user home directory");
-            String pfn = path+ps+props;
-            logger.info("Writing DisMELS properties to '"+pfn+"'");
-            g.writeProperties(p);
-            File f = new File(pfn);
-            p.store(new FileOutputStream(pfn),null);
-            JOptionPane.showMessageDialog(null, pfn, "Saving properties to",JOptionPane.INFORMATION_MESSAGE);
-        } catch (FileNotFoundException ex) {
-            Exceptions.printStackTrace(ex);
+            GlobalInfo g = GlobalInfo.getInstance();
+            logger.info("Using '"+userdir+"' as user home directory");
+            logger.info("Writing DisMELS properties to '"+propsPath+"'");
+            g.writeProperties(propsPath);
+            JOptionPane.showMessageDialog(null, propsPath, "Saving properties to",JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException | SecurityException ex) {
             Exceptions.printStackTrace(ex);
         }
-        logger.info("Finished writing properties.");
+        logger.info("Finished writing DisMELS properties.");
         return true;
     }
 }

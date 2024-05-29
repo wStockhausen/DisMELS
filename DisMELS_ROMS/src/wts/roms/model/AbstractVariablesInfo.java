@@ -8,58 +8,131 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.*;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
- *
+ * Abstract class representing a collection of AbstractVariableInfo instances.
+ * 
+ * Individual AVIs should be extracted using the "internal" DisMELS name assigned to
+ * the variable, NOT the name in the ROMS dataset (the latter may be different in
+ * different ROMS datasets).
+ * 
  * @author William.Stockhausen
  */
 public abstract class AbstractVariablesInfo implements PropertyChangeListener {
-    public static final String PROP_RESET = "RESET";
+    /**String for PropertyChange indicating removal of ALL AbstractVariableInfo instances from collection. */
+    public static final String PROP_RESET = "wts.roms.model.AbstractVariablesInfo.RESET";
 
-    public static final String PROP_VARIABLE_ADDED = "VARIABLE_ADDED";
-    public static final String PROP_VARIABLE_REMOVED = "VARIABLE_REMOVED";
-    public static final String PROP_VARIABLE_RENAMED = "VARIABLE_RENAMED";
+    /**String for PropertyChanges indicating AbstractVariableInfo instance added to collection */
+    public static final String PROP_VARIABLE_ADDED = "wts.roms.model.AbstractVariablesInfo.VARIABLE_ADDED";
+    /**String for PropertyChanges indicating AbstractVariableInfo instance removed from collection */
+    public static final String PROP_VARIABLE_REMOVED = "wts.roms.model.AbstractVariablesInfo.VARIABLE_REMOVED";
+    /**String for PropertyChanges indicating AbstractVariableInfo instance renamed in collection */
+    public static final String PROP_VARIABLE_RENAMED = "wts.roms.model.AbstractVariablesInfo.VARIABLE_RENAMED";
 
+    /** flag to throw PropertyChange events */
+    protected boolean throwPCEs = true;
     
-    /** */
+    /**Collection of VariableInfo instances */
     protected final Map<String,AbstractVariableInfo> mapAVI; 
     
     /** support for throwing property changes */
     transient protected PropertyChangeSupport propertySupport;
     
+    /** logger */
+    private static final Logger logger = Logger.getLogger(AbstractVariablesInfo.class.getName());
+    
+    /**
+     * Constructor for "n" AVIs.
+     * 
+     * @param n - the initial number ofAVIs to encapsulate
+     */
     public AbstractVariablesInfo(int n) {
         mapAVI = new HashMap<>(n);
     }
 
-    protected void addVariable(AbstractVariableInfo mvi){
-        String name = mvi.getName();
-        mvi.addPropertyChangeListener(this);
-        mapAVI.put(name, mvi);
-        propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,mvi);
+    /**
+     * Method called to clear all VariableInfo instances from collection.
+     */
+    protected abstract void reset();
+
+    /**
+     * Add a VariableInfo instance class to the collection.
+     * 
+     * The "internal" name (from avi.getName())must be used as the key to retrieve the
+     * associated VariableInfo object (not the name in the ROMS dataset, which 
+     * can be retrieved using avi.getNameInROMSDataset()).
+     * 
+     * @param avi 
+     */
+    protected void addVariable(AbstractVariableInfo avi){
+        String name = avi.getName();
+        avi.addPropertyChangeListener(this);
+        mapAVI.put(name, avi);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_ADDED,null,avi);
     }
 
+    /** 
+     * Abstract method to add a VariableInfo subclass instance to the collection, assigning it
+     * the (internal) name and description provided.
+     * 
+     * @param name - "internal" name used in DisMELS to refer to this variable
+     * @param desc - a description of the variable
+     */
     protected abstract void addVariable(String name, String desc);
 
     /**
-     * Returns the description associated with the variable name.
+     * Returns the description associated with the "internal" variable name.
      *
-     * @return - the name used in the ROMS dataset
+     * The "internal" name is the one used in DisMELS, not necessarily the name of
+     * the variable in the ROMS dataset. If the name was not found, a warning 
+     * message is displayed and returns a null.
+     *
+     * @param name - the "internal" name used in DisMELS
+     * 
+     * @return - the description of Variable, as a String
      */
     public String getDescription(String name) {
-        return mapAVI.get(name).getDescription();
+        String str = null;
+        AbstractVariableInfo avi = mapAVI.get(name);
+        if (avi != null) {
+            str = avi.getDescription();
+        } else {
+//            JOptionPane.showMessageDialog(
+//                    null,
+//                    "No variable associated with internal name '"+name+"'.",
+//                    "AbstractVariablesInfo.GetDescription: Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//            logger.warning("No variable associated with internal name '"+name+"'.");
+        }
+        return str;
     }
 
     /**
-     * Returns the ROMS name (alias) associated with the variable name,
-     * null if the name was not found.
+     * Returns the name used in the ROMS dataset associated with the 
+     * "internal" variable name.
+     * 
+     * The "internal" name is the one used in DisMELS, not necessarily the name of
+     * the variable in the ROMS dataset. If the name was not found, a warning 
+     * message is displayed and returns a null.
      *
+     * @param name - the "internal" name used in DisMELS
+     * 
      * @return - the name used in the ROMS dataset
      */
     public String getNameInROMSDataset(String name) {
         String varname = null;
-        AbstractVariableInfo mvi = mapAVI.get(name);
-        if (mvi != null) {
-            varname = mvi.getNameInROMSDataset();
+        AbstractVariableInfo avi = mapAVI.get(name);
+        if (avi != null) {
+            varname = avi.getNameInROMSDataset();
+        } else {
+//            JOptionPane.showMessageDialog(
+//                    null,
+//                    "No variable associated with internal name '"+name+"'.",
+//                    "AbstractVariablesInfo.getNameInROMSDataset: Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//            logger.warning("No variable associated with internal name '"+name+"'.");
         }
         return varname;
     }
@@ -76,13 +149,27 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
     }
 
     /**
-     * Returns the variable information associated with a variable name.
+     * Returns the variable information associated with an "internal" variable name.
+     * 
+     * The "internal" name is the one used in DisMELS, not necessarily the name of
+     * the variable in the ROMS dataset. If the name was not found, a warning 
+     * message is displayed and returns a null.
      *
-     * @param name = the variable's name
-     * @return -
+     * @param name - the variable's "internal" name
+     * 
+     * @return - the associated AbstractVariableInfo object
      */
     public AbstractVariableInfo getVariableInfo(String name){
-        return mapAVI.get(name);
+        AbstractVariableInfo avi = mapAVI.get(name);
+//        if (avi == null) {
+//            JOptionPane.showMessageDialog(
+//                    null,
+//                    "No variable associated with internal name '"+name+"'.",
+//                    "AbstractVariablesInfo.getVariableInfo: Error!",
+//                    JOptionPane.ERROR_MESSAGE);
+//            logger.warning("No variable associated with internal name '"+name+"'.");
+//        }
+        return avi;
     }
 
     /**
@@ -91,23 +178,22 @@ public abstract class AbstractVariablesInfo implements PropertyChangeListener {
      * @return 
      */
     public AbstractVariableInfo removeVariable(String name){
-        AbstractVariableInfo mvi = mapAVI.remove(name);
-        if (mvi!=null) mvi.removePropertyChangeListener(this);
-        propertySupport.firePropertyChange(PROP_VARIABLE_REMOVED,mvi,null);
-        return mvi;
+        AbstractVariableInfo avi = mapAVI.remove(name);
+        if (avi!=null) avi.removePropertyChangeListener(this);
+        if (throwPCEs) propertySupport.firePropertyChange(PROP_VARIABLE_REMOVED,avi,null);
+        return avi;
     }
 
 
     /**
-     * Resets the set of model variable info objects to "unchecked".
+     * Resets all VariableInfo objects to "unchecked".
      */
-    public void reset() {
+    public void resetCheckedStatus() {
         Iterator<String> keys = mapAVI.keySet().iterator();
         while (keys.hasNext()) {
             AbstractVariableInfo mvi = mapAVI.get(keys.next());
             mvi.setChecked(false);
         }
-        propertySupport.firePropertyChange(OptionalModelVariablesInfo.PROP_RESET, null, null);
     }
     
     /**

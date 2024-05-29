@@ -1,7 +1,10 @@
-/*
+/**
  * LHS_TypeBeanInfo.java
  *
  * Created on April 3, 2006, 4:13 PM
+ * Revision history:
+ * 20171019: 1. Revised to reflect revisions to LHS_Type for multiple next LHSs.
+ * 
  */
 
 package wts.models.DisMELS.framework;
@@ -28,16 +31,9 @@ public class LHS_TypeBeanInfo extends SimpleBeanInfo {
     // Property identifiers                      
     private static PropertyDescriptor pDLHSClass;
     private static PropertyDescriptor pDLHSName;
-    private static PropertyDescriptor pDattributesClass;
-    private static PropertyDescriptor pDattributesName;
-    private static PropertyDescriptor pDnextLHSClass;
-    private static PropertyDescriptor pDnextLHSName;
+    private static PropertyDescriptor pDnextLHSs;
     private static PropertyDescriptor pDspawnedLHSClass;
     private static PropertyDescriptor pDspawnedLHSName;
-    private static PropertyDescriptor pDparametersClass;
-    private static PropertyDescriptor pDparametersName;
-    private static PropertyDescriptor pDpointFTClass;
-    private static PropertyDescriptor pDpointFTName;
     private static PropertyDescriptor pDcolor;
 
     // Property array 
@@ -50,10 +46,8 @@ public class LHS_TypeBeanInfo extends SimpleBeanInfo {
             pDLHSClass.setBound ( true );
             pDLHSName = new PropertyDescriptor ( "lhsName", LHS_Type.class, "getLHSName", "setLHSName" ); // NOI18N
             pDLHSName.setBound ( true );
-            pDnextLHSName = new PropertyDescriptor ( "nextLHSName", LHS_Type.class, "getNextLHSName", "setNextLHSName" ); // NOI18N
-            pDnextLHSName.setBound ( true );
-            pDnextLHSClass = new PropertyDescriptor ( "nextLHSClass", LHS_Type.class, "getNextLHSClass", "setNextLHSClass" ); // NOI18N
-            pDnextLHSClass.setBound ( true );
+            pDnextLHSs = new PropertyDescriptor ( "nextLHSs", LHS_Type.class, "getNextLHSs", "setNextLHSs" ); // NOI18N
+            pDnextLHSs.setBound ( true );
             pDspawnedLHSName = new PropertyDescriptor ( "spawnedLHSName", LHS_Type.class, "getSpawnedLHSName", "setSpawnedLHSName" ); // NOI18N
             pDspawnedLHSName.setBound ( true );
             pDspawnedLHSClass = new PropertyDescriptor ( "spawnedLHSClass", LHS_Type.class, "getSpawnedLHSClass", "setSpawnedLHSClass" ); // NOI18N
@@ -62,8 +56,7 @@ public class LHS_TypeBeanInfo extends SimpleBeanInfo {
             pDcolor.setBound ( true );
             properties = new PropertyDescriptor[] {pDLHSClass,
                                                    pDLHSName,
-                                                   pDnextLHSName,
-                                                   pDnextLHSClass,
+                                                   pDnextLHSs,
                                                    pDspawnedLHSName,
                                                    pDspawnedLHSClass,
                                                    pDcolor};

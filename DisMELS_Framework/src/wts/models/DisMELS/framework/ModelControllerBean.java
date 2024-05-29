@@ -9,7 +9,6 @@
 
 package wts.models.DisMELS.framework;
 
-import com.wtstockhausen.utils.RandomNumberGenerator;
 import com.wtstockhausen.utils.SwingWorker;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -18,15 +17,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
 import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
 import wts.models.DisMELS.events.AnimationEventListener;
 import wts.models.DisMELS.events.AnimationEventSupport;
-import wts.models.utilities.ModelCalendar;
-import wts.models.utilities.CalendarIF;
 import wts.roms.model.*;
 
 /**
@@ -38,6 +39,9 @@ public class ModelControllerBean extends Object
 
     /* debug flag */
     public static boolean debug = true; //set for testing
+    
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(ModelControllerBean.class.getName());
     
     
     //Fields req'd for Beans support
@@ -126,8 +130,13 @@ public class ModelControllerBean extends Object
     private transient boolean guiMode = true;
     /** ocean time */
     private transient double time;
+    
+    /** possible ROMS datasets */
+    private transient String[] files_ROMSDatasets = null;
     /** current ROMS dataset */
-    private String file_CurrROMSDataset = "";
+    private transient String file_CurrROMSDataset = "";
+    /** index to current ROMS dataset in files_ROMSDatasets */
+    int indx_CurrROMSDataset = -1;
     
     private transient ModelGrid3D grid3D;
     private transient NetcdfReader netcdfReader;
@@ -140,22 +149,24 @@ public class ModelControllerBean extends Object
     private transient List<LifeStageInterface> indivs;
     private transient Iterator<LifeStageInterface> it;
     
+    private transient double startTimeBio;//time at which biology starts
+    
     private transient FeatureCollection fcStartPoints = null;
     private transient FeatureCollection fcEndPoints   = null;
     private transient FeatureCollection fcTracks      = null;
     private transient FeatureCollection fcDeadPoints  = null;
     private transient FeatureCollection fcDeadTracks  = null;
-    private transient FeatureCollection tmpStrtPts  = FeatureCollections.newCollection();
-    private transient FeatureCollection tmpPts      = FeatureCollections.newCollection();
-    private transient FeatureCollection tmpTrks     = FeatureCollections.newCollection();
-    private transient FeatureCollection tmpDeadPts  = FeatureCollections.newCollection();
-    private transient FeatureCollection tmpDeadTrks = FeatureCollections.newCollection();
+    private transient final FeatureCollection tmpStrtPts  = FeatureCollections.newCollection();
+    private transient final FeatureCollection tmpPts      = FeatureCollections.newCollection();
+    private transient final FeatureCollection tmpTrks     = FeatureCollections.newCollection();
+    private transient final FeatureCollection tmpDeadPts  = FeatureCollections.newCollection();
+    private transient final FeatureCollection tmpDeadTrks = FeatureCollections.newCollection();
 
-    private transient PrintWriter pwResults;
-    private transient PrintWriter pwConnResults;//PrintWriter for connctivity results
+    private transient HashMap<String,PrintWriter> pwResultsMap;//map to PrintWriters for results
+    private transient HashMap<String,PrintWriter> pwConnResultsMap;//map to PrintWriters for results
     
-    private transient String statMessage;
-    private transient int statTime;
+    private transient String statMessage;//message for progress bar
+    private transient int statTime;      //counter for progress bar
     
     /** step counter for updating animation */ 
     private int animCtr;
@@ -173,7 +184,7 @@ public class ModelControllerBean extends Object
     /** flag to update life stage transitions */
     private transient boolean updateStageTrans = false;
     
-    private transient AnimationEventSupport animEventSupport;
+    private transient final AnimationEventSupport animEventSupport;
 
     /**
      * Creates a new instance of ModelControllerBean
@@ -225,8 +236,8 @@ public class ModelControllerBean extends Object
             clone.randomNumberSeed  = randomNumberSeed;
             return clone;
         } catch (java.lang.CloneNotSupportedException exc) {
-            System.out.println("ModelControllerBean: Problem cloning");
-            System.out.println(exc.toString());
+            logger.info("ModelControllerBean: Problem cloning");
+            logger.info(exc.toString());
         }
         return null;
     }
@@ -284,6 +295,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setStartPointsFC(FeatureCollection newFC) {
+        if (fcStartPoints!=null) fcStartPoints.clear();
         fcStartPoints = newFC;
     }
 
@@ -292,6 +304,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setEndPointsFC(FeatureCollection newFC) {
+        if (fcEndPoints!=null) fcEndPoints.clear();
         fcEndPoints = newFC;
     }
 
@@ -300,6 +313,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setDeadPointsFC(FeatureCollection newFC) {
+        if (fcDeadPoints!=null) fcDeadPoints.clear();
         fcDeadPoints = newFC;
     }
 
@@ -308,6 +322,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setDeadTracksFC(FeatureCollection newFC) {
+        if (fcDeadTracks!=null) fcDeadTracks.clear();
         fcDeadTracks = newFC;
     }
 
@@ -316,6 +331,7 @@ public class ModelControllerBean extends Object
     }
     
     public void setTracksFC(FeatureCollection newFC) {
+        if (fcTracks!=null) fcTracks.clear();
         fcTracks = newFC;
     }
     
@@ -369,14 +385,14 @@ public class ModelControllerBean extends Object
         includeTracksInOutput = b;
         propertySupport.firePropertyChange(PROP_includeTracksInOutput, oldValue, includeTracksInOutput);
     }
-    
-    public String getFile_ROMSGrid() {
-        return globalInfo.getGridFile();
-    }
-    
-    public String getFile_ROMSCanonicalDataset() {
-        return globalInfo.getCanonicalFile();
-    }
+//    
+//    public String getFile_ROMSGrid() {
+//        return globalInfo.getGridFile();
+//    }
+//    
+//    public String getFile_ROMSCanonicalDataset() {
+//        return globalInfo.getCanonicalFile();
+//    }
     
     public String getFile_ROMSDataset() {
         return file_ROMSDataset;
@@ -519,6 +535,20 @@ public class ModelControllerBean extends Object
         propertySupport.removePropertyChangeListener(listener);
     }
     
+    /**
+     * Method to clean up biggest memory hogs(?) prior to initializing/running a
+     * new model.
+     * 
+     * NOTE: The global Interpolator3D instance in GlobalInfo is set to null. 
+     * The static reference to this I3D instance in AbstractLHS is also explicitly set 
+     * to null here as a convenience, because otherwise the instance wold not be garbage-collected.
+     * 
+     * References to the GlobalInfo I3D instance in LHS classes that DO NOT inherit 
+     * from AbstractLHS are not explicitly set to null (don't know what these 
+     * classes might be, as they are added as NetBeans modules outside DisMELS itself).
+     * These classes should implement their own logic to deal with the possibility that
+     * the I3D instance in the GlobalInfo instance has been reset to null.
+     */
     public void cleanup(){
             if (fcStartPoints!=null) fcStartPoints.clear();
             if (fcEndPoints!=null)   fcEndPoints.clear();
@@ -531,17 +561,20 @@ public class ModelControllerBean extends Object
             tmpStrtPts.clear();
             tmpTrks.clear();
             
+            it = null;
+            if (indivs!=null) indivs.clear();
             indivs = null;
             
-            netcdfReader = null;
+            LagrangianParticle.setTracker(null);
             
-            grid3D = null;
+            globalInfo.setInterpolator3D(null);//set global instance, and all LifeStageInterface subclasses with an "i3d" field to null
+            i3dt   = null;
             pe1    = null;
             pe2    = null;
             pet    = null;
-            i3dt   = null;
-            globalInfo.setInterpolator3D(null);//set global instance to null (seems like really bad idea, but need to to clean up memory)
-            AbstractLHS.i3d = null;//set to null to clean up memory
+            grid3D = null;
+            
+            netcdfReader = null;
             
             System.gc();//call garbage control to clean up
     }
@@ -552,46 +585,66 @@ public class ModelControllerBean extends Object
         try {
             cleanup();
             
-            if (randomNumberSeed>0) globalInfo.setRandomNmberGeneratorSeed(randomNumberSeed);
+            if (randomNumberSeed>0) {
+                globalInfo.setRandomNmberGeneratorSeed(randomNumberSeed);
+            } else {
+                globalInfo.setRandomNmberGeneratorSeed(System.currentTimeMillis());
+            }
+            logger.info("++Using random number generator "+globalInfo.getRandomNumberGenerator().toString());
+            logger.info("++Using random number seed "+globalInfo.getRandomNumberGenerator().getSeed());
+            logger.info("++random number test:");
+            for (int j=0;j<10;j++) {
+                String tst = "    ";
+                for (int i=0;i<10;i++) tst = tst+globalInfo.getRandomNumberGenerator().computeNormalVariate()+" ";
+                logger.info(tst);
+            }
             if (runForward) 
                 timeStep = Math.abs(timeStep);
             else 
                 timeStep = -Math.abs(timeStep);
             if (fixedEnvironment) {
-                System.out.println("ModelControllerBean: WARNING!! MCB.fixedEnvironment is true!!");
+                logger.info("ModelControllerBean: WARNING!! MCB.fixedEnvironment is true!!");
             }
             if (noVerticalMotion) {
                 LagrangianParticleTracker.noVerticalMotion = noVerticalMotion;
-                System.out.println("ModelControllerBean: WARNING!! LPT.noVerticalMotion is true!!");
+                logger.info("ModelControllerBean: WARNING!! LPT.noVerticalMotion is true!!");
             }
             if (noAdvection) {
                 LagrangianParticleTracker.noAdvection = noAdvection;
-                System.out.println("ModelControllerBean: WARNING!! LPT.noAdvection is true!!");
+                logger.info("ModelControllerBean: WARNING!! LPT.noAdvection is true!!");
             }
             if (maskLikeROMS) {
                 LagrangianParticleTracker.maskLikeROMS = maskLikeROMS;
-                System.out.println("ModelControllerBean: WARNING!! LPT.maskLikeROMS is true!!");
+                logger.info("ModelControllerBean: WARNING!! LPT.maskLikeROMS is true!!");
             }
             if (interpolateLikeROMS) {
                 Interpolator3D.interpolateLikeROMS = interpolateLikeROMS;
-                System.out.println("ModelControllerBean: WARNING!! I3D.interpolateLikeROMS is true!!");
+                logger.info("ModelControllerBean: WARNING!! I3D.interpolateLikeROMS is true!!");
             }
             if (updateLayerDepthsLikeROMS) {
                 PhysicalEnvironment.updateLayerDepthsLikeROMS = updateLayerDepthsLikeROMS;
-                System.out.println("ModelControllerBean: WARNING!! PE.updateLayerDepthsLikeROMS is true!!");
+                logger.info("ModelControllerBean: WARNING!! PE.updateLayerDepthsLikeROMS is true!!");
             }
             statMessage = "Initializing output files";
+            logger.info(statMessage);
             initializeOutputFiles();
+            
             statMessage = "Initializing environment";
+            logger.info(statMessage);
             initializeEnvironment();
+            
             statMessage = "Initializing biology";
+            logger.info(statMessage);
             initializeBioModel();
+            
             statMessage="Finished initialization";
         } catch (FileNotFoundException ex) {
             statMessage="Initialization halted: FileNotFoundException thrown";
+            logger.info(statMessage);
             throw ex;
         } catch(IOException ex) {
             statMessage="Initialization halted: IOException thrown";
+            logger.info(statMessage);
             throw ex;
         }
         //initialize counters and model time
@@ -602,43 +655,100 @@ public class ModelControllerBean extends Object
         statTime = 0;                               //??
         time = startTime;//set model time
         if (guiMode){
-            //propertySupport.firePropertyChange(PROP_CURRDATE, null, ModelCalendar.getCalendar().getDate());
+            //propertySupport.firePropertyChange(PROP_CURRDATE, null, globalInfo.getCalendar().getDate());
             propertySupport.firePropertyChange(PROP_OCEANTIME, null, startTime);
             animEventSupport.fireAnimationEvent();
         }
     }
     
     protected void initializeOutputFiles() {
-        try {
-            String file;
-            file = globalInfo.getWorkingDir()+file_Results;
-            FileWriter fwResults = new FileWriter(file);
-            pwResults = new PrintWriter(fwResults);
-            file = globalInfo.getWorkingDir()+file_ConnResults;
-            FileWriter fwConnRes = new FileWriter(file);
-            pwConnResults = new PrintWriter(fwConnRes);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+        pwResultsMap     = new HashMap<>();
+        pwConnResultsMap = new HashMap<>();
+        LifeStageAttributesInterface atts = null;
+        String file = null;
+        LHS_Types info = LHS_Types.getInstance();
+        Iterator<String> itr = info.getKeys().iterator();
+        while (itr.hasNext()) {
+            String lsType = itr.next();
+            String lsiClass  = info.getType(lsType).getLHSClass();
+            String attsClass = info.getType(lsType).getAttributesClass();
+            ClassLoader syscl = Lookup.getDefault().lookup(ClassLoader.class);
+            try{
+                Class attsClazz = syscl.loadClass(attsClass);
+                Constructor con = attsClazz.getDeclaredConstructor();
+                atts = (LifeStageAttributesInterface) con.newInstance();
+                if (!pwResultsMap.containsKey(attsClass)){
+                    try {
+                        file = globalInfo.getWorkingDir()+file_Results+"."+lsiClass+".csv";
+                        logger.info("Writing model results to '"+file+"'");
+                        FileWriter fwResults = new FileWriter(file);
+                        PrintWriter pwResults = new PrintWriter(fwResults,true);//enabled automatic flushing after each println call
+                        pwResults.println(atts.getCSVHeader());
+                        pwResults.println(atts.getCSVHeaderShortNames());
+                        pwResults.flush();
+                        pwResultsMap.put(lsiClass, pwResults);
+                    } catch (IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                        JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                if (!pwConnResultsMap.containsKey(attsClass)){
+                    try {
+                        file = globalInfo.getWorkingDir()+file_ConnResults+"."+lsiClass+".csv";
+                        logger.info("Writing model connectivity results to '"+file+"'");
+                        FileWriter fwConnResults = new FileWriter(file);
+                        PrintWriter pwConnResults = new PrintWriter(fwConnResults,true);//enabled automatic flushing after each println call
+                        pwConnResults.println(atts.getCSVHeader());
+                        pwConnResults.println(atts.getCSVHeaderShortNames());
+                        pwConnResults.flush();
+                        pwConnResultsMap.put(lsiClass, pwConnResults);
+                    } catch (IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                        JOptionPane.showMessageDialog(null, "Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex){
+                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, "Could not create 'test' object. Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            } catch (ClassNotFoundException ex){
+                Exceptions.printStackTrace(ex);
+                JOptionPane.showMessageDialog(null, "Invalid class. Could not create \n"+file,"ERROR",JOptionPane.ERROR_MESSAGE);
+            } catch (NoSuchMethodException ex){
+                Exceptions.printStackTrace(ex);
+            }
         }
     }
     
     protected void initializeEnvironment() throws IOException {
         //create ModelGrid3D instance
-        if (ModelGrid3D.isGrid(globalInfo.getGridFile())) {
-            grid3D = new ModelGrid3D(globalInfo.getGridFile());
-        }  else {
+        if (!ModelGrid3D.isGrid(globalInfo.getGridFile())) {
             JOptionPane.showMessageDialog(null, "file "+globalInfo.getGridFile()+" is not a ROMS grid", 
                                          "Error message", JOptionPane.ERROR_MESSAGE);
             throw(new IOException("Error in ModelControllerBean.initializeEnvironemnt(): \nfile '"+globalInfo.getGridFile()+"' is not a ROMS grid!!"));
         }
         //read canonical ROMS dataset for ModelGrid3D constant fields
-        netcdfReader = new NetcdfReader(globalInfo.getCanonicalFile());
-        grid3D.readConstantFields(netcdfReader);
+        grid3D = globalInfo.getGrid3D();
+        
+        //get array of ROMS dataset names in folder with "first" one
+        try {
+            files_ROMSDatasets = com.wtstockhausen.utils.FilesLister.findFilesWithSameExtension(file_ROMSDataset);
+            String msg = "InitializeEnvironment:: available ROMS datasets:";
+            for (String file_ROMSDataset : files_ROMSDatasets) msg = msg + "\n \t '" + file_ROMSDataset+"'";
+            //logger.info(msg);
+            //set "current" ROMS dataset to "first" one
+            file_CurrROMSDataset = file_ROMSDataset;
+            logger.info("InitializeEnvironment:: current ROMS dataset: '"+file_CurrROMSDataset+"'");
+            //identify location of "current" ROMS dataset in filenames array
+            indx_CurrROMSDataset = Arrays.binarySearch(files_ROMSDatasets, file_CurrROMSDataset);
+            logger.info("InitializeEnvironment:: current ROMS dataset has index: "+indx_CurrROMSDataset);
+        } catch (IOException ex){
+            JOptionPane.showMessageDialog(null, "file '"+file_ROMSDataset+"' was not found!", 
+                                         "Error message", JOptionPane.ERROR_MESSAGE);
+            throw(ex);
+        }
+        
         //set netcdfReader to read first ROMS dataset
-        file_CurrROMSDataset = file_ROMSDataset;
         netcdfReader = new NetcdfReader(file_CurrROMSDataset);
-        CalendarIF cal = netcdfReader.getCalendar();
-        ModelCalendar.setCalendar(cal);
         int nt = netcdfReader.getNumTimeSteps();
         //Identify PE1 & PE2 with which to start model
         if (runForward) {
@@ -646,15 +756,15 @@ public class ModelControllerBean extends Object
         } else {
             initializeEnvironmentBackwards(nt);
         }
-        System.out.println("Start time = "+startTime);
-        System.out.println("pe1 time   = "+pe1.getOceanTime());
-        System.out.println("pe2 time   = "+pe2.getOceanTime());
+        logger.info("Start time = "+startTime);
+        logger.info("pe1 time   = "+pe1.getOceanTime());
+        logger.info("pe2 time   = "+pe2.getOceanTime());
         if (!fixedEnvironment) {
             statMessage = "Interpolating environment";
-            System.out.println("Using varying environment!!");
+            logger.info("Using varying environment!!");
             pet = PhysicalEnvironment.interpolate(startTime,pe1,pe2);
         } else {
-            System.out.println("Using constant environment!!");
+            logger.info("Using constant environment!!");
             pet = pe1;
         }
 //        statMessage = "Creating 3d interpolator";
@@ -670,8 +780,7 @@ public class ModelControllerBean extends Object
         }
         globalInfo.setInterpolator3D(i3dt);//need this so AbstractLHS can get it
         
-        ModelCalendar.getCalendar().setTimeOffset((long) startTime);
-        //propertySupport.firePropertyChange(PROP_CURRDATE, null, ModelCalendar.getCalendar().getDate());
+        globalInfo.getCalendar().setTimeOffset((long) startTime);
         propertySupport.firePropertyChange(PROP_OCEANTIME, null, startTime);
     }
 
@@ -682,7 +791,7 @@ public class ModelControllerBean extends Object
         if (startTime<netcdfReader.getOceanTime(0)) {
             //set start time to time of first time slice in dataset
             setStartTime(netcdfReader.getOceanTime(0));
-            System.out.println("Start Time < initial Ocean Time ("+startTime+"), so resetting to initial Ocean Time.");
+            logger.info("Start Time < initial Ocean Time ("+startTime+"), so resetting to initial Ocean Time.");
         }
         if (nt==1) {//only one time step per file
             while (it<0) {
@@ -690,19 +799,19 @@ public class ModelControllerBean extends Object
                 double lastT = netcdfReader.getOceanTime(0);
                 //Assign pe1 to time slice in case we bracket startTime w/
                 //the next dataset.
-                System.out.println("initializeEnvironment it = "+(nt-1));
+                logger.info("initializeEnvironment it = "+(nt-1));
                 statMessage = "Reading environment 1 (as precaution) from "+file_CurrROMSDataset;
-                pe1 =  new PhysicalEnvironment(0,netcdfReader,grid3D);
+                pe1 =  new PhysicalEnvironment(0,netcdfReader);
                 //Switch to next dataset.
                 file_CurrROMSDataset = getNextFilename();
-                System.out.println("Switching to new netCDF file: "+file_CurrROMSDataset);
+                logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
                 netcdfReader.setNetcdfDataset(file_CurrROMSDataset);//open new dataset
                 if ((startTime>=lastT)&&
                        (startTime<netcdfReader.getOceanTime(0))) {
                     //Success bracketing startTime!  Assign pe2.
-                    System.out.println("startTime bracketed between datasets!");
+                    logger.info("startTime bracketed between datasets!");
                     statMessage = "Reading environment 2";
-                    pe2 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+                    pe2 = new PhysicalEnvironment(0,netcdfReader);
                     it = 0;//set to drop out of "while" condition
                 } else {
                     pe1 = null; //reset pe1
@@ -713,7 +822,7 @@ public class ModelControllerBean extends Object
             while (it<0) {
                 //search through current dataset for match
                 for (int i=1;i<nt;i++) {
-                    System.out.println("Testing for i: "+netcdfReader.getOceanTime(i-1)+"<="+startTime+"<"+netcdfReader.getOceanTime(i));
+                    logger.info("Testing for i: "+netcdfReader.getOceanTime(i-1)+"<="+startTime+"<"+netcdfReader.getOceanTime(i));
                    if ((startTime>=netcdfReader.getOceanTime(i-1))&&
                            (startTime<netcdfReader.getOceanTime(i)))
                        it = i-1;
@@ -721,33 +830,33 @@ public class ModelControllerBean extends Object
                 if (it>-1) {
                     //Success bracketing startTime!
                     //Assign pe's.  Will drop out of "while" condition now.
-                    System.out.println("Success bracketing startTime!!");
-                    System.out.println("initializeEnvironment it = "+it);
+                    logger.info("Success bracketing startTime!!");
+                    logger.info("initializeEnvironment it = "+it);
                     statMessage = "Reading environment 1";
-                    pe1 = new PhysicalEnvironment(it,netcdfReader,grid3D);
+                    pe1 = new PhysicalEnvironment(it,netcdfReader);
                     statMessage = "Reading environment 2";
-                    pe2 = new PhysicalEnvironment(it+1,netcdfReader,grid3D);
+                    pe2 = new PhysicalEnvironment(it+1,netcdfReader);
                 } else {
                     //startTime not bracketed within the dataset.
-                    System.out.println("startTime not bracketed w/in dataset!");
+                    logger.info("startTime not bracketed w/in dataset!");
                     //Save last time in the dataset.
                     double lastT = netcdfReader.getOceanTime(nt-1);
                     //Assign pe1 to last time slice in case we bracket startTime w/
                     //the 1st time slice from the next dataset.
-                    System.out.println("initializeEnvironment it = "+(nt-1));
+                    logger.info("initializeEnvironment it = "+(nt-1));
                     statMessage = "Reading environment 1 (as precaution)";
-                    pe1 =  new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+                    pe1 =  new PhysicalEnvironment(nt-1,netcdfReader);
                     //Switch to next dataset.
                     file_CurrROMSDataset = getNextFilename();
-                    System.out.println("Switching to new netCDF file: "+file_CurrROMSDataset);
+                    logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
                     netcdfReader.setNetcdfDataset(file_CurrROMSDataset);//open new dataset
                     nt = netcdfReader.getNumTimeSteps();//update number of time steps for new dataset
                     if ((startTime>=lastT)&&
                            (startTime<netcdfReader.getOceanTime(0))) {
                         //Success bracketing startTime!  Assign pe2.
-                        System.out.println("startTime brackedted between datasets!");
+                        logger.info("startTime brackedted between datasets!");
                         statMessage = "Reading environment 2";
-                        pe2 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+                        pe2 = new PhysicalEnvironment(0,netcdfReader);
                         it = 0;//set to drop out of "while" condition
                     } else {
                         pe1 = null; //reset pe1
@@ -765,7 +874,7 @@ public class ModelControllerBean extends Object
         if ((startTime==0)||(startTime>netcdfReader.getOceanTime(nt-1))) {
             //set start time to time of first time slice in dataset
             setStartTime(netcdfReader.getOceanTime(nt-1));
-            System.out.println("Start Time > initial Ocean Time ("+startTime+"), so resetting to initial Ocean Time.");
+            logger.info("Start Time > initial Ocean Time ("+startTime+"), so resetting to initial Ocean Time.");
         }
         if (nt==1) {
             while (it<0) {
@@ -773,20 +882,20 @@ public class ModelControllerBean extends Object
                 double lastT = netcdfReader.getOceanTime(0);
                 //Assign pe2 to time slice in case we bracket startTime w/
                 //the next dataset.
-                System.out.println("initializeEnvironment it = "+(nt-1)+"; time = "+lastT);
+                logger.info("initializeEnvironment it = "+(nt-1)+"; time = "+lastT);
                 statMessage = "Reading environment 2 (as precaution) from "+file_CurrROMSDataset;
-                pe2 =  new PhysicalEnvironment(0,netcdfReader,grid3D);
+                pe2 =  new PhysicalEnvironment(0,netcdfReader);
                 //Switch to next dataset.
                 file_CurrROMSDataset = getPreviousFilename();
-                System.out.println("Switching to new netCDF file: "+file_CurrROMSDataset);
+                logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
                 netcdfReader.setNetcdfDataset(file_CurrROMSDataset);//open new dataset
-                System.out.println("new time  = "+netcdfReader.getOceanTime(0));
+                logger.info("new time  = "+netcdfReader.getOceanTime(0));
                 if ((startTime<=lastT)&&
                        (startTime>netcdfReader.getOceanTime(0))) {
                     //Success bracketing startTime!  Assign pe1.
-                    System.out.println("startTime brackedted between datasets!");
+                    logger.info("startTime brackedted between datasets!");
                     statMessage = "Reading environment 1";
-                    pe1 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+                    pe1 = new PhysicalEnvironment(0,netcdfReader);
                     it = 0;//set to drop out of "while" condition
                 } else {
                     pe2 = null; //reset pe2
@@ -796,26 +905,26 @@ public class ModelControllerBean extends Object
         } else {//nt>1
             it = nt-1;
             double ot = netcdfReader.getOceanTime(nt-1);
-            System.out.println("OceanTime["+(nt-1)+"] = "+ot);
+            logger.info("OceanTime["+(nt-1)+"] = "+ot);
             if (startTime>netcdfReader.getOceanTime(nt-1)) {
                 setStartTime(netcdfReader.getOceanTime(nt-1));
             }
             for (int i=nt-1;i>0;i--) {
                 ot = netcdfReader.getOceanTime(i-1);
-                System.out.println("OceanTime["+(i-1)+"] = "+ot);
+                logger.info("OceanTime["+(i-1)+"] = "+ot);
                 if ((startTime>=netcdfReader.getOceanTime(i-1))&&
                        (startTime<netcdfReader.getOceanTime(i)))
                    it = i;
             }
-            System.out.println("initializeEnvironment it = "+it);
+            logger.info("initializeEnvironment it = "+it);
             statMessage = "Reading environment 1";
-            pe1 = new PhysicalEnvironment(it-1,netcdfReader,grid3D);
+            pe1 = new PhysicalEnvironment(it-1,netcdfReader);
             statMessage = "Reading environment 2";
-            pe2 = new PhysicalEnvironment(it,netcdfReader,grid3D);
+            pe2 = new PhysicalEnvironment(it,netcdfReader);
             while (it<0) {
                 //search through current dataset for match
                 for (int i=(nt-1);i>0;i--) {
-                    System.out.println("Testing for i: "+netcdfReader.getOceanTime(i-1)+"<="+startTime+"<"+netcdfReader.getOceanTime(i));
+                    logger.info("Testing for i: "+netcdfReader.getOceanTime(i-1)+"<="+startTime+"<"+netcdfReader.getOceanTime(i));
                    if ((startTime>=netcdfReader.getOceanTime(i-1))&&
                            (startTime<netcdfReader.getOceanTime(i)))
                        it = i-1;
@@ -823,33 +932,33 @@ public class ModelControllerBean extends Object
                 if (it>-1) {
                     //Success bracketing startTime!
                     //Assign pe's.  Will drop out of "while" condition now.
-                    System.out.println("Success bracketing startTime!!");
-                    System.out.println("initializeEnvironment it = "+it);
+                    logger.info("Success bracketing startTime!!");
+                    logger.info("initializeEnvironment it = "+it);
                     statMessage = "Reading environment 1";
-                    pe1 = new PhysicalEnvironment(it,netcdfReader,grid3D);
+                    pe1 = new PhysicalEnvironment(it,netcdfReader);
                     statMessage = "Reading environment 2";
-                    pe2 = new PhysicalEnvironment(it+1,netcdfReader,grid3D);
+                    pe2 = new PhysicalEnvironment(it+1,netcdfReader);
                 } else {
                     //startTime not bracketed within the dataset.
-                    System.out.println("startTime not bracketed w/in dataset!");
+                    logger.info("startTime not bracketed w/in dataset!");
                     //Save last time in the dataset.
                     double lastT = netcdfReader.getOceanTime(0);
                     //Assign pe2 to last time slice in case we bracket startTime w/
                     //the 1st time slice from the next dataset.
-                    System.out.println("initializeEnvironment it = "+0);
+                    logger.info("initializeEnvironment it = "+0);
                     statMessage = "Reading environment 2 (as precaution)";
-                    pe2 =  new PhysicalEnvironment(0,netcdfReader,grid3D);
+                    pe2 =  new PhysicalEnvironment(0,netcdfReader);
                     //Switch to next dataset.
                     file_CurrROMSDataset = getPreviousFilename();
-                    System.out.println("Switching to new netCDF file: "+file_CurrROMSDataset);
+                    logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
                     netcdfReader.setNetcdfDataset(file_CurrROMSDataset);//open new dataset
                     nt = netcdfReader.getNumTimeSteps();
                     if ((startTime<lastT)&&
                            (startTime>=netcdfReader.getOceanTime(nt-1))) {
                         //Success bracketing startTime!  Assign pe1.
-                        System.out.println("startTime bracketed between datasets!");
+                        logger.info("startTime bracketed between datasets!");
                         statMessage = "Reading environment 1";
-                        pe1 = new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+                        pe1 = new PhysicalEnvironment(nt-1,netcdfReader);
                         it = 0;//set to drop out of "while" condition
                     } else {
                         pe2 = null; //reset pe2
@@ -860,44 +969,46 @@ public class ModelControllerBean extends Object
         }
     }
  
-    protected void timestepEnvironment() throws IOException {
-        System.out.println("Time-stepping environment...");
+    protected void timestepEnvironmentForwards() throws IOException {
+        logger.info("Time-stepping environment...");
         if (pe2.getOceanTime()<=time) {
             pe1 = pe2;
             if (pe2.hasNext()) {
-                System.out.println("Getting next pe");
+                logger.info("Getting next pe");
                 pe2 = pe2.next();
                 System.gc(); //garbage collection. TODO: is this necessary?
-                System.out.println("Got next pe "+pe2.getOceanTime());
+                logger.info("Got next pe "+pe2.getOceanTime());
             } else {
-                System.out.println("Trying next netcdf file");
+                logger.info("Trying next netcdf file");
                 tryNext();
             }
         }
-        pet = null;
-        System.gc();//TODO: is this necessary?
-        pet = PhysicalEnvironment.interpolate(time,pe1,pe2);
-        i3dt.setPhysicalEnvironment(pet);
-        System.out.println("Environment interpolated to time: "+pet.getOceanTime());
+        if (startTimeBio<pe2.getOceanTime()){
+            pet = null;
+            System.gc();//TODO: is this necessary?
+            pet = PhysicalEnvironment.interpolate(time,pe1,pe2);
+            i3dt.setPhysicalEnvironment(pet);
+            logger.info("Environment interpolated to time: "+pet.getOceanTime());
+        }
     }
  
     protected void timestepEnvironmentBackwards() throws IOException {
-        System.out.println("Time-stepping environment backward...");
+        logger.info("Time-stepping environment backward...");
         if (pe1.getOceanTime()>time) {
             pe2 = pe1;
             if (pe1.hasPrevious()) {
-                System.out.println("Getting previous pe");
+                logger.info("Getting previous pe");
                 pe1 = pe1.previous();
-                System.out.println("Got previous pe "+pe1.getOceanTime());
+                logger.info("Got previous pe "+pe1.getOceanTime());
             } else {
-                System.out.println("Trying next netcdf file");
+                logger.info("Trying next netcdf file");
                 tryPrevious();
             }
         }
         pet = null;
         pet = PhysicalEnvironment.interpolate(time,pe1,pe2);
         i3dt.setPhysicalEnvironment(pet);
-        System.out.println("Environment interpolated to time: "+pet.getOceanTime());
+        logger.info("Environment interpolated to time: "+pet.getOceanTime());
     }
  
     /**
@@ -910,49 +1021,50 @@ public class ModelControllerBean extends Object
      */
     protected void tryNext() throws IOException {
         file_CurrROMSDataset = getNextFilename();
-        System.out.println("Switching to new netCDF file: "+file_CurrROMSDataset);
-        netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
-        pe2 = new PhysicalEnvironment(0,netcdfReader,grid3D);
+        if (!file_CurrROMSDataset.isEmpty()){
+            logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
+            netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
+            pe2 = new PhysicalEnvironment(0,netcdfReader);
+        } else {
+            logger.severe("No new netCDF file available!");
+            JOptionPane.showMessageDialog(null, "Stopping. No new netcdf file available.", 
+                                          "Number of time steps too long.", JOptionPane.ERROR_MESSAGE);
+            throw(new IOException("No new netcdf file available. Number of time steps too long."));
+        }
     }
  
     /**
      * Method is called internally to increment the netCDF file name for the
      * next ROMS dataset.
-     * @returns String - next ROMS dataset filename
+     * 
+     * @return String - next ROMS dataset filename
      */
     protected String getNextFilename() {
-        int n = file_CurrROMSDataset.length();
-        //System.out.println("file_CurrROMSDataset = "+file_CurrROMSDataset);
-        String idx = file_CurrROMSDataset.substring(n-7,n-3);
-        //System.out.println("idx = "+idx);
-        int ndx = Integer.parseInt(idx);
-        char[] idxc = String.valueOf(ndx+1).toCharArray();
-        //System.out.println("new index = "+String.valueOf(idxc));
-        char[] dfnc = file_CurrROMSDataset.toCharArray();
-        for (int i=idxc.length;i>0;i--) {
-            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
+        logger.info("in getNextFilename()");
+        if (indx_CurrROMSDataset<(files_ROMSDatasets.length-1)){
+            indx_CurrROMSDataset++;
+            logger.info("incrementing indx_CurrROMSDataset to: "+indx_CurrROMSDataset);
+            logger.info("next ROMS dataset: "+files_ROMSDatasets[indx_CurrROMSDataset]);
+            return files_ROMSDatasets[indx_CurrROMSDataset];
         }
-        return String.valueOf(dfnc);
+        return "";
     }
     
     /**
      * Method is called internally to decrement the netCDF file name for the
      * previous ROMS dataset.
-     * @returns String - previous ROMS dataset filename
+     * 
+     * @return String - previous ROMS dataset filename
      */
     protected String getPreviousFilename() {
-        int n = file_CurrROMSDataset.length();
-        //System.out.println("file_CurrROMSDataset = "+file_CurrROMSDataset);
-        String idx = file_CurrROMSDataset.substring(n-7,n-3);
-        //System.out.println("idx = "+idx);
-        int ndx = Integer.parseInt(idx);
-        char[] idxc = String.valueOf(ndx-1).toCharArray();
-        //System.out.println("new index = "+String.valueOf(idxc));
-        char[] dfnc = file_CurrROMSDataset.toCharArray();
-        for (int i=idxc.length;i>0;i--) {
-            dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
+        logger.info("in getPreviousFilename()");
+        if (indx_CurrROMSDataset>0){
+            indx_CurrROMSDataset--;
+            logger.info("decrementing indx_CurrROMSDataset to: "+indx_CurrROMSDataset);
+            logger.info("previous ROMS dataset: "+files_ROMSDatasets[indx_CurrROMSDataset]);
+            return files_ROMSDatasets[indx_CurrROMSDataset];
         }
-        return String.valueOf(dfnc);
+        return "";
     }
 
     /**
@@ -965,34 +1077,57 @@ public class ModelControllerBean extends Object
      */
     protected void tryPrevious() throws IOException {
         int n = file_CurrROMSDataset.length();
-        //System.out.println("file_CurrROMSDataset = "+file_CurrROMSDataset);
+        //logger.info("file_CurrROMSDataset = "+file_CurrROMSDataset);
         String idx = file_CurrROMSDataset.substring(n-7,n-3);
-        //System.out.println("idx = "+idx);
+        //logger.info("idx = "+idx);
         int ndx = Integer.parseInt(idx);
         char[] idxc = String.valueOf(ndx-1).toCharArray();
-        //System.out.println("new index = "+String.valueOf(idxc));
+        //logger.info("new index = "+String.valueOf(idxc));
         char[] dfnc = file_CurrROMSDataset.toCharArray();
         for (int i=idxc.length;i>0;i--) {
             dfnc[n-(4+(idxc.length-i))] = idxc[i-1];
         }
         file_CurrROMSDataset = String.valueOf(dfnc);
-        System.out.println("Switching to new netCDF file: "+file_CurrROMSDataset);
+        logger.info("Switching to new netCDF file: "+file_CurrROMSDataset);
         netcdfReader.setNetcdfDataset(file_CurrROMSDataset);
         int nt = netcdfReader.getNumTimeSteps();
-        pe2 = new PhysicalEnvironment(nt-1,netcdfReader,grid3D);
+        pe2 = new PhysicalEnvironment(nt-1,netcdfReader);
     }
   
+    public void getStartTimeBio() throws FileNotFoundException, IOException {
+        startTimeBio = Double.MAX_VALUE;
+        try {
+            String file = globalInfo.getWorkingDir()+file_InitialAttributes;
+            List<LifeStageAttributesInterface> lst = LHS_Factory.createAttributesFromCSV(file);
+            Iterator<LifeStageAttributesInterface> it = lst.iterator();
+            while(it.hasNext()){
+                LifeStageAttributesInterface lsai = it.next();
+                double st = lsai.getStartTime();//startTime in s if st>0; increment in days if st < 0
+                if (st==0) {
+                    st = startTime;//set to model start time
+                } else if (st<0) {
+                    //use st as start increment in days relative to model start time
+                    if (runForward) 
+                        st = startTime-86400*st;
+                    else
+                        st = startTime+86400*st;
+                }
+                startTimeBio = Math.min(startTimeBio, st);
+            }
+            logger.info("startTimeBio = "+startTimeBio);
+        } catch( InstantiationException | IllegalAccessException | NullPointerException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+    
     protected void initializeBioModel() throws FileNotFoundException, IOException {
-//        LagrangianParticleTracker lpt = new LagrangianParticleTracker(i3dt);
-//        lpt.setTimeStep(timeStep/ntBioModel);
-//        LagrangianParticle.setTracker(lpt);
-//        globalInfo.setInterpolator3D(i3dt);
-        
+        if (runForward) startTimeBio = Double.MAX_VALUE; else startTimeBio = -Double.MAX_VALUE;
         try {
             //create map of LHSParameters 
             Map<String,LifeStageParametersInterface> mapLSPs = null;
             String file;
             file = globalInfo.getWorkingDir()+file_Params;
+            logger.info("reading parameters from '"+file+"'");
             if (file_Params.endsWith(".csv")||file_Params.endsWith(".CSV")){
                 mapLSPs = LHS_Factory.createParametersFromCSV(file);
             } else
@@ -1009,37 +1144,48 @@ public class ModelControllerBean extends Object
             }
 
             //create individuals
+            LHS_Factory.resetID(1);//reset id counter in case of multiple runs
             file = globalInfo.getWorkingDir()+file_InitialAttributes;
+            logger.info("reading initial attributes from '"+file+"'");
             indivs = LHS_Factory.createLHSsFromCSV(file);
-            pwResults.println(indivs.get(0).getReportHeader());//write header to results file
-            pwConnResults.println(indivs.get(0).getReportHeader());//write header to results file
+            logger.info("Created "+indivs.size()+" individuals.");
+            logger.info("report header: "+indivs.get(0).getReportHeader());
+            //pwResults.println(indivs.get(0).getReportHeader());//write header to results file
+            //pwConnResults.println(indivs.get(0).getReportHeader());//write header to results file
             LifeStageInterface lhs;
             it = indivs.listIterator();
             while (it.hasNext()){
                 lhs = it.next();
                 double st = lhs.getStartTime();//startTime in s if st>0; increment in days if st < 0
                 if (st==0) {
-                    lhs.setStartTime(startTime);//set to model start time}
+                    st = startTime;//set to model start time}
                 } else if (st<0) {
                     //use st as start increment in days relative to model start time
                     if (runForward) 
-                        lhs.setStartTime(startTime-86400*st);
+                        st = startTime-86400*st;
                     else
-                        lhs.setStartTime(startTime+86400*st);
+                        st = startTime+86400*st;
                 }
+                if (runForward) startTimeBio = Math.min(startTimeBio, st);
+                else            startTimeBio = Math.max(startTimeBio, st);
+                lhs.setStartTime(st);
             }
             if (guiMode) {
                 it = indivs.listIterator();
                 while (it.hasNext()) {
                     lhs = it.next();
-                    tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
+                    tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                 }
                 fcEndPoints.addAll(tmpStrtPts);
                 tmpStrtPts.clear();
             }
             it = null;
-            System.out.println(indivs.size()+" individuals initially defined for model run.");
-        } catch( InstantiationException | IllegalAccessException ex) {
+            long to = globalInfo.getCalendar().getTimeOffset();
+            globalInfo.getCalendar().setTimeOffset((long) startTimeBio);
+            logger.info(indivs.size()+" individuals initially defined for model run.");
+            logger.info("startTimeBio = "+globalInfo.getCalendar().getDateTimeString());
+            globalInfo.getCalendar().setTimeOffset(to);
+        } catch( InstantiationException | IllegalAccessException | NullPointerException ex) {
             Exceptions.printStackTrace(ex);
         }
     }
@@ -1050,8 +1196,8 @@ public class ModelControllerBean extends Object
      * @param dt - the time step
      */
     protected void timestepBioModel(double dt) {
-        System.out.println("Time-stepping bio model! "+
-                ModelCalendar.getCalendar().getDateTimeString());
+//        logger.info("Time-stepping bio model! "+
+//                globalInfo.getCalendar().getDateTimeString());
         Iterator<LifeStageInterface> itOutput;
         List<LifeStageInterface> tmpOutput1;
         List<LifeStageInterface> deadIndivs = new ArrayList<>();
@@ -1067,7 +1213,7 @@ public class ModelControllerBean extends Object
                     try {
                         if (lhs.isAlive()) {
     //                        if (debug||LagrangianParticleTracker.debug||Interpolator3D.debug)
-    //                        System.out.println("Stepping old lhs "+lhs.id);
+    //                        logger.info("Stepping old lhs "+lhs.id);
                             lhs.step(dt);
                             if (lhs.isSuperIndividual()){
                                 //update super individual stage transitions only when updateStageTrans is true
@@ -1087,18 +1233,18 @@ public class ModelControllerBean extends Object
                                     while (itOutput.hasNext()) {
                                         lhs1 = itOutput.next();//just-created individual
                                         lhs1.setActive(true);//make sure it's active
-                                        //System.out.println("new LHS "+lhs.getID()+" set active.");
-                                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs1));
+                                        //logger.info("new LHS "+lhs.getID()+" set active.");
+                                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs1));
                     //                    lhs1.setStartTime(time+dt);//new lhs regarded as created at end of time step
                     //                    lhs.step(0.0);//no dispersal, but make sure all internal var.s are set
                                         writeToReportFile(lhs1);//record initial conditions
                                         writeToConnectivityFile(lhs1);
                                         if (guiMode && updateAnimation) {
-                                            tmpPts.add(LHS_Factory.createPointFeature(lhs1));
+                                            tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs1));
                                             //can't get track: length would be 0.
                                         }
                                     }
-//                                    System.out.println("Adding "+tmpOutput1.size()+" individuals");
+//                                    logger.info("Adding "+tmpOutput1.size()+" individuals");
                                     newIndivs.addAll(tmpOutput1);//need to add these to indivs after iteration is over
                                 }
                             }
@@ -1110,15 +1256,15 @@ public class ModelControllerBean extends Object
                         }
                         if (lhs.isAlive()) {
                             if (guiMode && updateAnimation) {
-                                tmpPts.add(LHS_Factory.createPointFeature(lhs));
+                                tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                                 tmpTrks.add(LHS_Factory.createTrackFeature(lhs));
                             }
                             if (updateResults) writeToReportFile(lhs);
                         } else {
                             //lhs was alive but is now dead
-                            //System.out.println("lhs "+lhs.id+" id dead!");
+                            //logger.info("lhs "+lhs.id+" id dead!");
                             if (guiMode&&showDeadIndivs) {
-                                tmpDeadPts.add(LHS_Factory.createPointFeature(lhs));
+                                tmpDeadPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                                 tmpDeadTrks.add(LHS_Factory.createTrackFeature(lhs));
                             }
                             writeToReportFile(lhs);//write last report
@@ -1126,11 +1272,11 @@ public class ModelControllerBean extends Object
                             deadIndivs.add(lhs);//add to deadIndivs collection
                         }
                     } catch (java.lang.ArrayIndexOutOfBoundsException exc) {
-                        System.out.println("lhs "+lhs.getID()+" exited model grid area.");
+                        logger.info("lhs "+lhs.getID()+" exited model grid area.");
                         lhs.setActive(false);
                         lhs.setAlive(false);
                         if (guiMode&&showDeadIndivs) {
-                            tmpDeadPts.add(LHS_Factory.createPointFeature(lhs));
+                            tmpDeadPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                             tmpDeadTrks.add(LHS_Factory.createTrackFeature(lhs));
                         }
                         writeToReportFile(lhs);//write last report
@@ -1142,8 +1288,8 @@ public class ModelControllerBean extends Object
                     if (( runForward&&(lhs.getStartTime()<(time+dt)))||
                            (!runForward&&((lhs.getStartTime()<=0)||(lhs.getStartTime()>(time+dt))))) {
                         lhs.setActive(true);
-                        //System.out.println("LHS "+lhs.getID()+" set active.");
-                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
+                        //logger.info("LHS "+lhs.getID()+" set active.");
+                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                         double dtp = (time+dt)-lhs.getStartTime();
                         //dtp could be > timeStep if startTime were set to (e.g.) 0.0
                         //If so, we'll set the StartTime for this gl to time and
@@ -1157,24 +1303,24 @@ public class ModelControllerBean extends Object
                         lhs.step(dtp);//step the lhs to time+dt
                         if (updateResults) writeToReportFile(lhs);
                         if (guiMode && updateAnimation) {
-                            tmpPts.add(LHS_Factory.createPointFeature(lhs));
+                            tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                             tmpTrks.add(LHS_Factory.createTrackFeature(lhs));
                         }
                     }
                 } else if (!lhs.isActive()&&!lhs.isAlive()) {
                     //should not get here
-                    //System.out.println("Something's wrong! Somebody's inactive and dead!!");
+                    //logger.info("Something's wrong! Somebody's inactive and dead!!");
                 }
             }//done with loop over indivs
             
             //remove dead indivs
             if (!deadIndivs.isEmpty()) {
-//                System.out.println("Removing "+deadIndivs.size()+" individuals.");
+//                logger.info("Removing "+deadIndivs.size()+" individuals.");
                 indivs.removeAll(deadIndivs);
             }
             //add indivs after stage changes
             if (!newIndivs.isEmpty()){
-                System.out.println("Adding "+newIndivs.size()+" individuals.");
+                //logger.info("Adding "+newIndivs.size()+" individuals.");
                 indivs.addAll(newIndivs);
             }
             
@@ -1185,26 +1331,26 @@ public class ModelControllerBean extends Object
                     while (itOutput.hasNext()) {
                         lhs = itOutput.next();
                         lhs.setActive(true);
-                        System.out.println("new LHS "+lhs.getID()+" set active.");
-                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeature(lhs));
+                        //logger.info("new LHS "+lhs.getID()+" set active.");
+                        if (guiMode) tmpStrtPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                         lhs.setStartTime(time+dt);//output lhs's regarded as created at end of time step
     //                    lhs.step(0.0);//no dispersal, but make sure all internal var.s are set
                         writeToReportFile(lhs);//record initial conditions
                         writeToConnectivityFile(lhs);
                         if (guiMode && updateAnimation) {
-                            tmpPts.add(LHS_Factory.createPointFeature(lhs));
+                            tmpPts.add(LHS_Factory.createPointFeatureNoAtts(lhs));
                             //can't get track: length would be 0.
                         }
                     }
-                    System.out.println("Adding "+newIndivs1.size()+" individuals");
+                    //logger.info("Adding "+newIndivs1.size()+" individuals");
                     indivs.addAll(newIndivs1);
                 }
             }
-            System.out.println("Current number of individuals: "+indivs.size());
+//            logger.info("Current number of individuals: "+indivs.size());
             
             //update map
             if (guiMode && updateAnimation) {
-//                System.out.println("Updating animation");
+//                logger.info("Updating animation");
                 if (tmpStrtPts.size()>0) {
                     fcStartPoints.addAll(tmpStrtPts);
                     tmpStrtPts.clear();
@@ -1233,7 +1379,7 @@ public class ModelControllerBean extends Object
                         tmpDeadTrks.clear();
                     }
                 }
-                //propertySupport.firePropertyChange(PROP_CURRDATE, null, ModelCalendar.getCalendar().getDate());
+                //propertySupport.firePropertyChange(PROP_CURRDATE, null, globalInfo.getCalendar().getDate());
                 propertySupport.firePropertyChange(PROP_OCEANTIME, null, time+dt);//note that 'time' has not yet been advanced for the timestep
                 animEventSupport.fireAnimationEvent();
             }
@@ -1244,6 +1390,8 @@ public class ModelControllerBean extends Object
     }    
     
     protected void writeToConnectivityFile(LifeStageInterface lhs) {
+        String className = LHS_Types.getInstance().getType(lhs.getTypeName()).getLHSClass();
+        PrintWriter pwConnResults = pwConnResultsMap.get(className);
         pwConnResults.println(lhs.getReport());
     }
  
@@ -1255,9 +1403,13 @@ public class ModelControllerBean extends Object
             if (lhs.getAttributes().isActive()) writeToConnectivityFile(lhs);
         }
         it = null;
+        Iterator<String> itr = pwConnResultsMap.keySet().iterator();
+        while (itr.hasNext()) pwConnResultsMap.get(itr.next()).flush();
     }
  
     protected void writeToReportFile(LifeStageInterface lhs) {
+        String className = LHS_Types.getInstance().getType(lhs.getTypeName()).getLHSClass();
+        PrintWriter pwResults = pwResultsMap.get(className);
         pwResults.println(lhs.getReport());
         lhs.startTrack(lhs.getLastPosition(LifeStageInterface.COORDINATE_TYPE_GEOGRAPHIC),LifeStageInterface.COORDINATE_TYPE_GEOGRAPHIC);//restart track with current LL position as start
         lhs.startTrack(lhs.getLastPosition(LifeStageInterface.COORDINATE_TYPE_PROJECTED), LifeStageInterface.COORDINATE_TYPE_PROJECTED); //restart track with current XY position as start
@@ -1271,11 +1423,25 @@ public class ModelControllerBean extends Object
             if (lhs.getAttributes().isActive()) writeToReportFile(lhs);
         }
         it = null;
+        Iterator<String> itr = pwResultsMap.keySet().iterator();
+        while (itr.hasNext()) pwResultsMap.get(itr.next()).flush();
+    }
+    
+    /**
+     * Close all files associated with a map of output files
+     * @param hm - map of output files
+     */
+    protected void closeOutputFiles(HashMap<String,PrintWriter> hm){
+        Iterator<String> itr = hm.keySet().iterator();
+        while (itr.hasNext())hm.get(itr.next()).close();
     }
 
+    /**
+     * Close all output files
+     */
     protected void closeOutputFiles() {
-        pwResults.close();
-        pwConnResults.close();
+        closeOutputFiles(pwResultsMap);
+        closeOutputFiles(pwConnResultsMap);
     }
     
     private int mod(int x, int y) {
@@ -1286,8 +1452,10 @@ public class ModelControllerBean extends Object
      * Runs the environmental model for ntEnvironModel with time step of timeStep. 
      * The biological components are integrated forward with a potentially 
      * smaller time step of timeStep/ntBioModel.
+     * 
+     * @throws IOException
      */
-    public void run() {
+    public void run() throws IOException {
         run(ntEnvironModel,timeStep,ntBioModel);
     }
     
@@ -1300,49 +1468,64 @@ public class ModelControllerBean extends Object
      * @param dt        -- time step to use for environmental model propagation
      * @param nLPTsteps -- # of fast integration steps per environmental time step
      *                     used to propagate the biological model forward.
+     * 
+     * @throws IOException
      */
-    public void run(int nTimes, double dt, int nLPTsteps) {
+    public void run(int nTimes, double dt, int nLPTsteps) throws IOException {
         double systime = System.currentTimeMillis();
         double dtp = dt/nLPTsteps;
         for (int t=0;t<nTimes;t++) {//loop over environmental model timesteps
-            //timestep indivs using current environment at fast timestep
-            for (int j=0;j<nLPTsteps;j++) {//loop over biological model timesteps
-                stpCtr++;
-//                if (debug||LagrangianParticleTracker.debug||Interpolator3D.debug)
-//                    System.out.println("step "+stpCtr+", time = "+time+"; "+animCtr+"; "+resCtr+"; "+lhsStageTransCtr);
-                updateAnimation  = (animCtr==0);
-                updateResults    = (resCtr==0);
-                updateStageTrans = (lhsStageTransCtr==0);
-//                System.out.println("animCtr = "+animCtr+" "+updateAnimation+" "+animationRate);
-                timestepBioModel(dtp);
-                time=time+dtp;
-                ModelCalendar.getCalendar().setTimeOffset((long) time);
-                animCtr          = mod(animCtr+1,animationRate);
-                resCtr           = mod(resCtr+1,resultsRate);
-                lhsStageTransCtr = mod(lhsStageTransCtr+1,lhsStageTransRate);
-                statTime++;
+            if ((runForward&&(startTimeBio<(time+dt)))||(!runForward&&((time-dt)<startTimeBio))){
+                //timestep indivs using current environment at fast timestep
+                for (int j=0;j<nLPTsteps;j++) {//loop over biological model timesteps
+                    stpCtr++;
+    //                if (debug||LagrangianParticleTracker.debug||Interpolator3D.debug)
+    //                    logger.info("step "+stpCtr+", time = "+time+"; "+animCtr+"; "+resCtr+"; "+lhsStageTransCtr);
+                    updateAnimation  = (animCtr==0);
+                    updateResults    = (resCtr==0);
+                    updateStageTrans = (lhsStageTransCtr==0);
+    //                logger.info("animCtr = "+animCtr+" "+updateAnimation+" "+animationRate);
+                    timestepBioModel(dtp);
+                    time=time+dtp;
+                    globalInfo.getCalendar().setTimeOffset((long) time);
+                    animCtr          = mod(animCtr+1,animationRate);
+                    resCtr           = mod(resCtr+1,resultsRate);
+                    lhsStageTransCtr = mod(lhsStageTransCtr+1,lhsStageTransRate);
+                    statTime++;
+                    statMessage = "Env. model step "+t;
+    //                logger.info(" date is "+globalInfo.getCalendar().getDateTimeString());
+    //                logger.info(" doy = "+globalInfo.getCalendar().getYearDay()+
+    //                                   ". Is it daylight? "+DaylightFunctions.isDaylight(-163.0,55.0,globalInfo.getCalendar().getYearDay()));
+                }
+                if (!writeFast) writeToReportFile();
+            } else {
+                time     += dt;
+                globalInfo.getCalendar().setTimeOffset((long) time);
+                statTime += nLPTsteps;
                 statMessage = "Env. model step "+t;
-//                System.out.println(" date is "+ModelCalendar.getCalendar().getDateTimeString());
-//                System.out.println(" doy = "+ModelCalendar.getCalendar().getYearDay()+
-//                                   ". Is it daylight? "+DaylightFunctions.isDaylight(-163.0,55.0,ModelCalendar.getCalendar().getYearDay()));
             }
-            if (!writeFast) writeToReportFile();
-            System.out.println("t = "+t+"; updated time is "+time+
-                               " date is "+ModelCalendar.getCalendar().getDateTimeString()+
+            logger.info("t = "+t+"; updated time is "+time+
+                               " date is "+globalInfo.getCalendar().getDateTimeString()+
                                " constantEnv = "+fixedEnvironment);
+            logger.info("Current number of individuals: "+indivs.size());
             if (!fixedEnvironment) {
                 try {
-                    if (runForward) timestepEnvironment();
-                    else timestepEnvironmentBackwards();
+                    if (runForward) timestepEnvironmentForwards();
+                    else            timestepEnvironmentBackwards();
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
+                    throw(ex);
                 }
             }
         }
+        finish();
+        logger.info("Run time (min) = "+
+                           (System.currentTimeMillis()-systime)/(60.0*1000));
+    }
+    
+    public void finish(){
         writeToConnectivityFile();//write final results to connectivity file
         closeOutputFiles();
-        System.out.println("Run time (min) = "+
-                           (System.currentTimeMillis()-systime)/(60.0*1000));
     }
     
     public ModelTaskIF getInitModelTask() {
@@ -1474,7 +1657,13 @@ public class ModelControllerBean extends Object
         
         private class ActualRunModelTask {
             private ActualRunModelTask() {
-                run(ntEnvironModel,timeStep,ntBioModel);
+                try{
+                    run(ntEnvironModel,timeStep,ntBioModel);                    
+                }  catch (Exception ex){
+                   Exceptions.printStackTrace(ex);
+                   finish();
+                   done = true;
+                 }
                 done = true;
             }
         }

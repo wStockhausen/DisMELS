@@ -39,8 +39,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "ModelCoordinatorTopComponent")
 @Messages({
     "CTL_ModelCoordinatorAction=Model coordinator",
-    "CTL_ModelCoordinatorTopComponent=Model coordinator",
-    "HINT_ModelCoordinatorTopComponent=This is the model coordinator window"
+    "CTL_ModelCoordinatorTopComponent=Model Coordinator",
+    "HINT_ModelCoordinatorTopComponent=This is the Model Coordinator window"
 })
 public final class ModelCoordinatorTopComponent extends TopComponent 
                                                 implements ExceptionListener  {
@@ -72,14 +72,14 @@ public final class ModelCoordinatorTopComponent extends TopComponent
         jLabel3 = new javax.swing.JLabel();
         jbtnSetPluginsDir = new javax.swing.JButton();
         jchkSetPluginsDir = new javax.swing.JCheckBox();
+        jPanel5 = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        jbtnSetProjectDir = new javax.swing.JButton();
+        jchkSetProjectDir = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jbtnSetROMSInfo = new javax.swing.JButton();
         jchkSetROMSInfo = new javax.swing.JCheckBox();
-        jPanel5 = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
-        jbtnSetWorkingDir = new javax.swing.JButton();
-        jchkSetWorkingDir = new javax.swing.JCheckBox();
         jPanel6 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jbtnDefineLHSTypes = new javax.swing.JButton();
@@ -102,7 +102,7 @@ public final class ModelCoordinatorTopComponent extends TopComponent
         jchkReviewModel = new javax.swing.JCheckBox();
         jPanel1 = new javax.swing.JPanel();
         jPanel12 = new javax.swing.JPanel();
-        jtfWorkingDir = new javax.swing.JTextField();
+        jtfProjectDir = new javax.swing.JTextField();
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
@@ -138,6 +138,46 @@ public final class ModelCoordinatorTopComponent extends TopComponent
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jLabel3)
                 .addComponent(jbtnSetPluginsDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel5, org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jLabel5.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jbtnSetProjectDir, org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jbtnSetProjectDir.text")); // NOI18N
+        jbtnSetProjectDir.setActionCommand(org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jbtnSetProjectDir.actionCommand")); // NOI18N
+        jbtnSetProjectDir.setMaximumSize(new java.awt.Dimension(243, 25));
+        jbtnSetProjectDir.setMinimumSize(new java.awt.Dimension(243, 25));
+        jbtnSetProjectDir.setPreferredSize(new java.awt.Dimension(243, 25));
+        jbtnSetProjectDir.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbtnSetProjectDirActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(jchkSetProjectDir, org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jchkSetProjectDir.text")); // NOI18N
+        jchkSetProjectDir.setEnabled(false);
+        jchkSetProjectDir.setFocusable(false);
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jchkSetProjectDir)
+                .addGap(5, 5, 5)
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jbtnSetProjectDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jchkSetProjectDir, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jLabel5)
+                .addComponent(jbtnSetProjectDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -178,45 +218,6 @@ public final class ModelCoordinatorTopComponent extends TopComponent
             .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jLabel4)
                 .addComponent(jbtnSetROMSInfo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-
-        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
-
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel5, org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jLabel5.text")); // NOI18N
-
-        org.openide.awt.Mnemonics.setLocalizedText(jbtnSetWorkingDir, org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jbtnSetWorkingDir.text")); // NOI18N
-        jbtnSetWorkingDir.setMaximumSize(new java.awt.Dimension(243, 25));
-        jbtnSetWorkingDir.setMinimumSize(new java.awt.Dimension(243, 25));
-        jbtnSetWorkingDir.setPreferredSize(new java.awt.Dimension(243, 25));
-        jbtnSetWorkingDir.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbtnSetWorkingDirActionPerformed(evt);
-            }
-        });
-
-        org.openide.awt.Mnemonics.setLocalizedText(jchkSetWorkingDir, org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jchkSetWorkingDir.text")); // NOI18N
-        jchkSetWorkingDir.setEnabled(false);
-        jchkSetWorkingDir.setFocusable(false);
-
-        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
-        jPanel5.setLayout(jPanel5Layout);
-        jPanel5Layout.setHorizontalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jchkSetWorkingDir)
-                .addGap(5, 5, 5)
-                .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jbtnSetWorkingDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel5Layout.setVerticalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jchkSetWorkingDir, javax.swing.GroupLayout.Alignment.TRAILING)
-            .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(jLabel5)
-                .addComponent(jbtnSetWorkingDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -421,26 +422,26 @@ public final class ModelCoordinatorTopComponent extends TopComponent
 
         jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jPanel12.border.title"))); // NOI18N
 
-        jtfWorkingDir.setEditable(false);
-        jtfWorkingDir.setText(org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jtfWorkingDir.text")); // NOI18N
-        jtfWorkingDir.setToolTipText(org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jtfWorkingDir.toolTipText")); // NOI18N
+        jtfProjectDir.setEditable(false);
+        jtfProjectDir.setText(org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jtfProjectDir.text")); // NOI18N
+        jtfProjectDir.setToolTipText(org.openide.util.NbBundle.getMessage(ModelCoordinatorTopComponent.class, "ModelCoordinatorTopComponent.jtfProjectDir.toolTipText")); // NOI18N
 
         javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jtfWorkingDir, javax.swing.GroupLayout.DEFAULT_SIZE, 307, Short.MAX_VALUE)
+            .addComponent(jtfProjectDir, javax.swing.GroupLayout.DEFAULT_SIZE, 307, Short.MAX_VALUE)
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jtfWorkingDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jtfProjectDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 339, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
                     .addContainerGap()
@@ -462,42 +463,39 @@ public final class ModelCoordinatorTopComponent extends TopComponent
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(5, 5, 5)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap())
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(5, 5, 5)
                 .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(5, 5, 5)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(5, 5, 5)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(5, 5, 5)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(5, 5, 5)
                 .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(5, 5, 5)
                 .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(5, 5, 5)
                 .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(5, 5, 5)
                 .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(5, 5, 5)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -511,19 +509,19 @@ public final class ModelCoordinatorTopComponent extends TopComponent
         });
     }//GEN-LAST:event_jbtnSetROMSInfoActionPerformed
 
-    private void jbtnSetWorkingDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnSetWorkingDirActionPerformed
+    private void jbtnSetProjectDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnSetProjectDirActionPerformed
         int res = jfc.showOpenDialog(null);
         if (res==jfc.APPROVE_OPTION) {
             File f = jfc.getSelectedFile();
             String wd = f.getPath()+File.separator;//close path
             GlobalInfo.getInstance().setWorkingDir(wd);
-            logger.info("Working Directory set to "+wd);
-            jchkSetWorkingDir.setSelected(true);
-            jtfWorkingDir.setText(wd);
-            jtfWorkingDir.setToolTipText(wd);
+            logger.info("Working Directory set to "+wd+"\n---------------------------------\n\n");
+            jchkSetProjectDir.setSelected(true);
+            jtfProjectDir.setText(wd);
+            jtfProjectDir.setToolTipText(wd);
         }
 
-    }//GEN-LAST:event_jbtnSetWorkingDirActionPerformed
+    }//GEN-LAST:event_jbtnSetProjectDirActionPerformed
 
     private void jbtnDefineLHSTypesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnDefineLHSTypesActionPerformed
         WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
@@ -600,17 +598,17 @@ public final class ModelCoordinatorTopComponent extends TopComponent
     private javax.swing.JButton jbtnReviewModel;
     private javax.swing.JButton jbtnRunDisMELS;
     private javax.swing.JButton jbtnSetPluginsDir;
+    private javax.swing.JButton jbtnSetProjectDir;
     private javax.swing.JButton jbtnSetROMSInfo;
-    private javax.swing.JButton jbtnSetWorkingDir;
     private javax.swing.JCheckBox jchkDefineInitialAttributes;
     private javax.swing.JCheckBox jchkDefineLHSParameterValues;
     private javax.swing.JCheckBox jchkDefineLHSTypes;
     private javax.swing.JCheckBox jchkReviewModel;
     private javax.swing.JCheckBox jchkRunDisMELS;
     private javax.swing.JCheckBox jchkSetPluginsDir;
+    private javax.swing.JCheckBox jchkSetProjectDir;
     private javax.swing.JCheckBox jchkSetROMSInfo;
-    private javax.swing.JCheckBox jchkSetWorkingDir;
-    private javax.swing.JTextField jtfWorkingDir;
+    private javax.swing.JTextField jtfProjectDir;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
@@ -670,10 +668,10 @@ public final class ModelCoordinatorTopComponent extends TopComponent
         
         //check working directory
         String wd = GlobalInfo.getInstance().getWorkingDir();
-        jtfWorkingDir.setText(wd);
+        jtfProjectDir.setText(wd);
         if (!wd.equals(GlobalInfo.PROP_NotSet)){
-            jchkSetWorkingDir.setSelected(true);
-            jtfWorkingDir.setToolTipText(wd);
+            jchkSetProjectDir.setSelected(true);
+            jtfProjectDir.setToolTipText(wd);
         }
         
         logger.info("---finished readProperties()");

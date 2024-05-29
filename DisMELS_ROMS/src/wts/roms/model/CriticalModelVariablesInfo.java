@@ -10,17 +10,21 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- *
+ * Encapsulates a collection of CriticaModelVariable instances reflecting 
+ * time-varying or 3D variables in a ROMS model dataset. 
+ * 
+ * These encompass 3D and/or time-varying variables that are REQUIRED to be in all 
+ * ROMS model datasets, with the assumption that that the name used in the 
+ * ROMS dataset to refer to the variable is the same as the "internal" name used in DisMELS.
+ * 
  * @author William.Stockhausen
  */
 public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
     
-    /** */
+    /** class logger */
     private static final Logger logger = Logger.getLogger(CriticalModelVariablesInfo.class.getName());
     /** version */
     public static final String version = "1.0";
-    
-    public static final String PROP_RESET = "RESET";
     
     /** the singleton instance */
     private static CriticalModelVariablesInfo instance = null;
@@ -41,10 +45,32 @@ public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
         propertySupport = new PropertyChangeSupport(this);
     }
     
+    /**
+     * Resets the collection of CriticalVariableInfo instances to their default values.
+     */
+    @Override
+    public void reset(){
+        logger.info("-Starting reset()");
+        throwPCEs = false;
+        mapAVI.clear();
+        constructCVIs();
+        throwPCEs = true;
+        propertySupport.firePropertyChange(PROP_RESET, null, null);
+        logger.info("-Done reset()");
+    }
+    
+    /**
+     * Convenience method to construct a CriticalVariableInfo instance.
+     * 
+     * @param name - name of variable ("internal" and name in ROMS dataset are same)
+     * @param isField - flag indicating whether this variable is a spatial field
+     * @param mask - name of mask field (use one of the ModelTypes.MASKTYPEs)
+     * @param description - description of field
+     */
     private void constructCVI(String name, boolean isField, String mask, String description){
         CriticalVariableInfo cvi = new CriticalVariableInfo(name, isField, mask, description);
         cvi.setNameInROMSDataset(name);//set as default
-        cvi.addPropertyChangeListener(this);
+        cvi.addPropertyChangeListener(this); 
         mapAVI.put(name,cvi);
     }
     
@@ -106,7 +132,7 @@ public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
         constructCVI(name,isField,mask,desc);
         //temp (temperature)
         name = "temp";
-        desc = "tempeature (3D)";
+        desc = "temperature (3D)";
         isField = true;
         mask    = ModelTypes.MASKTYPE_RHO;
         constructCVI(name,isField,mask,desc);
@@ -115,8 +141,9 @@ public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
     /**
      * Returns the critical variable information associated with a variable name.
      * 
-     * @param name = the variable's name
-     * @return -
+     * @param name = the variable's name ("internal" and ROMS dataset names are same)
+     * 
+     * @return - the associated CritivalVariableInfo object
      */
     @Override
     public CriticalVariableInfo getVariableInfo(String name){
@@ -129,12 +156,13 @@ public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
      * @param p 
      */
     public void readProperties(Properties p){
+        throwPCEs = false;
         logger.info("Reading properties");
         String clazz = this.getClass().getName();
         String version = p.getProperty(clazz+"_version");
         if ((version!=null)&&(version.equals("1.0"))){
             int n = Integer.parseInt(p.getProperty(clazz+"_"+"vars","0"));
-            System.out.println("Reading n = "+n);
+            logger.info("Reading n = "+n);
             for (int i=0;i<n;i++){
                 String str = clazz+"_var"+i+".";
                 boolean checked = Boolean.parseBoolean(p.getProperty(str+AbstractVariableInfo.PROP_Checked));
@@ -148,8 +176,10 @@ public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
                 cvi.setChecked(checked);
                 cvi.setNameInROMSDataset(romsName);
                 mapAVI.put(varName, cvi);
-            }       
+            }   
         }
+        throwPCEs = true;
+        propertySupport.firePropertyChange(PROP_RESET, null, null);
         logger.info("Done reading properties");
     }
     
@@ -171,11 +201,17 @@ public class CriticalModelVariablesInfo extends AbstractVariablesInfo {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        propertySupport.firePropertyChange(evt);//propagate event up chain
+        logger.info("PropertyChange detected: "+evt.toString());
+        if (throwPCEs) {
+            propertySupport.firePropertyChange(evt);//propagate event up chain
+            logger.info("Threw PropertyChange");
+        } else {
+            logger.info("Ignored PropertyChange");
+        }
     }
 
     /**
-     * This method does nothing!
+     * This method does nothing! All critical model variables are already defined.
      * @param name
      * @param desc 
      */

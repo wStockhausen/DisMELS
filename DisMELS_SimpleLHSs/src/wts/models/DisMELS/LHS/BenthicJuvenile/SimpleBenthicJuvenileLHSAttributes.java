@@ -46,17 +46,9 @@ public class SimpleBenthicJuvenileLHSAttributes extends AbstractSimpleLHSAttribu
      */
     @Override
     public Object clone() {
-        SimpleBenthicJuvenileLHSAttributes clone = null;
-        try {
-            clone = (SimpleBenthicJuvenileLHSAttributes) super.clone();
-            clone.map = (HashMap<String,Object>) map.clone();
-            for (int i=0;i<keys.length;i++) {
-                clone.setValue(keys[i],this.getValue(keys[i]));
-            }
-            clone.propertySupport = new PropertyChangeSupport(clone);
-        } catch (CloneNotSupportedException ex) {
-            ex.printStackTrace();
-        }
+        SimpleBenthicJuvenileLHSAttributes clone = new SimpleBenthicJuvenileLHSAttributes(typeName);
+        for (String key: keys) clone.setValue(key,this.getValue(key));
+        clone.propertySupport = new PropertyChangeSupport(clone);
         return clone;
     }
     

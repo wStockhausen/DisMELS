@@ -5,17 +5,25 @@
 package wts.roms.model;
 
 import java.beans.Customizer;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.logging.Logger;
 
 /**
- * Customizer for ModelVarableInfo instances.
+ * Customizer for OptionalModelVariableInfo instances.
  * 
  * @author William.Stockhausen
  */
 public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
-                                            implements Customizer {
+                                            implements Customizer, PropertyChangeListener {
 
+    /** the object being customized */
     private OptionalVariableInfo obj;
-    private boolean doEvents = true;
+    /** flag to enable responses to gui actions */
+    private boolean doActions = true;
+    
+    /** class-level logger */
+    private static final Logger logger = Logger.getLogger(CriticalVariableInfoCustomizer.class.getName());
     
     /**
      * Creates new form ModelVariableInfoCustomizer
@@ -42,6 +50,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jchkChecked.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jchkChecked.text")); // NOI18N
         jchkChecked.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jchkChecked.toolTipText")); // NOI18N
+        jchkChecked.setInheritsPopupMenu(true);
         jchkChecked.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jchkCheckedActionPerformed(evt);
@@ -50,6 +59,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jtfNameInROMS.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfNameInROMS.text")); // NOI18N
         jtfNameInROMS.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfNameInROMS.toolTipText")); // NOI18N
+        jtfNameInROMS.setInheritsPopupMenu(true);
         jtfNameInROMS.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfNameInROMSActionPerformed(evt);
@@ -58,6 +68,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jtfName.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfName.text")); // NOI18N
         jtfName.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfName.toolTipText")); // NOI18N
+        jtfName.setInheritsPopupMenu(true);
         jtfName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfNameActionPerformed(evt);
@@ -65,6 +76,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
         });
 
         jchkSpatialField.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jchkSpatialField.text")); // NOI18N
+        jchkSpatialField.setInheritsPopupMenu(true);
         jchkSpatialField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jchkSpatialFieldActionPerformed(evt);
@@ -81,6 +93,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
 
         jtfDescription.setText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfDescription.text")); // NOI18N
         jtfDescription.setToolTipText(org.openide.util.NbBundle.getMessage(OptionalVariableInfoCustomizer.class, "OptionalVariableInfoCustomizer.jtfDescription.toolTipText")); // NOI18N
+        jtfDescription.setInheritsPopupMenu(true);
         jtfDescription.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtfDescriptionActionPerformed(evt);
@@ -117,27 +130,27 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
     }// </editor-fold>//GEN-END:initComponents
 
     private void jtfNameInROMSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNameInROMSActionPerformed
-        if (doEvents) obj.setNameInROMSDataset(jtfNameInROMS.getText());
+        if (doActions) obj.setNameInROMSDataset(jtfNameInROMS.getText());
     }//GEN-LAST:event_jtfNameInROMSActionPerformed
 
     private void jtfNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNameActionPerformed
-        if (doEvents) obj.setName(jtfName.getText());
+        if (doActions) obj.setName(jtfName.getText());
     }//GEN-LAST:event_jtfNameActionPerformed
 
     private void jtfDescriptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfDescriptionActionPerformed
-        if (doEvents) obj.setDescription(jtfDescription.getText());
+        if (doActions) obj.setDescription(jtfDescription.getText());
     }//GEN-LAST:event_jtfDescriptionActionPerformed
 
     private void jcbMaskTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbMaskTypeActionPerformed
-        if (doEvents) obj.setMaskType((String)jcbMaskType.getSelectedItem());
+        if (doActions) obj.setMaskType((String)jcbMaskType.getSelectedItem());
     }//GEN-LAST:event_jcbMaskTypeActionPerformed
 
     private void jchkSpatialFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkSpatialFieldActionPerformed
-        if (doEvents) obj.setSpatialField(jchkSpatialField.isSelected());
+        if (doActions) obj.setSpatialField(jchkSpatialField.isSelected());
     }//GEN-LAST:event_jchkSpatialFieldActionPerformed
 
     private void jchkCheckedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jchkCheckedActionPerformed
-        if (doEvents) obj.setChecked(jchkChecked.isSelected());
+        if (doActions) obj.setChecked(jchkChecked.isSelected());
     }//GEN-LAST:event_jchkCheckedActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -153,7 +166,7 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
     public void setObject(Object bean) {
         if (bean instanceof OptionalVariableInfo){
             obj = (OptionalVariableInfo) bean;
-            doEvents = false;
+            doActions = false;
             jchkChecked.setSelected(obj.isChecked());
             jtfNameInROMS.setText(obj.getNameInROMSDataset());
             jtfName.setText(obj.getName());
@@ -163,7 +176,8 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
             jtfDescription.setToolTipText("Description: "+obj.getDescription());
             setEnabled(true);
             validate();
-            doEvents = true;
+            obj.addPropertyChangeListener(this);
+            doActions = true;
         }
     }
     
@@ -176,5 +190,23 @@ public class OptionalVariableInfoCustomizer extends javax.swing.JPanel
         jchkSpatialField.setEnabled(b);
         jcbMaskType.setEnabled(b);
         jtfDescription.setEnabled(b);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent pce) {
+        logger.info("PropertyChange detected: "+pce.toString());
+        if (pce.getPropertyName().equals(OptionalVariableInfo.PROP_Checked)){
+            jchkChecked.setSelected(obj.isChecked());
+        } else if (pce.getPropertyName().equals(OptionalVariableInfo.PROP_Description)){
+            jtfDescription.setText(obj.getDescription());
+        } else if (pce.getPropertyName().equals(OptionalVariableInfo.PROP_Field)){
+            jchkSpatialField.setSelected(obj.isSpatialField());
+        } else if (pce.getPropertyName().equals(OptionalVariableInfo.PROP_MaskType)){
+            jcbMaskType.setSelectedItem(obj.getMaskType());
+        } else if (pce.getPropertyName().equals(OptionalVariableInfo.PROP_Name)){
+            jtfName.setText(obj.getName());
+        } else if (pce.getPropertyName().equals(OptionalVariableInfo.PROP_NameInROMS)){
+            jtfNameInROMS.setText(obj.getNameInROMSDataset());
+        }
     }
 }

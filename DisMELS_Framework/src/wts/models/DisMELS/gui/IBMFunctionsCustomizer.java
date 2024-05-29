@@ -36,22 +36,28 @@ public class IBMFunctionsCustomizer extends javax.swing.JPanel {
     public void setObject(LifeStageParametersInterface obj, String cat){
         this.obj = obj;
         this.cat = cat;
-        Set<String> funcNames = obj.getIBMFunctionNamesByCategory(cat);
-        mapOfCustomizers = new LinkedHashMap<>(2*funcNames.size());
-        doEvents = false;
-        jcbFunctions.removeAllItems();
-        for (String name: funcNames) {
-            jcbFunctions.addItem(name);
-            mapOfCustomizers.put(name,null);//delay creation of customizers until needed
-        }
-        doEvents = true;
-        IBMFunctionInterface sfi = obj.getSelectedIBMFunctionForCategory(cat);
-        if (sfi==null){
-            logger.info("No function selected for category '"+cat+"'");
-            jcbFunctions.setSelectedIndex(0);
+        Set<String> funcNames = obj.getIBMFunctionKeysByCategory(cat);
+        if (funcNames.isEmpty()){
+            logger.info("No functions defined for category '"+cat+"'");
+            doEvents=false;         //no response to events
+            mapOfCustomizers = null;
         } else {
-            logger.info("Function selected for category '"+cat+"' is '"+sfi.getFunctionName()+"'");
-            jcbFunctions.setSelectedItem(sfi.getFunctionName());
+            mapOfCustomizers = new LinkedHashMap<>(2*funcNames.size());
+            doEvents = false;
+            jcbFunctions.removeAllItems();
+            for (String name: funcNames) {
+                jcbFunctions.addItem(name);
+                mapOfCustomizers.put(name,null);//delay creation of customizers until needed
+            }
+            doEvents = true;
+            IBMFunctionInterface sfi = obj.getSelectedIBMFunctionForCategory(cat);
+            if (sfi==null){
+                logger.info("No function selected for category '"+cat+"'");
+                jcbFunctions.setSelectedIndex(0);
+            } else {
+                logger.info("Function selected for category '"+cat+"' is '"+sfi.getFunctionName()+"'");
+                jcbFunctions.setSelectedItem(sfi.getFunctionName());
+            }
         }
     }
 
@@ -105,7 +111,7 @@ public class IBMFunctionsCustomizer extends javax.swing.JPanel {
             jpFV.add(czr,BorderLayout.CENTER);
             validate();
             repaint();
-            obj.selectIBMFunctionForCategory(cat, name);
+            obj.setSelectedIBMFunctionForCategory(cat, name);
         }
     }//GEN-LAST:event_jcbFunctionsActionPerformed
 

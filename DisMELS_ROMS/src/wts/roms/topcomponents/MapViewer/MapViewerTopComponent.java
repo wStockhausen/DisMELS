@@ -7,7 +7,6 @@ package wts.roms.topcomponents.MapViewer;
 import com.vividsolutions.jts.geom.*;
 import com.wtstockhausen.utils.FileFilterImpl;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.beans.*;
@@ -15,25 +14,30 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.shapefile.ShapefileDataStore;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.IllegalAttributeException;
+import org.geotools.feature.SchemaException;
 import org.geotools.map.DefaultMapLayer;
 import org.geotools.map.MapLayer;
 import org.geotools.styling.*;
-import org.netbeans.api.progress.ProgressUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.opengis.referencing.operation.TransformException;
 import org.openide.awt.ActionID;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-import wts.roms.gis.AlbersNAD83;
+import wts.GIS.shapefile.ShapefileCreator;
+import wts.roms.gis.ModelGrid2DMapData;
 import wts.roms.model.GlobalInfo;
 import wts.roms.model.ModelGrid2D;
 
@@ -54,8 +58,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "MapViewerTopComponent")
 @Messages({
     "CTL_MapViewerAction=Map Viewer",
-    "CTL_MapViewerTopComponent=Map viewer",
-    "HINT_MapViewerTopComponent=Map viewer"
+    "CTL_MapViewerTopComponent=Map Viewer",
+    "HINT_MapViewerTopComponent=Map Viewer"
 })
 public final class MapViewerTopComponent extends TopComponent implements PropertyChangeListener {
     
@@ -98,18 +102,20 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     }
     
     /** GlobalInfo singleton */
-    private GlobalInfo globalInfo;
+    private GlobalInfo romsGI;
     
     /** file chooser for GIS layers */
-    private JFileChooser jfcLayer = new JFileChooser();
-    /** file chooser for GIS layers */
-    private JFileChooser jfcImage = new JFileChooser();
+    private final JFileChooser jfcLayer = new JFileChooser();
+    /** file chooser for output images */
+    private final JFileChooser jfcImage = new JFileChooser();
+    /** file chooser for output shapefiles */
+    private final JFileChooser jfcShape = new JFileChooser();
     
     /** Geotools 2.0 style builder for shapefile layers */
-    private StyleBuilder sb = new StyleBuilder();
+    private final StyleBuilder sb = new StyleBuilder();
     
     /** map of layers by title */
-    private TreeMap<String,MapLayer> mapLayers = new TreeMap<>();
+    private final TreeMap<String,MapLayer> mapLayers = new TreeMap<>();
     
     /** JMenu for removable GIS layers */
     private JMenu jmuGISLayers = null;
@@ -119,6 +125,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** 
      * Counter for associated TopComponent "partners".
+     * 
      * The MapViewer instance can close when partners = 0.
      * "Partner" TopComponents should call instance.addParther() after opening
      * the MapViewer instance to indicate their partnership.
@@ -142,6 +149,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** 
      * Increment counter for associated TopComponent "partners".
+     * 
      * The MapViewer instance can close when partners = 0.
      * "Partner" TopComponents should call instance.addParther() after opening
      * the MapViewer instance to indicate their partnership.
@@ -155,6 +163,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     
     /** 
      * Decrement counter for associated TopComponent "partners".
+     * 
      * The MapViewer instance can close when partners = 0.
      * "Partner" TopComponents should call instance.addParther() after opening
      * the MapViewer instance to indicate their partnership.
@@ -167,8 +176,10 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     }
 
     /**
-     * Indicates when the MapViewer instance can close. This is true when all 
-     * partners have been removed.  TopComponents which have added themselves as partners
+     * Indicates when the MapViewer instance can close. 
+     * 
+     * This is true when all partners have been removed.  
+     * TopComponents which have added themselves as partners
      * should remove themselves as partners prior to checking this.
      * 
      * @return - boolean indicating whether the instance should be allowed to close. 
@@ -206,11 +217,14 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     /**
      * Method called when this TopComponent's window is opened in the application.
      * This could happen multiple times before the application is closed.
+     * 
+     * Calls loadGridFile() if doOnOpen is true.
      */
     @Override
     public void componentOpened() {
-        logger.info("starting MapViewer.compnonentOpened()");
-        if (doOnOpen) loadGridFile();
+        logger.info("Starting componentOpened()");
+        if (doOnOpen) mapGUI.setGrid();
+        logger.info("Finished componentOpened()");
     }
 
     /**
@@ -219,60 +233,33 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      */
     @Override
     public void componentClosed() {
-        logger.info("starting MapViewer.compnonentClosed()");
-        logger.info("finished MapViewer.compnonentClosed()");
+        logger.info("Starting compnonentClosed()");
+        logger.info("Finished compnonentClosed()");
+    }
+    
+    /**
+     * Gets the  ModelGrid2DMapData associated with the map
+     * 
+     * @return the ModelGrid2DMapData object
+     */
+    public ModelGrid2DMapData getGrid2DMapData(){
+        return mapGUI.getGridMapData();
     }
     
     /**
      * Gets the ModelGrid2D associated with the map
-     * @return 
+     * 
+     * @return the ModelGrid2 object
      */
     public ModelGrid2D getModelGrid(){
-        return mapGUI.getGridMapData().getGrid2D();
-    }
-
-    /**
-     * Load the grid file.
-     */
-    private void loadGridFile() {
-        Runnable r = new Runnable(){
-            @Override
-            public void run() {
-                String grdFN = globalInfo.getGridFile();
-                Cursor c = getCursor();
-                try {
-                    if ((!grdFN.equals("<not set>"))&&(wts.roms.model.ModelGrid2D.isGrid(grdFN))) {
-                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        mapGUI.setGridFileName(grdFN);
-                        mapGUI.validate();
-                        mapGUI.repaint();
-                    } else {
-                        javax.swing.JOptionPane.showMessageDialog(
-                                null,
-                                grdFN,
-                                "Error loading ROMS grid file: this is not a grid file:",
-                                javax.swing.JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (java.lang.Exception ex) {
-                    javax.swing.JOptionPane.showMessageDialog(
-                            null,
-                            grdFN,
-                            "Error loading grid file",
-                            javax.swing.JOptionPane.ERROR_MESSAGE);
-                    Exceptions.printStackTrace(ex);
-                }
-                setCursor(c);
-                doOnOpen = false;
-            }
-        };
-        ProgressUtils.showProgressDialogAndRun(r, "Reading ROMS grid info...");
+        return romsGI.getGrid2D();
     }
 
     private void initComponents1() {
         doOnOpen = true;//flag to load grid in componentOpened
-        globalInfo = GlobalInfo.getInstance();
-        globalInfo.addPropertyChangeListener(this);
-        String wdFN = globalInfo.getGridFile();
+        romsGI = GlobalInfo.getInstance();
+        romsGI.addPropertyChangeListener(this);
+        String wdFN = romsGI.getGridFile();
         File wdF = new File(wdFN);
 
         FileFilter fileFilter = new FileFilterImpl("shp","Shape files");
@@ -287,6 +274,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         jfcImage.setCurrentDirectory(wdF);
         jfcImage.setDialogTitle("Save map as image");
 
+        FileFilter fileFilter2 = new FileFilterImpl("shp","Shape files");
+        jfcShape.addChoosableFileFilter(fileFilter2);
+        jfcShape.setFileFilter(fileFilter1);
+        jfcShape.setCurrentDirectory(wdF);
+        jfcShape.setDialogTitle("Save as ESRI shapefile");
     }
     
     /**
@@ -324,20 +316,54 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     public void removeGeoMouseListener(MouseListener listener){
         mapGUI.removeMouseListener(listener);
     }
+    
+    /**
+     * Calls refreshMap() method on the MapGUI_JPanel object (mapGUI) to refresh
+     * the map to the current context. 
+     * 
+     * This re-creates the MapPane and Legend objects
+     * in MapGUI_JPanel, and adds the current grid layers to the context.
+     */
+    public void refreshMap(){
+        logger.info("Starting refreshMap()");
+        mapGUI.refreshMap();
+        logger.info("Finished refreshMap()");
+    }
+    
+    /**
+     * Calls resetMap() method on the MapGUI_JPanel object (mapGUI) to reset
+     * the map to the current context. This re-creates the MapPane and Legend objects
+     * in MapGUI_JPanel.
+     */
+    public void resetMap(){
+        logger.info("Starting resetMap()");
+//        mapGUI.resetMap();
+        remove(jpMap);
+        initComponents();
+        mapGUI.setGrid();
+        logger.info("Finished resetMap()");
+    }
 
+    /**
+     * Sets the menu allowing removal of manual removal of
+     * GIS layers from the map.
+     * 
+     * @param jmu - the JMenu object to set (assign as jmuGISLayers)
+     */
     public void setRemoveGISLayersMenu(JMenu jmu){
         logger.info("Setting RemoveGISLayersMenu");
         jmuGISLayers = jmu;
+        logger.info("Done setting RemoveGISLayersMenu");
     }
     
     /** 
-     * Adds a GIS layer based on a shapefile the user is prompted for.
+     * Adds a GIS layer to the map, based on a shapefile the user is prompted for.
      */
     public void addGISLayer(){
         int res = jfcLayer.showOpenDialog(this);
         if (res==JFileChooser.APPROVE_OPTION) {
             File f = jfcLayer.getSelectedFile();
-            createShapefileLayer(f);
+            createLayerFromShapefile(f);
         }
     }
     
@@ -347,8 +373,17 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer 
      */
     public void addGISLayer(MapLayer layer){
+        logger.info("addGISLayer(MapLayer): Adding GIS layer: "+layer.getTitle());
+        Set<String> ks = mapLayers.keySet();
+        logger.info("--mapLayers before add:");
+        for (String k : ks) logger.info("----"+k);
         mapLayers.put(layer.getTitle(),layer);
-        mapGUI.addLayer(layer);
+        mapGUI.addLayerAtTop(layer);
+        mapGUI.repaint();
+        logger.info("--mapLayers after add:");
+        ks = mapLayers.keySet();
+        for (String k : ks) logger.info("----"+k);
+        logger.info("addGISLayer(MapLayer): Added GIS layer: "+layer.getTitle());
     }
     
     /**
@@ -357,8 +392,17 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer 
      */
     public void addGISLayerAtBase(MapLayer layer){
+        logger.info("addGISLayerAtBase(MapLayer): Adding GIS layer: "+layer.getTitle());
+        Set<String> ks = mapLayers.keySet();
+        logger.info("--mapLayers before add:");
+        for (String k : ks) logger.info("----"+k);
         mapLayers.put(layer.getTitle(),layer);
         mapGUI.addLayerAtBottom(layer);
+        mapGUI.repaint();
+        logger.info("--mapLayers after add:");
+        ks = mapLayers.keySet();
+        for (String k : ks) logger.info("----"+k);
+        logger.info("addGISLayerAtBase(MapLayer): Added GIS layer: "+layer.getTitle());
     }
     
     /**
@@ -367,8 +411,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer - name of layer to remove
      */
     public void removeGISLayer(String layer){
+        logger.info("removeGISLayer(String layer): Removing GIS layer: "+layer);
         MapLayer mapLayer = mapLayers.remove(layer);
         mapGUI.removeLayer(mapLayer);
+        mapGUI.repaint();
+        logger.info("removeGISLayer(String layer): Removed GIS layer: "+layer);
     }
     
     /**
@@ -377,8 +424,11 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * @param layer - the layer to remove
      */
     public void removeGISLayer(MapLayer layer){
+        logger.info("removeGISLayer(MapLayer layer): Removing GIS layer: "+layer.getTitle());
         mapLayers.remove(layer.getTitle());
         mapGUI.removeLayer(layer);
+        mapGUI.repaint();
+        logger.info("removeGISLayer(MapLayer layer): Removed GIS layer: "+layer.getTitle());
     }
     
     /**
@@ -386,7 +436,7 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
      * 
      * @param f - the shapefile
      */
-    public void createShapefileLayer(File f) {
+    public void createLayerFromShapefile(File f) {
         try {
             URL url = f.toURI().toURL();
             ShapefileDataStore store = new ShapefileDataStore(url);
@@ -407,7 +457,10 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                 style.setName("point name");
                 style.setTitle("point title");
             } else {
-                style = sb.createStyle(sb.createPolygonSymbolizer(Color.LIGHT_GRAY, Color.BLACK, 1));
+                Fill fill = sb.createFill(Color.DARK_GRAY,0.7);
+                Stroke strk = sb.createStroke(Color.BLACK, 1.0);
+                PolygonSymbolizer ps = sb.createPolygonSymbolizer(strk, fill);
+                style = sb.createStyle(ps);
                 style.setName("polygon name");
                 style.setTitle("polygon title");
            }
@@ -425,6 +478,8 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                     MapLayer layer = mapLayers.remove(evt.getActionCommand());
                     mapGUI.removeLayer(layer);
                     jmuGISLayers.remove((JMenuItem)evt.getSource());
+                    logger.info("jmi ActionPerformed: jmuGISLayers component count =  "+jmuGISLayers.getComponentCount());
+                    if (jmuGISLayers.getComponentCount()==0) jmuGISLayers.setEnabled(false);
                 }
             });
             jmi.setEnabled(true);
@@ -440,14 +495,14 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
                     f.getAbsolutePath(),
                     "Error opening GIS layer: problem with file name?",
                     javax.swing.JOptionPane.ERROR_MESSAGE);
-            Exceptions.printStackTrace(ex);
+            logger.severe(ex.getLocalizedMessage());
         } catch (java.io.IOException ex) {
             javax.swing.JOptionPane.showMessageDialog(
                     null,
                     f.getAbsolutePath(),
                     "I/O error creating GIS layer: expected a shapefile.",
                     javax.swing.JOptionPane.ERROR_MESSAGE);
-            Exceptions.printStackTrace(ex);
+            logger.severe(ex.getLocalizedMessage());
         }
     }
 
@@ -476,25 +531,23 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
         // TODO read your settings according to their version
     }
     
-    //TODO: need to be able to load grid after changes to grid file name
-
+    /**
+     * Reacts to the following PropertyChangeEvents:
+     *  1. GlobalInfo.PROP_GridFIle
+     *      a. if the component is opened, calls loadGridFile() to show the new grid on the map
+     *      b. otherwise, sets a flag to call loadGridFile() when it does open
+     *  Note: this removes all GIS layers from the map and ONLY adds the new grid and mask layers
+     * 
+     * @param evt 
+     */
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals(GlobalInfo.PROP_GridFile)){
-            logger.info("PropertyChange--grid file");
-            if (isOpened()) loadGridFile(); else doOnOpen = true;
+            logger.info("PropertyChange--grid file is : '"+romsGI.getGridFile()+"'");
+            //load the grid file (if component is opened) or flag it to load on opening
+            if (isOpened()) resetMap(); else doOnOpen = true;
+//            if (!isOpened()) doOnOpen = true;
         }
-    }
-    
-    /**
-     * Returns the bathymetric depth corresponding to the given location.
-     * @param pt - location (in lon/lat) as Point
-     * @return - the interpolated bathymetric depth (m)
-     */
-    public double interpolateBathymetricDepth(double lon, double lat){
-        double[] trPt = AlbersNAD83.transformPtoG(new double[]{lon,lat});
-        double bd = Math.abs(mapGUI.interpolateBathymetricDepth(trPt[0],trPt[1]));
-        return bd;
     }
     
     /**
@@ -516,4 +569,87 @@ public final class MapViewerTopComponent extends TopComponent implements Propert
     public void saveMapAsImage(String fn) throws IOException{
         mapGUI.saveMapAsImage(fn);
     }
+    
+    /**
+     * Create a polyline shapefile from the model grid.
+     */
+    public void createLineShapefile(){
+        jfcShape.setDialogTitle("Select output shapefile for grid lines");
+        int res = jfcShape.showSaveDialog(this);
+        if (res==JFileChooser.APPROVE_OPTION) {
+            try {
+                File fshp = jfcShape.getSelectedFile();                                                      
+                URL url = fshp.toURI().toURL();
+                FeatureCollection fc = mapGUI.getGridMapData().getGridLines();
+                ShapefileCreator sc = new ShapefileCreator();
+                sc.setShapefileURL(url);
+                sc.createShapefile(fc);
+            } catch (MalformedURLException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (SchemaException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IllegalAttributeException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (TransformException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    /**
+     * Create a polygon shapefile from the land mask for the model grid.
+     */
+    public void createMaskShapefile(){
+        jfcShape.setDialogTitle("Select output shapefile for land mask");
+        int res = jfcShape.showSaveDialog(this);
+        if (res==jfcShape.APPROVE_OPTION) {
+            try {
+                File fshp = jfcShape.getSelectedFile();
+                URL url = fshp.toURI().toURL();
+                FeatureCollection fc = mapGUI.getGridMapData().getMask();
+                ShapefileCreator sc = new ShapefileCreator();
+                sc.setShapefileURL(url);
+                sc.createShapefile(fc);
+            } catch (MalformedURLException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (SchemaException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IllegalAttributeException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (TransformException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+    }                                                      
+    
+    /**
+     * Create a shapefile from a map layer.
+     * 
+     * @param layerName 
+     */
+    public void createShapefileFromLayer(String layerName){
+         MapLayer layer = mapLayers.get(layerName);
+         if (layer!=null){
+            jfcShape.setDialogTitle("Select output shapefile for layer");
+            int res = jfcShape.showSaveDialog(this);
+            if (res==jfcShape.APPROVE_OPTION) {
+                try {
+                    File fshp = jfcShape.getSelectedFile();
+                    URL url = fshp.toURI().toURL();
+                    FeatureCollection fc = layer.getFeatureSource().getFeatures();
+                    ShapefileCreator sc = new ShapefileCreator();
+                    sc.setShapefileURL(url);
+                    sc.createShapefile(fc);
+                } catch (MalformedURLException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+         }
+    }                                                      
 }

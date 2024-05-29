@@ -46,33 +46,39 @@ public class LifeStageParametersCustomizer extends javax.swing.JPanel
     public void setObject(Object bean){        
         if (bean instanceof LifeStageParametersInterface){
             obj = (LifeStageParametersInterface) bean;
-            constructUI();
+            try {
+                constructUI();
+            } catch (Exception exc){
+                JOptionPane.showMessageDialog(this, 
+                                              exc.getMessage(),
+                                              "Error constructing parameters customizer: check parameters file.",
+                                              JOptionPane.WARNING_MESSAGE);
+            }
         }
     }
     
     private void constructUI(){
-//        TitledBorder tb = javax.swing.BorderFactory.createTitledBorder(obj.getTypeName());
-//        this.setBorder(tb);
-        
+        logger.info("constructing UI.");
         this.removeAll();//remove all components
-        
         try {
+            logger.info("--Trying BeanInfo to identify custom Customizer for LifeStageParameters type '"+obj.getTypeName()+"'.");
             BeanInfo bi = Introspector.getBeanInfo(obj.getClass());
             BeanDescriptor bd = bi.getBeanDescriptor();
             Class cClass = bd.getCustomizerClass();
             JPanel customizer = (JPanel) cClass.newInstance();
             this.add(customizer,BorderLayout.CENTER);
-            logger.info("Found customizer for LifeStageParameters type "+obj.getTypeName());
+            logger.info("--Found custom Customizer for LifeStageParameters type '"+obj.getTypeName()+"'.");
         } catch (IntrospectionException|InstantiationException|IllegalAccessException|NullPointerException ex){
+            logger.info("--Could not find custom Customizer for LifeStageParameters type '"+obj.getTypeName()+"'.");
             constructCustomizer();
         }
-        
+        logger.info("finished constructing UI.");
         this.validate();
         this.repaint();
     }
     
     private void constructCustomizer(){
-        logger.info("Constructing customizer for LifeStageParameters type "+obj.getTypeName());
+        logger.info("--Constructing customizer for LifeStageParameters type '"+obj.getTypeName()+"'.");
         //set up tabbed panes
         javax.swing.JTabbedPane jTabbedPane1 = new javax.swing.JTabbedPane();
         javax.swing.JPanel jpParams    = new javax.swing.JPanel();
@@ -92,7 +98,7 @@ public class LifeStageParametersCustomizer extends javax.swing.JPanel
 //        jp1.setBorder(tb1);
         jp1.setLayout(new BorderLayout());
         jspParams.setViewportView(jp1);
-        Set<String> pKeys = obj.getIBMParameterNames();
+        Set<String> pKeys = obj.getIBMParameterKeys();
         if (pKeys.isEmpty()){
             JLabel jl = new JLabel();
             jl.setText("no settable parameters defined for this life stage");
@@ -126,18 +132,22 @@ public class LifeStageParametersCustomizer extends javax.swing.JPanel
         jtpFCats.setTabPlacement(JTabbedPane.BOTTOM);
         jpFunctions.add(jtpFCats,BorderLayout.CENTER);
         
-        Set<String> cats = obj.getIBMFunctionCategories();
-        for (String cat: cats){
-            JPanel jpFCat = new JPanel();
-            jpFCat.setLayout(new BorderLayout());
-            jtpFCats.addTab(cat+" functions",jpFCat);
-            
-            IBMFunctionsCustomizer czr = new IBMFunctionsCustomizer();
-            czr.setObject(obj, cat);
-            jpFCat.add(czr,BorderLayout.CENTER);
+        try {
+            Set<String> cats = obj.getIBMFunctionCategories();
+            for (String cat: cats){
+                JPanel jpFCat = new JPanel();
+                jpFCat.setLayout(new BorderLayout());
+                jtpFCats.addTab(cat+" functions",jpFCat);
+
+                IBMFunctionsCustomizer czr = new IBMFunctionsCustomizer();
+                czr.setObject(obj, cat);
+                jpFCat.add(czr,BorderLayout.CENTER);
+            }
+        } catch (java.lang.UnsupportedOperationException ex) {
+            //do nothing
         }
+        logger.info("----Finished constructing customizer for LifeStageParameters type '"+obj.getTypeName()+"'.");
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-    
 }

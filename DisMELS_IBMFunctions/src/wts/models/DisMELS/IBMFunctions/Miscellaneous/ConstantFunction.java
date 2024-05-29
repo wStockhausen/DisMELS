@@ -105,10 +105,10 @@ public class ConstantFunction extends AbstractIBMFunction {
     }
 
     /**
-     * Calculates the value of the function, given the current parameter params 
-     * and the input variable.
+     * Calculates the value of the function.
      * 
-     * @param vars - null
+     * @param vars - any Object or null
+     * 
      * @return     - Double - the constant value
      */
     @Override

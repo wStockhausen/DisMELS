@@ -20,7 +20,6 @@ import wts.models.DisMELS.LHS.PelagicStages.SimplePelagicLHSAttributes;
 import wts.models.DisMELS.LHS.SimpleLHSs.AbstractSimpleLHS;
 import wts.models.DisMELS.framework.*;
 import wts.models.utilities.DateTimeFunctions;
-import wts.models.utilities.ModelCalendar;
 import wts.roms.model.LagrangianParticle;
 
 /**
@@ -48,6 +47,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             "wts.models.DisMELS.LHS.BenthicJuvenile.SimpleBenthicJuvenileLHS"};
     /* Classes for spawned LHS */
     public static final String[] spawnedLHSClasses = new String[]{};
+    /** a logger for messages */
+    private static final Logger logger = Logger.getLogger(SimpleSettlerLHS.class.getName());
     
         //Instance fields
             //  Fields hiding ones from superclass
@@ -83,8 +84,6 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     private boolean isDaytime;
     /** number of individuals transitioning to next stage */
     private double numTrans;  
-    /** total depth (m) at individual's position */
-    private double totalDepth;
     
     /**
      * This constructor is provided only to facilitate the ServiceProvider functionality.
@@ -240,7 +239,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             super.setAttributes(newAtts);
         } else {
             //TODO: should throw an error here
-            System.out.println("SimpleSettlerLHS.setAttributes(): no match for attributes type");
+            logger.info("SimpleSettlerLHS.setAttributes(): no match for attributes type");
         }
     }
     
@@ -423,22 +422,22 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     @Override
     public List<LifeStageInterface> getMetamorphosedIndividuals(double dt) {
         output.clear();
-        LifeStageInterface nLHS = null;
+        List<LifeStageInterface> nLHSs = null;
         //if total depth is appropriate for settlement and 
         //indiv is near the bottom, then settle and transform to next stage.
-        if ((totalDepth>=minSettlementDepth)&&
-                (totalDepth<=maxSettlementDepth)&&
-                (depth>(totalDepth-5))) {
+        if ((bathym>=minSettlementDepth)&&
+                (bathym<=maxSettlementDepth)&&
+                (depth>(bathym-5))) {
             if ((numTrans>0)||!isSuperIndividual){
-                nLHS = createNextLHS();
-                if (nLHS!=null) output.add(nLHS);
+                nLHSs = createNextLHSs();
+                if (nLHSs!=null) output.addAll(nLHSs);
             }
         }
         return output;
     }
 
-    private LifeStageInterface createNextLHS() {
-        LifeStageInterface nLHS = null;
+    private List<LifeStageInterface> createNextLHSs() {
+        List<LifeStageInterface> nLHSs = null;
         try {
             //create LHS with "output" stage
             if (isSuperIndividual) {
@@ -452,7 +451,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
                  *          5) set number in new LHS to numTrans for current LHS
                  *          6) reset numTrans in current LHS
                  */
-                nLHS = LHS_Factory.createNextLHSFromSuperIndividual(typeName,this,numTrans);
+                nLHSs = LHS_Factory.createNextLHSsFromSuperIndividual(typeName,this,numTrans);
                 numTrans = 0.0;//reset numTrans to zero
             } else {
                 /** 
@@ -466,14 +465,14 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
                  *          4) copy current LHS origID to new LHS origID
                  *          5) kill current LHS
                  */
-                nLHS = LHS_Factory.createNextLHSFromIndividual(typeName,this);
+                nLHSs = LHS_Factory.createNextLHSsFromIndividual(typeName,this);
                 alive  = false; //allow only 1 transition, so kill this stage
                 active = false; //set stage inactive, also
             }
         } catch (IllegalAccessException | InstantiationException ex) {
             ex.printStackTrace();
         }
-        return nLHS;
+        return nLHSs;
     }
 
     public void initialize() {
@@ -490,7 +489,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         zPos       = atts.getValue(SimpleSettlerLHSAttributes.PROP_vertPos,zPos);
         time       = startTime;
         numTrans   = 0.0; //set numTrans to zero
-        System.out.println(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
+        if (debug) logger.info(hType+cc+vType+cc+startTime+cc+xPos+cc+yPos+cc+zPos);
         if (i3d!=null) {
             double[] IJ = new double[] {xPos,yPos};
             if (hType==Types.HORIZ_XY) {
@@ -500,7 +499,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
                 IJ = i3d.getGrid().computeIJfromLL(yPos,xPos);
             }
             double z = i3d.interpolateBathymetricDepth(IJ);
-            System.out.println("Bathymetric depth = "+z);
+            if (debug) logger.info("Bathymetric depth = "+z);
 
             double K = 0;  //set K = 0 (at bottom) as default
             if (vType==Types.VERT_K) {
@@ -540,14 +539,14 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     public void step(double dt) throws ArrayIndexOutOfBoundsException {
         double[] pos = null;
         //determine daytime/nighttime for vertical migration & calc indiv. W
-        isDaytime = DateTimeFunctions.isDaylight(lon,lat,ModelCalendar.getCalendar().getYearDay());
-        if (isDaytime&&willAttachDay&&(depth>(totalDepth-1))) {
+        isDaytime = DateTimeFunctions.isDaylight(lon,lat,GlobalInfo.getInstance().getCalendar().getYearDay());
+        if (isDaytime&&willAttachDay&&(depth>(bathym-1))) {
             //set indiv on bottom and don't let it move
             attached = true;
             pos = lp.getIJK();
             pos[2] = 0;
         } else 
-        if (!isDaytime&&willAttachNight&&(depth>(totalDepth-1))) {
+        if (!isDaytime&&willAttachNight&&(depth>(bathym-1))) {
             //set indiv on bottom and don't let it move
             attached = true;
             pos = lp.getIJK();
@@ -567,7 +566,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             //assume same daytime status, but recalc depth and revise W 
 //            pos = lp.getPredictedIJK();
 //            depth = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
-//            if (debug) System.out.println("Depth after predictor step = "+depth);
+//            if (debug) logger.info("Depth after predictor step = "+depth);
             //w = calcW(dt,lp.getNP1())+r; //set swimming rate for predicted position
             lp.setW(w,lp.getNP1());
             lp.setU(uv[0],lp.getNP1());
@@ -576,8 +575,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
             lp.doCorrectorStep();
             pos = lp.getIJK();
         }
-//        System.out.println("id: "+id+cc+isDaytime+cc+depth+cc+totalDepth+cc+attached);
-        time = time+dt;
+//        logger.info("id: "+id+cc+isDaytime+cc+depth+cc+bathym+cc+attached);
+        time += dt;
         updateSize(dt);
         updateNum(dt);
         updateAge(dt);
@@ -587,9 +586,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         if (i3d.isAtGridEdge(pos,tolGridEdge)){
             alive=false;
             active=false;
-        }
-        if (debug) {
-            System.out.println(toString());
+            gridCellID=i3d.getGridCellID(pos, tolGridEdge);
+            logger.info("Indiv "+id+" exited grid at ["+pos[0]+","+pos[1]+"]: "+gridCellID);
         }
         updateAttributes(); //update the attributes object w/ modified values
     }
@@ -603,8 +601,8 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     protected double calcW(double dt) {
 //        String str = "";
         double w = 0;
-        if ((minSettlementDepth<=totalDepth)&&(totalDepth<=maxSettlementDepth)){
-            w =  -vertSwimmingSpeed*(1.0-Math.exp(-(totalDepth-depth)/5.0));//swim towards bottom
+        if ((minSettlementDepth<=bathym)&&(bathym<=maxSettlementDepth)){
+            w =  -vertSwimmingSpeed*(1.0-Math.exp(-(bathym-depth)/5.0));//swim towards bottom
         } else
         if (isDaytime) {
             if (depth<minDepthDay) {
@@ -667,9 +665,9 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
         double totRate = mortalityRate;
         //if total depth is appropriate for settlement and 
         //indiv is near the bottom, then settle and transform to next stage.
-        if ((totalDepth>=minSettlementDepth)&&
-                (totalDepth<=maxSettlementDepth)&&
-                (depth>(totalDepth-5))) {
+        if ((bathym>=minSettlementDepth)&&
+                (bathym<=maxSettlementDepth)&&
+                (depth>(bathym-5))) {
             totRate += stageTransRate;
             //apply mortality rate to previous number transitioning and
             //add in new transitioners
@@ -680,7 +678,7 @@ public class SimpleSettlerLHS extends AbstractSimpleLHS {
     }
     
     private void updatePosition(double[] pos) {
-        totalDepth = i3d.interpolateBathymetricDepth(pos);
+        bathym = i3d.interpolateBathymetricDepth(pos);
         depth      = -i3d.calcZfromK(pos[0],pos[1],pos[2]);
         lat        = i3d.interpolateLat(pos);
         lon        = i3d.interpolateLon(pos);

@@ -7,7 +7,6 @@
 package wts.models.DisMELS.gui;
 
 import java.beans.Customizer;
-import wts.models.DisMELS.framework.AbstractLHSAttributes;
 import wts.models.DisMELS.framework.LifeStageAttributesInterface;
 
 /**

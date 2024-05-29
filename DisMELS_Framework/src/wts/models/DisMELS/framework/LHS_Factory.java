@@ -11,6 +11,7 @@ package wts.models.DisMELS.framework;
 
 import com.wtstockhausen.datasource.ParseCSV;
 import java.awt.Color;
+import java.beans.ExceptionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -22,7 +23,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.geotools.feature.Feature;
 import org.geotools.feature.IllegalAttributeException;
 import org.openide.util.Exceptions;
@@ -41,7 +44,7 @@ import org.openide.util.Lookup;
  * 
  * @author William Stockhausen
  */
-public class LHS_Factory implements PropertyChangeListener {
+public class LHS_Factory implements PropertyChangeListener, ExceptionListener {
     
     /** the singleton instance of this class */
     private static LHS_Factory instance = null;
@@ -124,7 +127,6 @@ public class LHS_Factory implements PropertyChangeListener {
      *  Returns an instance of the LHSAttributes class corresponding to the 
      * input String array.  The type name for the resulting instance should be
      * strv[0].
-     * @param key  - LHS type name to create attributes instance for
      * @param strv - String array defining attributes values
      * @return - instance of attributes class with values contained in strv
      * @throws java.lang.InstantiationException 
@@ -161,8 +163,10 @@ public class LHS_Factory implements PropertyChangeListener {
         instance.pCSV.decodeLine(); //decode header line
         //now decode input data
         logger.info("Reading csv file for initial attributes.");
+        long ctr = 1;
         try {
             while ((strv = instance.pCSV.decodeLine()) != null) {
+                ctr++;
                 lhsName = strv[0];
                 aLHS = createAttributes(lhsName);
                 aLHS.setValues(strv);//throws null pointer if createAttributes failed
@@ -172,7 +176,7 @@ public class LHS_Factory implements PropertyChangeListener {
             instance.pCSV = null;//can set to null because we're past eof
         } catch (java.lang.NullPointerException ex) {
             String str = file.getAbsolutePath()+"\nTried to create attributes for LHS type "+
-                         lhsName+" from CSV.\nProblem CSV row was: \n'";
+                         lhsName+" from CSV.\nProblem CSV row was "+ctr+": \n'";
             for (int i=0;i<(strv.length-1);i++) str = str+strv[i]+", ";
             str = str+strv[strv.length-1]+"'";
             javax.swing.JOptionPane.showMessageDialog(
@@ -184,10 +188,10 @@ public class LHS_Factory implements PropertyChangeListener {
             throw ex;
        } catch (java.lang.NumberFormatException ex) {
             String str = file.getAbsolutePath()+"\nTried to create attributes for LHS type "+
-                         lhsName+" from CSV.\nProblem CSV row was: \n'";
+                         lhsName+" from CSV.\nProblem CSV row was"+ctr+": \n'";
             for (int i=0;i<(strv.length-1);i++) str = str+strv[i]+", ";
             str = str+strv[strv.length-1]+"'";
-            str = str+"\nNumber format error (check your values!";
+            str = str+"\nNumber format error (check your values or last line!)";
             javax.swing.JOptionPane.showMessageDialog(
                     null,
                     str,
@@ -217,6 +221,7 @@ public class LHS_Factory implements PropertyChangeListener {
         String lhsName;
         String[] strv = null;
         if (first) {
+            logger.info("Opening csv file for initial attributes.");
             FileReader     fr   = new FileReader(file);
             BufferedReader br   = new BufferedReader(fr);
             instance.pCSV = new ParseCSV(br);
@@ -226,18 +231,23 @@ public class LHS_Factory implements PropertyChangeListener {
             instance.pCSV.decodeLine(); //decode header line
         }
         //now decode input data
-        logger.info("Reading csv file for initial attributes.");
-        long ctr = 0;
-        while (((strv = instance.pCSV.decodeLine()) != null)&&(ctr++<max)) {
-            lhsName = strv[0];
-            aLHS = createAttributes(lhsName);
-            aLHS.setValues(strv);
-            list.add(aLHS);
-            for (long i=0;i<skip;i++) strv = instance.pCSV.decodeLine();//skip lines as requested
-        }
-        if (strv==null) {
-            instance.pCSV.close();
-            instance.pCSV = null;//can set to null because we're past eof
+        if (instance.pCSV==null){
+            logger.info("--csv file for initial attributes closed, returning empty list.");
+            return list;//return empty list
+        } else {
+            logger.info("--Reading csv file for initial attributes.");
+            long ctr = 0;
+            while (((strv = instance.pCSV.decodeLine()) != null)&&(ctr++<max)) {
+                lhsName = strv[0];
+                aLHS = createAttributes(lhsName);
+                aLHS.setValues(strv);
+                list.add(aLHS);
+                for (long i=0;i<skip;i++) strv = instance.pCSV.decodeLine();//skip lines as requested
+            }
+            if (strv==null) {
+                instance.pCSV.close();
+                instance.pCSV = null;//can set to null because we're past eof
+            }
         }
         return list;
     }
@@ -376,17 +386,26 @@ public class LHS_Factory implements PropertyChangeListener {
             BufferedInputStream bis = new BufferedInputStream(fis);
             XMLDecoder xd = new XMLDecoder(bis);
             xd.setOwner(instance);
-//            xd.setExceptionListener(instance);
+            xd.setExceptionListener(instance);
             Map<String,LifeStageParametersInterface> map = null;
-            logger.info("loading paramsMap");
-            map = (Map<String,LifeStageParametersInterface>) xd.readObject();
-            logger.info("done loading paramsMap");
+            logger.info("--reading paramsMap object from XML");
+            try {
+                map = (Map<String,LifeStageParametersInterface>) xd.readObject();
+            } catch (Exception ex){
+                logger.warning(ex.getMessage());
+            }
+            logger.info("--done reading paramsMap object from XML");
             xd.close();
             
             //update instance.paramsMap with new info
-            for (String key: map.keySet()) instance.paramsMap.put(key,map.get(key));
+            logger.info("--updating LHS_Factory.paramsMap");
+            for (String key: map.keySet()) {
+                logger.info("----updating '"+key+"'.");
+                instance.paramsMap.put(key,map.get(key));
+            }
+            logger.info("--finished updating LHS_Factory.paramsMap");
 
-            logger.info("finished createParametersFromXML("+file.getName()+")");
+            logger.info("--finished createParametersFromXML("+file.getName()+")");
             //return COPY of instance.paramsMap (same parameters objects, but different map object)
             map = new LinkedHashMap<>(instance.paramsMap);
         return map;
@@ -476,6 +495,28 @@ public class LHS_Factory implements PropertyChangeListener {
     }
     
     /**
+     *  Returns a point feature representing the LHS object location
+     * and typeName, but with no LHSAttributes.
+     * @param lhs 
+     * @return 
+     * @throws java.lang.InstantiationException 
+     * @throws java.lang.IllegalAccessException 
+     */
+    public static Feature createPointFeatureNoAtts(LifeStageInterface lhs) 
+                        throws InstantiationException, IllegalAccessException {
+        LHSPointFeatureTypeNoAtts ftLHS = createPointFeatureTypeNoAtts(lhs.getTypeName());
+        LifeStageAttributesInterface atts = lhs.getAttributes();
+        ftLHS.setGeometryFromAttributes(atts);
+        Feature feature = null;
+        try {
+            feature = ftLHS.createFeature();
+        } catch (IllegalAttributeException | NullPointerException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return feature;
+    }
+    
+    /**
      *  Returns a "default" instance of the LHSPointFeatureType class 
      *  associated with the given key.
      * @param key 
@@ -499,6 +540,30 @@ public class LHS_Factory implements PropertyChangeListener {
             instance.pointFTs.put(key,lhs);//update pointsFT
         } catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException ex) {
             Exceptions.printStackTrace(ex);
+        }
+        return lhs;
+    }
+    
+    /**
+     *  Returns a "default" instance of the LHSPointFeatureTypeNoAtts class 
+     *  associated with the given key.
+     * @param key 
+     * @return 
+     * @throws java.lang.IllegalAccessException 
+     * @throws java.lang.InstantiationException 
+     */
+    public static LHSPointFeatureTypeNoAtts createPointFeatureTypeNoAtts(String key) 
+                        throws InstantiationException, IllegalAccessException {
+        LHSPointFeatureTypeNoAtts lhs = null;
+        try {
+            if (instance==null) instance = new LHS_Factory();
+            lhs = instance.pointFTsNoAtts.get(key);
+            if (lhs!=null) return lhs; //found it, so return.
+            lhs = new LHSPointFeatureTypeNoAtts(key);//create a new instance
+            instance.pointFTsNoAtts.put(key,lhs);//update map pointFTsNoAtts
+        } catch (NullPointerException ex){
+            ex.printStackTrace();
+            throw ex;
         }
         return lhs;
     }
@@ -566,17 +631,33 @@ public class LHS_Factory implements PropertyChangeListener {
         //String from call to getCSVHeader() or getCSVHeaderShortNames()
         instance.pCSV.decodeLine(); //decode header line
         //now decode input data
-        logger.info("Reading csv file for initial attributes.");
+        logger.info("Reading csv file to create LHSs from initial attributes.");
+        long ctr = 1;
         String lhsName;
         LifeStageInterface lhs;
         while ((strv = instance.pCSV.decodeLine()) != null) {
-            lhsName = strv[0];
-            lhs = createLHS(lhsName);
-            lhs.setAttributes(strv);
-            list.add(lhs);
+            ctr++;
+            try {
+                lhsName = strv[0];
+                lhs = createLHS(lhsName);
+                lhs.setAttributes(strv);
+                list.add(lhs);
+            } catch(java.lang.NullPointerException ex) {
+                logger.info("NullPointerException in createLHSsFromCSV on line "+ctr);
+                throw(ex);
+            } catch (java.lang.ArrayIndexOutOfBoundsException ex){
+                String msg = "java.lang.ArrayIndexOutOfBoundsException thrown reading initial "+
+                             "attributes file line "+ctr+".";
+                logger.info(msg);
+                logger.info(ex.getMessage());
+            } catch(java.lang.UnknownError ex) {
+                logger.info("UnknownError in createLHSsFromCSV on line "+ctr);
+                throw(ex);
+            }
         }
         instance.pCSV.close();
         instance.pCSV = null;//can set to null because we're past eof
+        logger.info("Finished reading csv file to create LHSs from initial attributes.");
         return list;
     }
     
@@ -594,38 +675,73 @@ public class LHS_Factory implements PropertyChangeListener {
     }
         
     /**
-     *  Returns a "default" instance of the output LHS class 
-     *  associated with the given key.
-     * @param key - type name of the LHS for which to create an output LHS
-     * @return    - instance of output class with output type name
+     *  Returns a list of "vanilla" instances for the output LHS classes 
+     *  associated with the given input key.
+     * 
+     * @param key - type name of the LHS from which to create output LHSs
+     * 
+     * @return - List<LifeStageInterface> of output classes instances for key = type name.
+     * 
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static LifeStageInterface createNextLHS(String key) 
+    public static List<LifeStageInterface> createNextLHSs(String key) 
                         throws InstantiationException, IllegalAccessException {
         if (instance==null) instance = new LHS_Factory();
         LHS_Type lhsType = instance.types.getType(key);
         if (lhsType==null) return null; //key not defined!
-        String nKey = lhsType.getNextLHSName();//key for next LHS
-        LHS_Type nlhsType = instance.types.getType(nKey);
-        if (nlhsType==null) {
-            logger.info("No LHS type '"+nKey+"' found as next stage for LHS '"+key+"'.");
-            return null;//no object for key!
-        } 
-        LifeStageInterface nlhs = null;
-        try {
-            ClassLoader syscl = Lookup.getDefault().lookup(ClassLoader.class);
-            Class nlhsClass = syscl.loadClass(nlhsType.getLHSClass());
-            if (nlhsClass==null) {
-                logger.info("Could not find class "+nlhsType.getLHSClass());
-                return null;//class not defined!
+        List<LifeStageInterface> nLHSs = new ArrayList<LifeStageInterface>();
+        Set<String> nKeys = lhsType.getNextLHSNames();//key for next LHS
+        for (String nKey : nKeys){
+            LHS_Type nlhsType = instance.types.getType(nKey);
+            if (nlhsType==null) {
+                logger.info("No LHS type '"+nKey+"' found as next stage for LHS '"+key+"'.");
+                return null;//no object for key!
             } 
-            Constructor con = nlhsClass.getDeclaredConstructor(String.class);
-            nlhs = (LifeStageInterface) con.newInstance(nKey);
-        } catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException ex) {
+            LifeStageInterface nlhs = null;
+            try {
+                ClassLoader syscl = Lookup.getDefault().lookup(ClassLoader.class);
+                Class nlhsClass = syscl.loadClass(nlhsType.getLHSClass());
+                if (nlhsClass==null) {
+                    logger.info("Could not find class "+nlhsType.getLHSClass());
+                } else {
+                    Constructor con = nlhsClass.getDeclaredConstructor(String.class);
+                    nlhs = (LifeStageInterface) con.newInstance(nKey);
+                    nLHSs.add(nlhs);
+                }
+            } catch (ClassNotFoundException | SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        return nLHSs;
+    }
+    
+    /**
+     *  Returns instance of the next LHS class initialized with LifeStageInterface oldLHS
+     *  associated with the given key.
+     * 
+     * This calls setInfoFromIndividual(oldLHS) on the new LSI objects.
+     * 
+     * @param key     - type name of the LHS for which to create the next LHS
+     * @param oldLHS - the life stage instance with which to initialize the new instance
+     * @return - instance of next LHS class with associated type name
+     * @throws java.lang.InstantiationException 
+     * @throws java.lang.IllegalAccessException 
+     */
+    public static List<LifeStageInterface> createNextLHSsFromIndividual(String key, LifeStageInterface oldLHS) 
+                        throws InstantiationException, IllegalAccessException {
+        List<LifeStageInterface> nLHSs = null;
+        try {
+            nLHSs = createNextLHSs(key);
+            if (nLHSs!=null) {
+                for (LifeStageInterface nLHS : nLHSs){
+                    nLHS.setInfoFromIndividual(oldLHS);
+                }
+            }
+        } catch (SecurityException | IllegalArgumentException ex) {
             Exceptions.printStackTrace(ex);
         }
-        return nlhs;
+        return nLHSs;
     }
     
     /**
@@ -637,49 +753,36 @@ public class LHS_Factory implements PropertyChangeListener {
      * @throws java.lang.InstantiationException 
      * @throws java.lang.IllegalAccessException 
      */
-    public static LifeStageInterface createNextLHSFromIndividual(String key, LifeStageInterface oldLHS) 
+    public static List<LifeStageInterface> createNextLHSsFromSuperIndividual(String key, LifeStageInterface oldLHS,double numTrans) 
                         throws InstantiationException, IllegalAccessException {
-        LifeStageInterface nlhs = null;
+        List<LifeStageInterface> nLHSs = null;
         try {
-            nlhs = createNextLHS(key);
-            if (nlhs!=null) nlhs.setInfoFromIndividual(oldLHS);
+            nLHSs = createNextLHSs(key);
+            if (nLHSs!=null) {
+                for (LifeStageInterface nlhs : nLHSs){
+                    nlhs.setInfoFromSuperIndividual(oldLHS,numTrans);
+                }
+            }
         } catch (SecurityException | IllegalArgumentException ex) {
             Exceptions.printStackTrace(ex);
         }
-        return nlhs;
+        return nLHSs;
     }
     
     /**
-     *  Returns instance of the next LHS class initialized with attributes oldAtts
-     *  associated with the given key.
-     * @param key     - type name of the LHS for which to create the next LHS
-     * @param oldAtts - the attributes with which to initialize the new instance
-     * @return - instance of next LHS class with associated type name
-     * @throws java.lang.InstantiationException 
-     * @throws java.lang.IllegalAccessException 
-     */
-    public static LifeStageInterface createNextLHSFromSuperIndividual(String key, LifeStageInterface oldLHS,double numTrans) 
-                        throws InstantiationException, IllegalAccessException {
-        LifeStageInterface nlhs = null;
-        try {
-            nlhs = createNextLHS(key);
-            if (nlhs!=null) nlhs.setInfoFromSuperIndividual(oldLHS,numTrans);
-        } catch (SecurityException | IllegalArgumentException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        return nlhs;
-    }
-    
-    /**
-     *  Returns the defined next stage LHS class for the key 
+     *  Returns the defined next stage LHS classes for the key 
      * @param key - name of LHS type
      * @return - class of output LHS associated with LHS type identified by key
      */
-    public static String getNextLHSClass(String key) {
+    public static Set<String> getNextLHSClasses(String key) {
         if (instance==null) instance = new LHS_Factory();
         LHS_Type lhs = instance.types.getType(key);
-        String c = null;
-        if (lhs!=null) c = lhs.getNextLHSClass();
+        Set<String> c = null;
+        if (lhs!=null) {
+            for (String name : lhs.getNextLHSNames()){
+                c.add(lhs.getNextLHSClass(name));
+            }
+        }
         return c;
     }    
         
@@ -846,6 +949,8 @@ public class LHS_Factory implements PropertyChangeListener {
     private Map<String,LifeStageParametersInterface> paramsMap;
     /** lookup map by LH stage name for point feature type objects associated with different LHS types */
     private Map<String,LHSPointFeatureType> pointFTs;
+    /** lookup map by LH stage name for point feature type objects without LifeStageAttributes associated with different LHS types */
+    private Map<String,LHSPointFeatureTypeNoAtts> pointFTsNoAtts;
     /** lookup map by LH stage name for track feature type objects associated with different LHS types */
     private Map<String,LHSTrackFeatureType> trackFTs;
     /** lookup map by LH stage name for attributes instance constructors associated with different LHS types */
@@ -863,9 +968,10 @@ public class LHS_Factory implements PropertyChangeListener {
         logger.info("Instantiating LHS_Factory");
         types = LHS_Types.getInstance();//get the singleton once!
         
-        paramsMap = new LinkedHashMap<>();
-        pointFTs  = new LinkedHashMap<>();
-        trackFTs  = new LinkedHashMap<>();
+        paramsMap              = new LinkedHashMap<>();
+        pointFTs               = new LinkedHashMap<>();
+        pointFTsNoAtts         = new LinkedHashMap<>();
+        trackFTs               = new LinkedHashMap<>();
         attributesConstructors = new LinkedHashMap<>();
         lhsConstructors        = new LinkedHashMap<>();
         
@@ -977,5 +1083,16 @@ public class LHS_Factory implements PropertyChangeListener {
         }
         //fire PropertyChange indicating changes.
         propertySupport.firePropertyChange(PROP_RESET,null,null);
+    }
+
+    @Override
+    public void exceptionThrown(Exception e) {
+        StackTraceElement[] stes = e.getStackTrace();
+        String txt = "";
+        for (StackTraceElement ste : stes) {
+            txt = txt + ste.toString() + "\n";
+        }
+        JOptionPane.showMessageDialog(null, txt,"Error in LHS_Factory",JOptionPane.ERROR_MESSAGE);
+        logger.warning(txt);
     }
 }

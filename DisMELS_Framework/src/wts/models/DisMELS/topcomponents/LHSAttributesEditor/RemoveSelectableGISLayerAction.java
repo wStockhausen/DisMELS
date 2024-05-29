@@ -12,7 +12,11 @@ import org.openide.util.*;
 import org.openide.util.actions.Presenter;
 
 /**
- *
+ * This class provides a context-sensitive JMenu to the LHSAttributesEditor to
+ * remove "selectable" GIS layers. The menu is
+ * disabled if the editor is not in the current "context" or if there are no selectable layers.
+ * It is enabled if the reverse is true.
+ * 
  * @author William.Stockhausen
  */
 public class RemoveSelectableGISLayerAction  extends AbstractAction 
@@ -32,9 +36,9 @@ public class RemoveSelectableGISLayerAction  extends AbstractAction
     public RemoveSelectableGISLayerAction(Lookup lookup){
         super();
         initComponents();//create visual components
-        for (Object obj: lookup.lookupAll(Object.class)){
+//        for (Object obj: lookup.lookupAll(Object.class)){
 //            logger.log(Level.INFO, "lookup includes {0}", obj.getClass().getName());
-        }
+//        }
         lkpResult = lookup.lookupResult(LHSAttributesEditorTopComponent.class);
         lkpResult.addLookupListener(this);
         resultChanged(new LookupEvent(lkpResult));
@@ -42,13 +46,13 @@ public class RemoveSelectableGISLayerAction  extends AbstractAction
     
     private void initComponents(){
 //        logger.info("Creating JMenu component");
-        jmu = new JMenu("Remove Selectable GIS Layer");//TODO: use DynamicMenuContent ??
+        jmu = new JMenu("Remove selectable GIS layer");//TODO: use DynamicMenuContent ??
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
         //nothing should happen here--write ActionListeners for the added menu items
-        //when they're created.
+        //when they're added to this menu in the InitialAttributesEditor.
     }
 
     @Override
@@ -58,7 +62,7 @@ public class RemoveSelectableGISLayerAction  extends AbstractAction
         if (!lkpResult.allInstances().isEmpty()){
             LHSAttributesEditorTopComponent tc = lkpResult.allInstances().iterator().next();
 //            logger.info("===setting RemoveSelectableGISLayers menu in LHSAttributesEditor!");
-            tc.setRemoveSelectableGISLayersMenu(jmu);//this really only needs to happen once
+            tc.setJMenu_RemoveSelectableGISLayers(jmu);//this really only needs to happen once
             if (jmu.getMenuComponentCount()>0) b = true;
         }
 //        logger.info("===setEnabled "+b);

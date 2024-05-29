@@ -68,8 +68,8 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "ModelRunnerTopComponent")
 @Messages({
     "CTL_ModelRunnerAction=ModelRunner",
-    "CTL_ModelRunnerTopComponent=ModelRunner Window",
-    "HINT_ModelRunnerTopComponent=This is a ModelRunner window"
+    "CTL_ModelRunnerTopComponent= IBM Editor/Launcher",
+    "HINT_ModelRunnerTopComponent=This is the IBM Editor/Launcher window"
 })
 public final class ModelRunnerTopComponent extends TopComponent implements AnimationEventListener, PropertyChangeListener  {
     
@@ -196,6 +196,7 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
         jPanel1 = new javax.swing.JPanel();
         jbInitializeModel = new javax.swing.JButton();
         jbRunModel = new javax.swing.JButton();
+        jbClear = new javax.swing.JButton();
 
         setLayout(new java.awt.BorderLayout());
         add(mcbCustomizer, java.awt.BorderLayout.CENTER);
@@ -235,6 +236,14 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
         });
         jPanel1.add(jbRunModel);
 
+        org.openide.awt.Mnemonics.setLocalizedText(jbClear, org.openide.util.NbBundle.getMessage(ModelRunnerTopComponent.class, "ModelRunnerTopComponent.jbClear.text")); // NOI18N
+        jbClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbClearActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jbClear);
+
         jPanel2.add(jPanel1, java.awt.BorderLayout.EAST);
 
         add(jPanel2, java.awt.BorderLayout.NORTH);
@@ -261,9 +270,15 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
         showAnim = jchkShowAnim.isSelected();
     }//GEN-LAST:event_jchkShowAnimActionPerformed
 
+    private void jbClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbClearActionPerformed
+        logger.log(Level.INFO,"Clearing memory.");
+        clearModel();
+    }//GEN-LAST:event_jbClearActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JButton jbClear;
     private javax.swing.JButton jbInitializeModel;
     private javax.swing.JButton jbRunModel;
     private javax.swing.JCheckBox jchkShowAnim;
@@ -283,6 +298,9 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
                 File f = new File(fnMCB);
                 xmlLoader.open(f);
                 enableSaveAction(true);
+                String msg = "Loaded model runner file\n"+fnMCB;
+                String title = "Model runner:";
+                javax.swing.JOptionPane.showMessageDialog(null, msg, title, javax.swing.JOptionPane.INFORMATION_MESSAGE);
             } catch (FileNotFoundException ex) {
                 Exceptions.printStackTrace(ex);
             }
@@ -390,18 +408,28 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
     }
     
     /**
+     * Method called to clear memory for new model run.
+     */
+    private void clearModel(){
+        mcb.cleanup();
+        jbInitializeModel.setEnabled(true);
+        jbRunModel.setEnabled(false);
+    }
+    
+    /**
      * Method called to initialize a DisMELS model run.
      * TODO: incorporate flag for map rendering of results.
      */
     private void initializeModel(){
         logger.info("Initializing model");
+        mcb.cleanup();//call to clean up in case it hasn't been done already
         jbInitializeModel.setEnabled(false);
-        fcStartPoints.clear();
-        fcEndPoints.clear();
-        fcTracks.clear();
-        fcDeadPoints.clear();
-        fcDeadTracks.clear();
-        System.gc();
+//        fcStartPoints.clear();
+//        fcEndPoints.clear();
+//        fcTracks.clear();
+//        fcDeadPoints.clear();
+//        fcDeadTracks.clear();
+//        System.gc();
         try {
             mcb.setStartPointsFC(fcStartPoints);
             mcb.setEndPointsFC(fcEndPoints);
@@ -425,7 +453,6 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
                 Exceptions.printStackTrace(ex);
             }
         }
-        logger.info(mcb.getFile_ROMSGrid());
         logger.info(mcb.getFile_ROMSDataset());
         logger.info(mcb.getFile_Params());
         logger.info(mcb.getFile_InitialAttributes());
@@ -814,7 +841,7 @@ public final class ModelRunnerTopComponent extends TopComponent implements Anima
     
     //------------------------------------------------------------------------//
     /**
-     * Private class to implement a "reset" capability for LifeStageParameters
+     * Private class to implement a "reset" capability for ModelControllerBean
      */
     private class Resetter implements Resetable {
 

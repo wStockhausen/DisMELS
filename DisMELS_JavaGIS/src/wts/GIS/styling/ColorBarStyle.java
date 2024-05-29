@@ -31,7 +31,10 @@ import org.geotools.styling.Symbolizer;
  */
 public class ColorBarStyle implements Style, Cloneable, Serializable {
 
-    public static String PROP_STYLE = "style";
+    /** property thrown when updateStyle() is called */
+    public static String PROP_STYLE   = "wts.GIS.styling.ColorBarStyle:Style";
+    /** property thrown when an element of the style changes and updateStyle SHOULD be called */
+    public static String PROP_ELEMENT = "wts.GIS.styling.ColorBarStyle:Element";
 
     /** initially an instance of a vanilla default style */
     private Style style;
@@ -218,6 +221,7 @@ public class ColorBarStyle implements Style, Cloneable, Serializable {
         if (!clrRamp.equalsIgnoreCase(rampName)){
             clrRamp = rampName;
             mustUpdateStyle = true;
+            propertySupport.firePropertyChange(PROP_ELEMENT,null,null);
         }
     }
 
@@ -230,6 +234,7 @@ public class ColorBarStyle implements Style, Cloneable, Serializable {
             min = val;
             mustUpdateStyle = true;
         }
+            propertySupport.firePropertyChange(PROP_ELEMENT,null,null);
     }
 
     public double getMax() {
@@ -240,6 +245,7 @@ public class ColorBarStyle implements Style, Cloneable, Serializable {
         if (max!=val){
             max = val;
             mustUpdateStyle = true;
+            propertySupport.firePropertyChange(PROP_ELEMENT,null,null);
         }
     }
 
@@ -251,6 +257,7 @@ public class ColorBarStyle implements Style, Cloneable, Serializable {
         if (numClrs!=val){
             numClrs = val;
             mustUpdateStyle = true;
+            propertySupport.firePropertyChange(PROP_ELEMENT,null,null);
         }
     }
 
@@ -262,6 +269,7 @@ public class ColorBarStyle implements Style, Cloneable, Serializable {
         if (showLTMin!=b){
             showLTMin = b;
             mustUpdateStyle = true;
+            propertySupport.firePropertyChange(PROP_ELEMENT,null,null);
         }
     }
 
@@ -273,6 +281,7 @@ public class ColorBarStyle implements Style, Cloneable, Serializable {
         if (showGTMax!=b){
             showGTMax = b;
             mustUpdateStyle = true;
+            propertySupport.firePropertyChange(PROP_ELEMENT,null,null);
         }
     }
 
